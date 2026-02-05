@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodiaTax - Documentación Completa</title>
+    <style>
+        @page {
+            margin: 2cm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+        }
+        
+        h1 {
+            color: #eab308;
+            font-size: 2.5em;
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #eab308;
+            page-break-before: always;
+        }
+        
+        h1:first-child {
+            page-break-before: avoid;
+        }
+        
+        h2 {
+            color: #ca8a04;
+            font-size: 1.8em;
+            margin: 25px 0 15px 0;
+            padding-top: 10px;
+        }
+        
+        h3 {
+            color: #444;
+            font-size: 1.3em;
+            margin: 20px 0 10px 0;
+        }
+        
+        h4 {
+            color: #666;
+            font-size: 1.1em;
+            margin: 15px 0 8px 0;
+        }
+        
+        p {
+            margin: 10px 0;
+            text-align: justify;
+        }
+        
+        ul, ol {
+            margin: 10px 0 10px 30px;
+        }
+        
+        li {
+            margin: 5px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        
+        th {
+            background-color: #eab308;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .highlight {
+            background-color: #fff9e6;
+            padding: 15px;
+            border-left: 4px solid #eab308;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+        
+        .feature-box {
+            background: linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border: 1px solid #eab308;
+            page-break-inside: avoid;
+        }
+        
+        .emoji {
+            font-size: 1.3em;
+            margin-right: 8px;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+            color: white;
+            margin: -20px -20px 30px -20px;
+            page-break-after: avoid;
+        }
+        
+        .header h1 {
+            color: white;
+            border: none;
+            margin: 0;
+            page-break-before: avoid;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            border-top: 2px solid #eab308;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .check-list {
+            list-style-type: none;
+            margin-left: 0;
+        }
+        
+        .check-list li:before {
+            content: "✅ ";
+            margin-right: 8px;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚖 CodiaTax</h1>
+        <p>Aplicación de Gestión Profesional para Taxistas</p>
+        <p style="font-size: 0.9em; margin-top: 5px;">Versión 1.1.0 - Documentación Completa</p>
+    </div>
+
+    <h2>📱 ¿Qué es CodiaTax?</h2>
+    <p><strong>CodiaTax</strong> es una aplicación móvil diseñada específicamente para <strong>profesionales del taxi</strong> que necesitan llevar un control diario de:</p>
+    <ul class="check-list">
+        <li>Ingresos y gastos</li>
+        <li>Servicios realizados</li>
+        <li>Mantenimiento del vehículo</li>
+        <li>Turnos de aeropuerto</li>
+        <li>Estadísticas y resúmenes</li>
+    </ul>
+    <p>La app te ayuda a <strong>ahorrar tiempo</strong>, <strong>reducir errores</strong> en la contabilidad y tener toda la información de tu negocio siempre disponible en tu móvil.</p>
+
+    <h2>🎯 ¿Para quién es esta App?</h2>
+    <ul>
+        <li><strong>Propietarios de taxi</strong> que gestionan su propio negocio</li>
+        <li><strong>Conductores asalariados</strong> que necesitan reportar servicios</li>
+        <li><strong>Taxistas con turnos de aeropuerto</strong> que necesitan predicción de días</li>
+        <li>Cualquier profesional del taxi que quiera <strong>profesionalizar su gestión</strong></li>
+    </ul>
+
+    <div class="page-break"></div>
+    <h1>🚀 Funcionalidades Principales</h1>
+
+    <h2>1. 🏠 Pantalla de Inicio (Dashboard)</h2>
+    <p>Lo primero que ves al abrir la app:</p>
+    <div class="feature-box">
+        <ul>
+            <li><strong>Resumen diario:</strong> Ingresos de hoy, servicios realizados</li>
+            <li><strong>Odómetro virtual:</strong> Kilómetros totales del vehículo</li>
+            <li><strong>Alertas de mantenimiento:</strong> Te avisa cuándo toca revisión</li>
+            <li><strong>Acceso rápido:</strong> Botones para registrar servicios o kilómetros</li>
+        </ul>
+    </div>
+    <div class="highlight">
+        <strong>¿Para qué sirve?</strong><br>
+        Tener una <strong>visión general</strong> de tu día de trabajo sin navegar por múltiples pantallas.
+    </div>
+
+    <h2>2. 🚖 Registro de Servicios</h2>
+    <p>Cada vez que realizas un servicio (carrera), puedes registrarlo:</p>
+    
+    <h3>Datos que guardas:</h3>
+    <ul>
+        <li>Hora de inicio y fin</li>
+        <li>Origen y destino</li>
+        <li>Tarifa cobrada (efectivo, tarjeta, bizum)</li>
+        <li>Tipo de servicio (urbano, aeropuerto, nocturno, etc.)</li>
+        <li>Kilómetros recorridos</li>
+    </ul>
+
+    <h3>Funcionalidades especiales:</h3>
+    <div class="feature-box">
+        <ul>
+            <li>✏️ <strong>Editar servicios:</strong> Si cometiste un error, puedes corregirlo</li>
+            <li>🗑️ <strong>Eliminar servicios:</strong> Para borrar duplicados</li>
+            <li>📊 <strong>Estadísticas automáticas:</strong> Ve cuánto has ganado por día/semana/mes</li>
+        </ul>
+    </div>
+
+    <div class="highlight">
+        <strong>¿Para qué sirve?</strong><br>
+        Tener un <strong>histórico completo</strong> de todos tus servicios para:
+        <ul style="margin-top: 10px;">
+            <li>Declaraciones de impuestos</li>
+            <li>Análisis de rentabilidad</li>
+            <li>Justificación de ingresos ante gestoría</li>
+        </ul>
+    </div>
+
+    <div class="page-break"></div>
+    <h2>3. 💰 Gestión de Gastos (Mejorado)</h2>
+    <p>Uno de los módulos más potentes de la app.</p>
+
+    <h3>Tipos de gastos que puedes registrar:</h3>
+
+    <h4>🚗 Gastos de Vehículo:</h4>
+    <ul>
+        <li>Gasoil / Gasolina</li>
+        <li>Mantenimiento / Taller</li>
+        <li>Seguro del coche</li>
+        <li>Lavado / Limpieza</li>
+        <li>Otros gastos vehículo</li>
+    </ul>
+
+    <h4>💼 Gastos de Negocio:</h4>
+    <ul>
+        <li>Cuota de autónomo</li>
+        <li>Gestoría (con cálculo de frecuencia)</li>
+        <li>Impuestos / Tasas</li>
+        <li>Asociación / Emisora</li>
+        <li>Otros gastos negocio</li>
+    </ul>
+
+    <h3>Funcionalidades especiales:</h3>
+
+    <div class="feature-box">
+        <p><strong>1. Cálculo automático de Gestoría:</strong></p>
+        <p style="margin-left: 20px;">Ejemplo: Pagas 60€ trimestrales → La app calcula: 60€ ÷ 3 = 20€/mes → Se registra automáticamente como gasto mensual</p>
+
+        <p><strong>2. Edición de gastos:</strong></p>
+        <p style="margin-left: 20px;">Si te equivocaste al registrar un gasto → Click en ✏️ → Modifica y guarda</p>
+
+        <p><strong>3. Borrado de gastos:</strong></p>
+        <p style="margin-left: 20px;">Click en 🗑️ → Confirmación → Eliminado</p>
+
+        <p><strong>4. Historial completo:</strong></p>
+        <p style="margin-left: 20px;">Todos tus gastos ordenados por fecha, filtrados por categoría, exportables para tu gestoría</p>
+    </div>
+
+    <div class="page-break"></div>
+    <h2>4. 🔧 Mantenimiento de Taller</h2>
+    <p>Control profesional del estado de tu vehículo.</p>
+
+    <h3>Artículos predefinidos con intervalos recomendados:</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Artículo</th>
+                <th>Intervalo Recomendado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Cambio de Aceite</td>
+                <td>Cada 15,000 km</td>
+            </tr>
+            <tr>
+                <td>Filtros (Aire/Habitáculo)</td>
+                <td>Cada 30,000 km</td>
+            </tr>
+            <tr>
+                <td>Aceite Caja de Cambios</td>
+                <td>Cada 90,000 km</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Cómo funciona:</h3>
+    <div class="feature-box">
+        <ol>
+            <li><strong>Registro:</strong> Seleccionas artículo → Introduces km actuales → La app calcula próximo cambio</li>
+            <li><strong>Avisos:</strong> Dashboard muestra "Faltan X km para próxima revisión"</li>
+            <li><strong>Historial:</strong> Lista completa de todo el mantenimiento con fechas y km</li>
+            <li><strong>PDF:</strong> Genera informe profesional descargable</li>
+        </ol>
+    </div>
+
+    <h2>5. ✈️ Turnos de Aeropuerto</h2>
+    <p>Sistema inteligente de predicción de turnos.</p>
+
+    <h3>Funcionalidades:</h3>
+    <div class="feature-box">
+        <p><strong>🟢 Verde:</strong> Turnos confirmados por ti</p>
+        <p><strong>🟡 Amarillo:</strong> Predicciones automáticas (cada 11 días)</p>
+        <p><strong>Toca amarillo → Verde:</strong> Confirma y recalcula automáticamente</p>
+        <p><strong>Persistencia:</strong> Los turnos NO se borran al cerrar la app</p>
+    </div>
+
+    <div class="page-break"></div>
+    <h2>6. 🔐 Sistema de Acceso Inteligente</h2>
+
+    <h3>Características:</h3>
+    <ul class="check-list">
+        <li><strong>Recordar usuario:</strong> Marca checkbox → Entras automático la próxima vez</li>
+        <li><strong>Pre-llenado:</strong> Si cierras sesión, datos guardados para re-login rápido</li>
+        <li><strong>Multi-usuario:</strong> Propietario o Asalariado</li>
+        <li><strong>Seguridad:</strong> Datos locales cifrados, sin compartir</li>
+    </ul>
+
+    <h1>📊 Ventajas vs Métodos Tradicionales</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Método Tradicional</th>
+                <th>CodiaTax</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>📝 Libreta de papel</td>
+                <td>📱 Todo digital, siempre disponible</td>
+            </tr>
+            <tr>
+                <td>🧮 Calculadora manual</td>
+                <td>⚡ Cálculos automáticos</td>
+            </tr>
+            <tr>
+                <td>📁 Facturas en casa</td>
+                <td>☁️ Acceso desde cualquier lugar</td>
+            </tr>
+            <tr>
+                <td>🤷 Olvidar gastos</td>
+                <td>🔔 Recordatorios y avisos</td>
+            </tr>
+            <tr>
+                <td>⏰ Tiempo buscando datos</td>
+                <td>🔍 Búsqueda instantánea</td>
+            </tr>
+            <tr>
+                <td>📊 Sin estadísticas</td>
+                <td>📈 Gráficas automáticas</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h1>💡 Casos de Uso Reales</h1>
+
+    <div class="feature-box">
+        <h3>Caso 1: Declaración Trimestral</h3>
+        <ol>
+            <li>Fin de trimestre → Historial</li>
+            <li>Filtras últimos 3 meses</li>
+            <li>Exportas PDF con servicios y gastos</li>
+            <li>Envías a gestor</li>
+            <li>¡Listo en 2 minutos!</li>
+        </ol>
+    </div>
+
+    <div class="feature-box">
+        <h3>Caso 2: Revisión del Coche</h3>
+        <ol>
+            <li>Dashboard avisa: "Cambio aceite en 500 km"</li>
+            <li>Vas al taller</li>
+            <li>Registras mantenimiento con km actual</li>
+            <li>App recalcula: próximo en 15,000 km</li>
+            <li>No tienes que recordarlo</li>
+        </ol>
+    </div>
+
+    <div class="feature-box">
+        <h3>Caso 3: Planificación Mensual</h3>
+        <ol>
+            <li>Abres "Turno Aero"</li>
+            <li>Ves turnos (verde + amarillo)</li>
+            <li>Planificas otros trabajos</li>
+            <li>Confirmas predicciones</li>
+            <li>Calendario siempre actualizado</li>
+        </ol>
+    </div>
+
+    <div class="page-break"></div>
+    <h1>🔒 Seguridad y Privacidad</h1>
+
+    <h2>Tus datos son TUYOS</h2>
+    <ul class="check-list">
+        <li>Todo se guarda <strong>localmente</strong> en tu móvil</li>
+        <li><strong>No hay servidores</strong> externos</li>
+        <li><strong>No se comparte</strong> con terceros</li>
+        <li><strong>Sin cuentas</strong> en la nube</li>
+        <li><strong>Sin publicidad</strong></li>
+    </ul>
+
+    <h2>Control total</h2>
+    <ul>
+        <li>Exporta datos cuando quieras</li>
+        <li>Borra todo con un click</li>
+        <li>No dependes de internet</li>
+    </ul>
+
+    <h1>📲 Instalación y Requisitos</h1>
+
+    <h2>Requisitos del Sistema</h2>
+    <ul>
+        <li><strong>Android:</strong> 7.0 o superior</li>
+        <li><strong>iOS:</strong> 13.0 o superior (en desarrollo)</li>
+        <li><strong>Almacenamiento:</strong> ~50 MB</li>
+        <li><strong>Internet:</strong> Solo para primera descarga</li>
+    </ul>
+
+    <h2>Permisos Necesarios</h2>
+    <ul>
+        <li>📁 <strong>Almacenamiento:</strong> Para guardar datos</li>
+        <li>📸 <strong>Cámara (opcional):</strong> Para escanear tickets</li>
+        <li>🔔 <strong>Notificaciones:</strong> Para recordatorios</li>
+    </ul>
+
+    <h1>🎯 Conclusión</h1>
+
+    <div class="highlight">
+        <p><strong>CodiaTax</strong> es mucho más que una app de registro:</p>
+        <ul class="check-list" style="margin-top: 10px;">
+            <li>Es tu <strong>asistente de negocio</strong> personal</li>
+            <li>Tu <strong>contador automático</strong> de gastos</li>
+            <li>Tu <strong>recordatorio</strong> de mantenimiento</li>
+            <li>Tu <strong>planificador</strong> de turnos</li>
+            <li>Tu <strong>herramienta profesional</strong> para ser más eficiente</li>
+        </ul>
+    </div>
+
+    <p style="text-align: center; font-size: 1.3em; margin: 30px 0; color: #eab308;">
+        <strong>Todo en una sola aplicación, diseñada POR taxistas, PARA taxistas.</strong>
+    </p>
+
+    <div class="feature-box" style="text-align: center; padding: 30px;">
+        <h2 style="color: #ca8a04; margin-bottom: 15px;">El resultado:</h2>
+        <ul style="list-style: none; text-align: left; max-width: 600px; margin: 0 auto;">
+            <li>✅ Más tiempo para ti</li>
+            <li>✅ Menos errores en cuentas</li>
+            <li>✅ Más control de tu negocio</li>
+            <li>✅ Más profesionalidad</li>
+        </ul>
+    </div>
+
+    <div class="footer">
+        <p><strong>CodiaTax v1.1.0</strong></p>
+        <p>Documentación generada el 21 de Diciembre de 2025</p>
+        <p style="margin-top: 10px;">© 2025 CodiaTax - Todos los derechos reservados</p>
+    </div>
+</body>
+</html>

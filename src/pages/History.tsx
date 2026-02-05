@@ -1,0 +1,265 @@
+import React, { useState, useMemo } from 'react';
+import { useApp } from '../context/AppContext';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, getMonth, getYear, getDate, es } from '../utils/dateHelpers';
+import { Search, FileDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
+import { useToast } from '../hooks/useToast';
+import ExportMenu from '../components/Common/ExportMenu';
+import { Service } from '../types';
+
+const History: React.FC = () => {
+    const { services, expenses, user } = useApp();
+    const toast = useToast();
+    const [viewDate, setViewDate] = useState<Date>(new Date());
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+    // Filters
+    const [showFilters, setShowFilters] = useState<boolean>(false);
+    const [filterDay, setFilterDay] = useState<string>('');
+    const [filterMonth, setFilterMonth] = useState<number>(getMonth(new Date()));
+    const [filterYear, setFilterYear] = useState<number>(getYear(new Date()));
+    const [filterConcept, setFilterConcept] = useState<string>('');
+
+    // Calendar Data
+    const daysInMonth = useMemo(() => {
+        const start = startOfMonth(viewDate);
+        const end = endOfMonth(viewDate);
+        return eachDayOfInterval({ start, end });
+    }, [viewDate]);
+
+    // Check if a day has services
+    const hasServices = (date: Date) => {
+        return services.some(s => isSameDay(new Date(s.timestamp), date));
+    };
+
+    // Derived Filtered Data
+    const filteredServices = useMemo(() => {
+        return services.filter(service => {
+            const date = new Date(service.timestamp);
+
+            if (showFilters) {
+                if (getYear(date) !== filterYear) return false;
+                if (filterMonth !== -1 && getMonth(date) !== filterMonth) return false;
+                if (filterDay !== '' && getDate(date) !== parseInt(filterDay)) return false;
+                if (filterConcept) {
+                    const concept = (service.companyName || 'Normal' + (service.observation || '')).toLowerCase();
+                    if (!concept.includes(filterConcept.toLowerCase())) return false;
+                }
+                return true;
+            }
+
+            if (selectedDate) {
+                return isSameDay(date, selectedDate);
+            }
+            return isSameMonth(date, viewDate);
+        }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    }, [services, showFilters, filterDay, filterMonth, filterYear, filterConcept, selectedDate, viewDate]);
+
+    const totalAmount = filteredServices.reduce((sum, s) => sum + s.amount, 0);
+
+    // Helpers for Calendar Navigation
+    const prevMonth = () => setViewDate(d => new Date(getYear(d), getMonth(d) - 1));
+    const nextMonth = () => setViewDate(d => new Date(getYear(d), getMonth(d) + 1));
+
+    // Handle Search Toggle
+    const toggleFilters = () => {
+        if (!showFilters) {
+            setFilterYear(getYear(viewDate));
+            setFilterMonth(getMonth(viewDate));
+            setFilterDay('');
+            setFilterConcept('');
+        }
+        setShowFilters(!showFilters);
+        setSelectedDate(null);
+    };
+
+    // PDF Export Logic
+    const exportPDF = async () => {
+        try {
+            const doc = new jsPDF() as any;
+            const dateStr = showFilters ? `Filtrado Personalizado` : (selectedDate ? format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: es }) : format(viewDate, "MMMM 'de' yyyy", { locale: es }));
+            const fileName = `codiatax_historial_${new Date().getTime()}.pdf`;
+
+            doc.setFontSize(18);
+            doc.setTextColor(40, 40, 40);
+            doc.text("CODIATAX - Histórico de Servicios", 14, 20);
+
+            doc.setFontSize(11);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Periodo: ${dateStr}`, 14, 28);
+
+            doc.setFillColor(245, 245, 245);
+            doc.rect(14, 35, 182, 20, 'F');
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Total Servicios: ${filteredServices.length}`, 20, 48);
+            doc.text(`Importe Total: ${totalAmount.toFixed(2)} €`, 150, 48, { align: 'right' });
+
+            const tableData = filteredServices.map(s => [
+                format(new Date(s.timestamp), 'dd/MM/yy HH:mm'),
+                s.type === 'company' ? (s.companyName || '') : 'Normal',
+                s.observation || '-',
+                s.amount.toFixed(2) + ' €'
+            ]);
+
+            autoTable(doc, {
+                startY: 60,
+                head: [['Fecha/Hora', 'Cliente', 'Observaciones', 'Importe']],
+                body: tableData,
+                theme: 'grid',
+                headStyles: { fillColor: [59, 130, 246], textColor: 255 },
+                styles: { fontSize: 9 },
+            });
+
+            if (Capacitor.isNativePlatform()) {
+                const pdfBase64 = (doc as any).output('datauristring').split(',')[1];
+                const result = await Filesystem.writeFile({
+                    path: fileName,
+                    data: pdfBase64,
+                    directory: Directory.Cache
+                });
+                await Share.share({
+                    title: 'Histórico Codiatax',
+                    url: result.uri,
+                });
+            } else {
+                doc.save(fileName);
+            }
+
+        } catch (error) {
+            console.error("Export Error:", error);
+            toast.error("Error al exportar PDF");
+        }
+    };
+
+    return (
+        <div style={{ paddingBottom: '80px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h2 style={{ fontSize: '1.5rem', margin: 0, color: 'var(--text-primary)' }}>Histórico Diario</h2>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button onClick={toggleFilters} className="btn-ghost" style={{ padding: '8px', color: showFilters ? 'var(--accent-primary)' : 'var(--text-secondary)', cursor: 'pointer', border: 'none', background: 'none' }}>
+                        <Search size={24} />
+                    </button>
+                    <ExportMenu />
+                </div>
+            </div>
+
+            {showFilters && (
+                <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', border: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <select className="input" value={filterDay} onChange={e => setFilterDay(e.target.value)}>
+                            <option value="">Día</option>
+                            {Array.from({ length: 31 }).map((_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}
+                        </select>
+                        <select className="input" value={filterMonth.toString()} onChange={e => setFilterMonth(parseInt(e.target.value))}>
+                            {Array.from({ length: 12 }).map((_, i) => (
+                                <option key={i} value={i}>{format(new Date(2024, i, 1), 'MMM', { locale: es })}</option>
+                            ))}
+                        </select>
+                        <select className="input" value={filterYear.toString()} onChange={e => setFilterYear(parseInt(e.target.value))}>
+                            {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Buscar concepto..."
+                        className="input"
+                        value={filterConcept}
+                        onChange={e => setFilterConcept(e.target.value)}
+                        style={{ width: '100%' }}
+                    />
+                </div>
+            )}
+
+            {!showFilters && (
+                <div className="card" style={{ marginBottom: '1rem', padding: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <button onClick={prevMonth} className="btn-ghost" style={{ border: 'none', background: 'none', cursor: 'pointer' }}><ChevronLeft /></button>
+                        <span style={{ fontWeight: 'bold', textTransform: 'capitalize' }}>{format(viewDate, 'MMMM yyyy', { locale: es })}</span>
+                        <button onClick={nextMonth} className="btn-ghost" style={{ border: 'none', background: 'none', cursor: 'pointer' }}><ChevronRight /></button>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center' }}>
+                        {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => (
+                            <div key={d} style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{d}</div>
+                        ))}
+
+                        {Array.from({ length: (daysInMonth[0].getDay() + 6) % 7 }).map((_, i) => (
+                            <div key={`empty-${i}`} />
+                        ))}
+
+                        {daysInMonth.map(day => {
+                            const isSelected = selectedDate && isSameDay(day, selectedDate);
+                            const hasData = hasServices(day);
+                            const isToday = isSameDay(day, new Date());
+
+                            return (
+                                <button
+                                    key={day.toString()}
+                                    onClick={() => setSelectedDate(isSelected ? null : day)}
+                                    style={{
+                                        aspectRatio: '1',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        borderRadius: '50%',
+                                        border: 'none',
+                                        backgroundColor: isSelected ? 'var(--accent-primary)' : (isToday ? 'rgba(59, 130, 246, 0.2)' : 'transparent'),
+                                        color: isSelected ? '#fff' : 'var(--text-primary)',
+                                        position: 'relative',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    {getDate(day)}
+                                    {hasData && !isSelected && (
+                                        <div style={{ position: 'absolute', bottom: '2px', width: '4px', height: '4px', borderRadius: '50%', backgroundColor: 'var(--success)' }} />
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <h3 style={{ fontSize: '1rem', opacity: 0.8 }}>
+                        {selectedDate ? `Servicios del día ${getDate(selectedDate)}` : 'Resultados'}
+                    </h3>
+                    <span style={{ fontWeight: 'bold', color: 'var(--success)' }}>Total: {totalAmount.toFixed(2)} €</span>
+                </div>
+
+                {filteredServices.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        No hay servicios para mostrar
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        {filteredServices.map((service, index) => (
+                            <div key={index} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem' }}>
+                                <div>
+                                    <div style={{ fontWeight: 'bold' }}>{service.companyName || 'Servicio'}</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                        {format(new Date(service.timestamp), 'dd MMM - HH:mm', { locale: es })}
+                                    </div>
+                                    {service.observation && (
+                                        <div style={{ fontSize: '0.8rem', fontStyle: 'italic', marginTop: '2px' }}>"{service.observation}"</div>
+                                    )}
+                                </div>
+                                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                                    {service.amount.toFixed(2)} €
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default History;
