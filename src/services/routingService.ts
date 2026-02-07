@@ -183,6 +183,43 @@ export const reverseGeocode = async (coords: Coordinates): Promise<ReverseGeocod
     }
 };
 
+// Get location suggestions for autocomplete
+export interface LocationSuggestion {
+    displayName: string;
+    lat: number;
+    lng: number;
+}
+
+export const getLocationSuggestions = async (query: string): Promise<LocationSuggestion[]> => {
+    if (!query || query.length < 3) return [];
+
+    try {
+        // Search in Cadiz, Spain to prioritize local results
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=es&viewbox=-6.4,36.9,-5.8,36.4&bounded=0`;
+
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'CodiataxApp/1.0'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        return data.map((item: any) => ({
+            displayName: item.display_name,
+            lat: parseFloat(item.lat),
+            lng: parseFloat(item.lon)
+        }));
+    } catch (error) {
+        console.error('Error fetching suggestions:', error);
+        return [];
+    }
+};
+
 // Calculate taxi fare based on distance and tariff
 export interface FareCalculation {
     distance: number;

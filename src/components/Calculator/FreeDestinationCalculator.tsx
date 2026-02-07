@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
     MapPin, Navigation, Loader, Info, ArrowLeft, Clock, Route
 } from 'lucide-react';
 import { getCurrentTariff, getTariffReason } from '../../data/taxiFares2025';
-import { calculateRoute, geocodeAddress, reverseGeocode, calculateFare, Coordinates, FareCalculation } from '../../services/routingService';
+import { calculateRoute, geocodeAddress, reverseGeocode, calculateFare, Coordinates, FareCalculation, getLocationSuggestions, LocationSuggestion } from '../../services/routingService';
 import RouteMap from './RouteMap';
 
 interface Props {
@@ -26,6 +26,10 @@ const FreeDestinationCalculator: React.FC<Props> = ({ onBack }) => {
     const [routeDistance, setRouteDistance] = useState<number>(0);
     const [routeDuration, setRouteDuration] = useState<number>(0);
     const [routeGeometry, setRouteGeometry] = useState<[number, number][]>([]);
+    const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
+    const suggestionsRef = useRef<HTMLDivElement>(null);
 
     const currentTariff = useMemo(() => getCurrentTariff(), []);
 
@@ -81,6 +85,49 @@ const FreeDestinationCalculator: React.FC<Props> = ({ onBack }) => {
             },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
         );
+    };
+
+    // Autocomplete effect
+    React.useEffect(() => {
+        const timer = setTimeout(async () => {
+            if (destination.trim().length >= 3 && !isSearching) {
+                const results = await getLocationSuggestions(destination);
+                setSuggestions(results);
+                setShowSuggestions(results.length > 0);
+            } else {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [destination, isSearching]);
+
+    const handleSelectSuggestion = (s: LocationSuggestion) => {
+        setIsSearching(true);
+        setDestination(s.displayName);
+        setSuggestions([]);
+        setShowSuggestions(false);
+        // We can immediately trigger calculation or just set the destination
+        setTimeout(() => setIsSearching(false), 500);
+    };
+
+    // Close suggestions when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            setShowSuggestions(false);
+        }
     };
 
     // Calculate route and fare
@@ -180,18 +227,37 @@ const FreeDestinationCalculator: React.FC<Props> = ({ onBack }) => {
                 {/* Current Tariff */}
                 <div className="card" style={{
                     marginBottom: '1rem',
-                    backgroundColor: currentTariff.type === 'tarifa8'
-                        ? 'rgba(var(--warning-rgb), 0.15)'
-                        : 'rgba(var(--success-rgb), 0.15)'
+                    border: '2px solid',
+                    borderColor: currentTariff.type === 'tarifa8' ? 'var(--warning)' : 'var(--success)',
+                    background: currentTariff.type === 'tarifa8'
+                        ? 'linear-gradient(135deg, rgba(var(--warning-rgb), 0.1), rgba(var(--warning-rgb), 0.05))'
+                        : 'linear-gradient(135deg, rgba(var(--success-rgb), 0.1), rgba(var(--success-rgb), 0.05))',
+                    padding: '1rem'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Clock size={16} color={currentTariff.type === 'tarifa8' ? 'var(--warning)' : 'var(--success)'} />
-                            <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{currentTariff.label}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{
+                                fontSize: '0.65rem',
+                                fontWeight: '700',
+                                color: currentTariff.type === 'tarifa8' ? 'var(--warning)' : 'var(--success)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em'
+                            }}>
+                                Tarifa Aplicada Ahora
+                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                                <Clock size={18} color={currentTariff.type === 'tarifa8' ? 'var(--warning)' : 'var(--success)'} />
+                                <span style={{ fontWeight: '800', fontSize: '1.2rem' }}>{currentTariff.label}</span>
+                            </div>
                         </div>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            📅 {getTariffReason()}
-                        </span>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                                📅 {getTariffReason()}
+                            </div>
+                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                                {currentTariff.description}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -476,24 +542,68 @@ const FreeDestinationCalculator: React.FC<Props> = ({ onBack }) => {
                                     justifyContent: 'center',
                                     fontSize: '0.7rem'
                                 }}>2</span>
-                                Destino
+                                Destino (Opcional ayuda predictiva)
                             </div>
 
-                            <input
-                                type="text"
-                                placeholder="Ej: Cádiz, El Puerto, Sevilla..."
-                                value={destination}
-                                onChange={(e) => setDestination(e.target.value)}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    backgroundColor: 'var(--bg-secondary)',
-                                    border: '1px solid var(--border-light)',
-                                    borderRadius: 'var(--radius-sm)',
-                                    color: 'var(--text-primary)',
-                                    fontSize: '0.9rem'
-                                }}
-                            />
+                            <div style={{ position: 'relative' }} ref={suggestionsRef}>
+                                <input
+                                    type="text"
+                                    placeholder="Ej: Cádiz, El Puerto, Sevilla..."
+                                    value={destination}
+                                    onChange={(e) => setDestination(e.target.value)}
+                                    onFocus={() => destination.length >= 3 && setShowSuggestions(suggestions.length > 0)}
+                                    onKeyDown={handleKeyDown}
+                                    style={{
+                                        width: '100%',
+                                        padding: '1rem',
+                                        backgroundColor: 'var(--bg-secondary)',
+                                        border: '1px solid var(--border-light)',
+                                        borderRadius: 'var(--radius-sm)',
+                                        color: 'var(--text-primary)',
+                                        fontSize: '1rem',
+                                        fontWeight: '500'
+                                    }}
+                                />
+                                {showSuggestions && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '100%',
+                                        left: 0,
+                                        right: 0,
+                                        zIndex: 100,
+                                        backgroundColor: 'var(--bg-primary)',
+                                        border: '1px solid var(--border-light)',
+                                        borderRadius: '0 0 var(--radius-md) var(--radius-md)',
+                                        boxShadow: 'var(--shadow-lg)',
+                                        maxHeight: '200px',
+                                        overflowY: 'auto',
+                                        marginTop: '1px'
+                                    }}>
+                                        {suggestions.map((s, i) => (
+                                            <div
+                                                key={i}
+                                                onClick={() => handleSelectSuggestion(s)}
+                                                style={{
+                                                    padding: '12px 16px',
+                                                    fontSize: '0.9rem',
+                                                    borderBottom: i === suggestions.length - 1 ? 'none' : '1px solid var(--border-light)',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '10px'
+                                                }}
+                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
+                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                            >
+                                                <MapPin size={14} color="var(--text-muted)" />
+                                                <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {s.displayName}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Calculate Button */}

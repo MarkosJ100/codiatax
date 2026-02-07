@@ -10,6 +10,7 @@ import UnifiedChart from '../components/Dashboard/UnifiedChart';
 import FuelPricesWidget from '../components/Dashboard/FuelPricesWidget';
 import ExportMenu from '../components/Common/ExportMenu';
 import SecuritySettings from '../components/Settings/SecuritySettings';
+import DataSettings from '../components/Settings/DataSettings';
 
 const Home: React.FC = () => {
     const {
@@ -304,6 +305,7 @@ const Home: React.FC = () => {
                     Configuración de la App
                 </h2>
                 <SecuritySettings />
+                <DataSettings />
             </div>
         </div>
     );

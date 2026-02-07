@@ -231,19 +231,35 @@ const AirportShifts: React.FC = () => {
             />
 
             {undoBuffer && (
-                <div style={{
-                    position: 'fixed', bottom: '100px', left: '50%', transform: 'translateX(-50%)',
-                    zIndex: 2000, backgroundColor: 'var(--text-primary)', color: 'var(--bg-primary)',
-                    padding: '10px 20px', borderRadius: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                    display: 'flex', alignItems: 'center', gap: '10px', animation: 'slideUp 0.3s ease-out',
-                    cursor: 'pointer'
-                }} onClick={() => {
-                    const res = undoLastAction();
-                    if (res.success) showToast("Cambios desechos exitosamente.");
-                }}>
-                    <span style={{ fontWeight: 'bold' }}>↩ Deshacer cambio</span>
+                <div style={{ marginTop: '1.5rem' }}>
+                    <button
+                        className="btn"
+                        style={{
+                            width: '100%',
+                            backgroundColor: 'var(--accent-primary)',
+                            color: 'white',
+                            padding: '14px',
+                            fontSize: '1rem',
+                            fontWeight: 'bold',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px',
+                            border: '2px solid var(--accent-primary)',
+                            borderRadius: 'var(--radius-md)',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                        }}
+                        onClick={() => {
+                            const res = undoLastAction();
+                            if (res.success) showToast("Cambios deshechos exitosamente.");
+                        }}
+                    >
+                        <span>↩</span>
+                        <span>Deshacer último cambio</span>
+                    </button>
                 </div>
             )}
+
         </div >
     );
 };

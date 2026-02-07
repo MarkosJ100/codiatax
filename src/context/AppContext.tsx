@@ -6,6 +6,7 @@ import {
   MaintenanceItem, AirportShift, ShiftType, WorkMode
 } from '../types';
 import { supabase } from '../supabase';
+import { Preferences } from '@capacitor/preferences';
 
 interface AppContextType {
   user: User | null;
@@ -43,6 +44,8 @@ interface AppContextType {
   clearFutureAirportShifts: (fromDateStr: string) => { success: boolean, error?: string };
   undoLastAction: () => { success: boolean };
   undoBuffer: AirportShift[] | null;
+  resetAppData: () => void;
+  restoreAppData: (backupData: any) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -291,6 +294,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useLocalStorage('codiatax_shift_storage', shiftStorage);
 
   // --- Actions ---
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const login = (userData: User, rememberMe: boolean) => {
     setUser(userData);
     if (rememberMe) {
@@ -512,10 +520,123 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
   }, [user]);
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
+  const resetAppData = useCallback(async () => {
+    try {
+      showToast('Borrando todos los datos...', 'info');
+
+      // 0. Delete ALL Supabase data for this user FIRST
+      if (user?.name) {
+        try {
+          const userId = user.name;
+          await Promise.all([
+            supabase.from('servicios').delete().eq('user_id', userId),
+            supabase.from('gastos').delete().eq('user_id', userId),
+            supabase.from('vehiculos').delete().eq('user_id', userId),
+            supabase.from('turnos_storage').delete().eq('user_id', userId)
+          ]);
+          console.log('Supabase data deleted for user:', userId);
+        } catch (supaError) {
+          console.warn('Error deleting Supabase data:', supaError);
+          // Continue with local reset even if Supabase fails
+        }
+      }
+
+      // 1. Clear ALL storage nuclear-style
+      localStorage.clear();
+      sessionStorage.clear();
+
+      try {
+        await Preferences.clear();
+      } catch (e) {
+        console.warn('Error clearing preferences:', e);
+      }
+
+      // 2. Clear React state immediately
+      setVehicle({
+        licensePlate: '',
+        model: '',
+        initialOdometer: 0,
+        maintenance: {
+          oil: { name: 'Aceite', lastKm: 0, interval: 15000 },
+          tires: { name: 'Neumáticos', lastKm: 0, interval: 40000 },
+          brakes: { name: 'Frenos', lastKm: 0, interval: 30000 }
+        }
+      });
+      setMileageLogs([]);
+      setServices([]);
+      setExpenses([]);
+      setAnnualConfig({ yearStartKm: 0, yearEndKm: 0, manualGrossIncome: 0 });
+      setShiftStorage({ assignments: [], restDays: [], userConfigs: [] });
+      setUser(null);
+
+      // 3. Force hard reload to ensure everything stops
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 500);
+    } catch (error) {
+      console.error('Critical reset error:', error);
+      localStorage.clear();
+      window.location.reload();
+    }
+  }, [user, showToast]);
+
+  const restoreAppData = useCallback(async (backupData: any): Promise<{ success: boolean; error?: string }> => {
+    try {
+      // Validate backup structure
+      if (!backupData || typeof backupData !== 'object') {
+        return { success: false, error: 'Archivo de backup inválido' };
+      }
+
+      const { services: bServices, expenses: bExpenses, vehicle: bVehicle, mileageLogs: bMileage, annualConfig: bConfig, shiftStorage: bShifts } = backupData;
+
+      // Restore state
+      if (bVehicle) setVehicle(bVehicle);
+      if (Array.isArray(bServices)) setServices(bServices);
+      if (Array.isArray(bExpenses)) setExpenses(bExpenses);
+      if (Array.isArray(bMileage)) setMileageLogs(bMileage);
+      if (bConfig) setAnnualConfig(bConfig);
+      if (bShifts) setShiftStorage(bShifts);
+
+      // Save to localStorage
+      if (bVehicle) localStorage.setItem('codiatax_vehicle', JSON.stringify(bVehicle));
+      if (Array.isArray(bServices)) localStorage.setItem('codiatax_services', JSON.stringify(bServices));
+      if (Array.isArray(bExpenses)) localStorage.setItem('codiatax_expenses', JSON.stringify(bExpenses));
+      if (Array.isArray(bMileage)) localStorage.setItem('codiatax_mileage', JSON.stringify(bMileage));
+      if (bConfig) localStorage.setItem('codiatax_annual_config', JSON.stringify(bConfig));
+      if (bShifts) localStorage.setItem('codiatax_shift_storage', JSON.stringify(bShifts));
+
+      // Sync to Supabase if user is logged in
+      if (user?.name) {
+        try {
+          const userId = user.name;
+          await Promise.all([
+            bServices ? supabase.from('servicios').upsert(bServices.map((s: any) => ({ ...s, user_id: userId }))) : Promise.resolve(),
+            bExpenses ? supabase.from('gastos').upsert(bExpenses.map((e: any) => ({ ...e, user_id: userId }))) : Promise.resolve(),
+            bVehicle ? supabase.from('vehiculos').upsert({
+              user_id: userId,
+              license_plate: bVehicle.licensePlate,
+              model: bVehicle.model,
+              initial_odometer: bVehicle.initialOdometer,
+              maintenance_data: bVehicle.maintenance
+            }) : Promise.resolve(),
+            bShifts ? supabase.from('turnos_storage').upsert({
+              user_id: userId,
+              data_json: bShifts
+            }) : Promise.resolve()
+          ]);
+        } catch (supaError) {
+          console.warn('Error syncing restored data to Supabase:', supaError);
+        }
+      }
+
+      showToast('Datos restaurados correctamente', 'success');
+      return { success: true };
+    } catch (error) {
+      console.error('Error restoring backup:', error);
+      return { success: false, error: 'Error al restaurar los datos' };
+    }
+  }, [user, showToast]);
+
 
   return (
     <AppContext.Provider value={{
@@ -532,7 +653,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       shiftStorage, toggleAirportShift, toggleRestDay,
       checkShiftCollision, saveUserShiftConfig,
       getShiftForDate,
-      generateAirportCycle, clearFutureAirportShifts, undoLastAction, undoBuffer
+      generateAirportCycle, clearFutureAirportShifts, undoLastAction, undoBuffer,
+      resetAppData, restoreAppData
     }}>
       {children}
     </AppContext.Provider>
