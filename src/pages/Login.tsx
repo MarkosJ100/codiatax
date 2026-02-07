@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useActionState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
     User as UserIcon, ShieldCheck, CreditCard, ChevronLeft, ChevronRight,
@@ -14,42 +14,65 @@ const Login: React.FC = () => {
     const context = useApp();
     const { login, shiftStorage, toggleAirportShift, toggleRestDay, checkShiftCollision, saveUserShiftConfig, showToast } = context;
 
-    const [step, setStep] = useState<number>(1);
-    const [role, setRole] = useState<UserRole>('employee');
-    const [name, setName] = useState<string>('');
-    const [license, setLicense] = useState<string>('');
-    const [workMode, setWorkMode] = useState<WorkMode>('solo');
+    const [savedUser] = useState<User | null>(() => {
+        const saved = localStorage.getItem('codiatax_user');
+        return saved && saved !== "undefined" && saved !== "null" ? JSON.parse(saved) : null;
+    });
+
+    const [role, setRole] = useState<UserRole>(savedUser?.role || 'employee');
+    const [name, setName] = useState<string>(savedUser?.name || '');
+    const [license, setLicense] = useState<string>(savedUser?.licenseNumber || '');
+    const [workMode, setWorkMode] = useState<WorkMode>(savedUser?.workMode || (savedUser?.isShared ? 'rotating' : 'solo'));
     const [rememberMe, setRememberMe] = useState<boolean>(true);
 
     // Shift selection state
-    const [shiftWeek, setShiftWeek] = useState<string>('Semana A');
-    const [shiftType, setShiftType] = useState<ShiftType>('mañana');
+    const [shiftWeek, setShiftWeek] = useState<string>(savedUser?.shiftWeek || 'Semana A');
+    const [shiftType, setShiftType] = useState<ShiftType>(savedUser?.shiftType || 'mañana');
     const [viewDate, setViewDate] = useState<Date>(new Date());
-
-    useEffect(() => {
-        const savedUser = localStorage.getItem('codiatax_user');
-        if (savedUser && savedUser !== "undefined" && savedUser !== "null") {
-            try {
-                const parsed = JSON.parse(savedUser);
-                if (parsed.name) setName(parsed.name);
-                if (parsed.licenseNumber) setLicense(parsed.licenseNumber);
-                if (parsed.role) setRole(parsed.role as UserRole);
-                if (parsed.workMode) {
-                    setWorkMode(parsed.workMode as WorkMode);
-                } else if (parsed.isShared !== undefined) {
-                    setWorkMode(parsed.isShared ? 'rotating' : 'solo');
-                }
-
-                if (parsed.shiftWeek) setShiftWeek(parsed.shiftWeek);
-                if (parsed.shiftType) setShiftType(parsed.shiftType as ShiftType);
-            } catch (e) { console.error(e); }
-        }
-    }, []);
 
     const daysInMonth = eachDayOfInterval({
         start: startOfMonth(viewDate),
         end: endOfMonth(viewDate)
     });
+
+    // React 19 Action to handle the configuration flow
+    const [state, formAction, isPending] = useActionState(async (prevState: any, formData: FormData) => {
+        const actionType = formData.get('actionType') as string;
+
+        if (actionType === 'step1') {
+            const nameVal = name.trim();
+            const licenseVal = license.trim();
+
+            if (!nameVal) {
+                showToast("Introduce tu nombre", "error");
+                return { step: 1 };
+            }
+            if (!/^\d{3}$/.test(licenseVal)) {
+                showToast("Licencia de 3 dígitos", "error");
+                return { step: 1 };
+            }
+
+            let currentShiftType = shiftType;
+            if (workMode === 'fixed') {
+                currentShiftType = role === 'owner' ? 'mañana' : 'tarde';
+                setShiftType(currentShiftType);
+            }
+
+            if (workMode === 'rotating') {
+                return { step: 2 };
+            } else {
+                handleConfirm(currentShiftType);
+                return { step: 1 }; // Success will trigger login which switches components
+            }
+        }
+
+        if (actionType === 'confirm') {
+            handleConfirm();
+            return { step: 2 };
+        }
+
+        return prevState;
+    }, { step: 1 });
 
     const handleConfirm = (override?: string | ShiftType) => {
         const isSharedMode = workMode !== 'solo';
@@ -81,24 +104,6 @@ const Login: React.FC = () => {
         }
 
         login(userData, rememberMe);
-    };
-
-    const handleNext = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!name.trim()) return showToast("Introduce tu nombre", "error");
-        if (!/^\d{3}$/.test(license)) return showToast("Licencia de 3 dígitos", "error");
-
-        let currentShiftType = shiftType;
-        if (workMode === 'fixed') {
-            currentShiftType = role === 'owner' ? 'mañana' : 'tarde';
-            setShiftType(currentShiftType);
-        }
-
-        if (workMode === 'rotating') {
-            setStep(2);
-        } else {
-            handleConfirm(currentShiftType);
-        }
     };
 
     const isAirportShift = (day: Date) => {
@@ -141,8 +146,9 @@ const Login: React.FC = () => {
             </div>
 
             <div className="card" style={{ padding: '1.5rem', flex: 1 }}>
-                {step === 1 ? (
-                    <form onSubmit={handleNext} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                {state.step === 1 ? (
+                    <form action={formAction} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                        <input type="hidden" name="actionType" value="step1" />
                         <h2 style={{ textAlign: 'center', fontSize: '1.2rem' }}>Configuración Inicial</h2>
 
                         <div style={{ display: 'flex', gap: '8px' }}>
@@ -157,6 +163,7 @@ const Login: React.FC = () => {
                         <div>
                             <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem' }}>Nombre</label>
                             <input
+                                name="userName"
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
@@ -169,7 +176,7 @@ const Login: React.FC = () => {
                             <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem' }}>Número de Licencia</label>
                             <div style={{ position: 'relative' }}>
                                 <CreditCard size={18} style={{ position: 'absolute', left: '12px', top: '12px', opacity: 0.5 }} />
-                                <input type="text" inputMode="numeric" value={license} onChange={e => setLicense(e.target.value.replace(/\D/g, '').slice(0, 3))} placeholder="Ej: 123" style={{ paddingLeft: '40px' }} required />
+                                <input name="license" type="text" inputMode="numeric" value={license} onChange={e => setLicense(e.target.value.replace(/\D/g, '').slice(0, 3))} placeholder="Ej: 123" style={{ paddingLeft: '40px' }} required />
                             </div>
                         </div>
 
@@ -215,14 +222,14 @@ const Login: React.FC = () => {
                             </label>
                         </div>
 
-                        <button type="submit" className="btn btn-primary" style={{ padding: '1rem' }}>
-                            {workMode === 'rotating' ? 'Siguiente' : 'Entrar'}
+                        <button type="submit" className="btn btn-primary" style={{ padding: '1rem' }} disabled={isPending}>
+                            {isPending ? 'Procesando...' : (workMode === 'rotating' ? 'Siguiente' : 'Entrar')}
                         </button>
                     </form>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem' }}>
-                            <button onClick={() => setStep(1)} className="btn-ghost" style={{ padding: '8px' }}><ChevronLeft size={20} /></button>
+                            <button onClick={() => formAction(new FormData())} className="btn-ghost" style={{ padding: '8px' }}><ChevronLeft size={20} /></button>
                             <h2 style={{ fontSize: '1.2rem', margin: 0 }}>Tus Turnos</h2>
                         </div>
 
@@ -317,9 +324,12 @@ const Login: React.FC = () => {
                             </div>
                         )}
 
-                        <button onClick={() => handleConfirm()} className="btn btn-primary" style={{ marginTop: 'auto', padding: '1rem' }}>
-                            Confirmar y Entrar
-                        </button>
+                        <form action={formAction}>
+                            <input type="hidden" name="actionType" value="confirm" />
+                            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: 'auto', padding: '1rem' }} disabled={isPending}>
+                                {isPending ? 'Confirmando...' : 'Confirmar y Entrar'}
+                            </button>
+                        </form>
                     </div>
                 )}
             </div>

@@ -14,9 +14,7 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource }) => {
 
     const filteredServices = services.filter(s => {
         if (!filterSource) return true;
-        // @ts-ignore - source might be missing in some old records
         if (filterSource === 'manual') return s.source === 'manual' || !s.source;
-        // @ts-ignore
         return s.source === filterSource;
     });
 

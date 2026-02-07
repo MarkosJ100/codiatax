@@ -1,6 +1,8 @@
 export {
     format,
     startOfMonth,
+    startOfWeek,
+    startOfYear,
     endOfMonth,
     eachDayOfInterval,
     isSameMonth,

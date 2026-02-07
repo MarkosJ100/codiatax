@@ -6,7 +6,7 @@ import DailyTotalForm from '../components/Services/DailyTotalForm';
 import { PenTool, Calculator } from 'lucide-react';
 
 export const Services: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'manual' | 'total'>('manual');
+    const [activeTab, setActiveTab] = useState<'manual' | 'total'>('total');
 
     return (
         <div>
@@ -15,16 +15,16 @@ export const Services: React.FC = () => {
             {/* Tabs */}
             <div style={{ display: 'flex', marginBottom: '1rem', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '4px' }}>
                 <button
-                    onClick={() => setActiveTab('manual')}
-                    style={{ flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', backgroundColor: activeTab === 'manual' ? 'var(--bg-card)' : 'transparent', color: activeTab === 'manual' ? 'var(--text-primary)' : 'var(--text-secondary)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '0.9rem', border: 'none', cursor: 'pointer' }}
-                >
-                    <PenTool size={16} style={{ marginRight: '8px' }} /> Servicios Manuales
-                </button>
-                <button
                     onClick={() => setActiveTab('total')}
                     style={{ flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', backgroundColor: activeTab === 'total' ? 'var(--bg-card)' : 'transparent', color: activeTab === 'total' ? 'var(--text-primary)' : 'var(--text-secondary)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '0.9rem', border: 'none', cursor: 'pointer' }}
                 >
-                    <Calculator size={16} style={{ marginRight: '8px' }} /> Servicios Totales
+                    <Calculator size={16} style={{ marginRight: '8px' }} /> Resumen Diario
+                </button>
+                <button
+                    onClick={() => setActiveTab('manual')}
+                    style={{ flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', backgroundColor: activeTab === 'manual' ? 'var(--bg-card)' : 'transparent', color: activeTab === 'manual' ? 'var(--text-primary)' : 'var(--text-secondary)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '0.9rem', border: 'none', cursor: 'pointer' }}
+                >
+                    <PenTool size={16} style={{ marginRight: '8px' }} /> Entrada Manual
                 </button>
             </div>
 

@@ -1,5 +1,16 @@
 {
   "appId": "com.marc0mc.codiatax",
   "appName": "Codiatax",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    },
+    "CapacitorCookies": {
+      "enabled": true
+    }
+  },
+  "android": {
+    "allowMixedContent": true
+  }
 }

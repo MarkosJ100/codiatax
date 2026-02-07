@@ -1,62 +1,102 @@
-import React, { useState } from 'react';
+import React, { useState, useTransition } from 'react';
 import { useApp } from '../../context/AppContext';
+import { isSameDay } from '../../utils/dateHelpers';
 import { useToast } from '../../hooks/useToast';
-import { Calculator, Save, Gauge } from 'lucide-react';
+import { Calculator, Save, Gauge, Loader2 } from 'lucide-react';
 
 const DailyTotalForm: React.FC = () => {
-    const { addService, addMileageLog } = useApp();
+    const {
+        addService, updateService,
+        addMileageLog, mileageLogs,
+        services, expenses,
+        addExpense, updateExpense
+    } = useApp();
     const toast = useToast();
+    const [isPending, startTransition] = useTransition();
 
-    const [smartAmount, setSmartAmount] = useState<string>('');
-    const [companyAmount, setCompanyAmount] = useState<string>('');
-    const [dailyKm, setDailyKm] = useState<string>('');
+    // Detect today's existing data from services/mileage
+    const todayServiceSmart = services.find(s => isSameDay(new Date(s.timestamp), new Date()) && s.observation?.includes('SmartTD'));
+    const todayServiceCompany = services.find(s => isSameDay(new Date(s.timestamp), new Date()) && s.observation?.includes('Compañía'));
+    const todayMileage = mileageLogs.find(l => isSameDay(new Date(l.timestamp), new Date()));
+    const todayExpenses = expenses.find(e => isSameDay(new Date(e.timestamp), new Date()) && e.description?.includes('Resumen'));
+
+    const [smartAmount, setSmartAmount] = useState<string>(todayServiceSmart ? todayServiceSmart.amount.toString() : '');
+    const [companyAmount, setCompanyAmount] = useState<string>(todayServiceCompany ? todayServiceCompany.amount.toString() : '');
+    const [dailyKm, setDailyKm] = useState<string>(todayMileage ? todayMileage.amount.toString() : '');
+    const [dailyExpense, setDailyExpense] = useState<string>(todayExpenses ? todayExpenses.amount.toString() : '');
 
     const total = (parseFloat(smartAmount) || 0) + (parseFloat(companyAmount) || 0);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (total <= 0) return;
 
         const now = new Date().toISOString();
 
-        if (parseFloat(smartAmount) > 0) {
-            addService({
-                type: 'normal',
-                amount: parseFloat(smartAmount),
-                observation: 'Resumen Diario - SmartTD',
-                timestamp: now
-            });
-        }
+        startTransition(() => {
+            // KM registration (Upsert handled in AppContext)
+            if (dailyKm) {
+                addMileageLog(parseInt(dailyKm));
+            }
 
-        if (parseFloat(companyAmount) > 0) {
-            addService({
-                type: 'company',
-                companyName: 'Varios/Totales',
-                amount: parseFloat(companyAmount),
-                observation: 'Resumen Diario - Compañía',
-                timestamp: now
-            });
-        }
+            // SmartTD Update/Add
+            if (parseFloat(smartAmount) > 0) {
+                if (todayServiceSmart) {
+                    updateService(todayServiceSmart.id, { amount: parseFloat(smartAmount) });
+                } else {
+                    addService({
+                        type: 'normal',
+                        amount: parseFloat(smartAmount),
+                        observation: 'Resumen Diario - SmartTD',
+                        timestamp: now,
+                        source: 'total'
+                    });
+                }
+            }
 
-        if (dailyKm) {
-            addMileageLog(parseInt(dailyKm));
-        }
+            // Company Update/Add
+            if (parseFloat(companyAmount) > 0) {
+                if (todayServiceCompany) {
+                    updateService(todayServiceCompany.id, { amount: parseFloat(companyAmount) });
+                } else {
+                    addService({
+                        type: 'company',
+                        companyName: 'Varios/Totales',
+                        amount: parseFloat(companyAmount),
+                        observation: 'Resumen Diario - Compañía',
+                        timestamp: now,
+                        source: 'total'
+                    });
+                }
+            }
 
-        setSmartAmount('');
-        setCompanyAmount('');
-        setDailyKm('');
-        toast.success('Resumen diario guardado correctamente');
+            // Expenses Update/Add
+            if (parseFloat(dailyExpense) > 0) {
+                if (todayExpenses) {
+                    updateExpense(todayExpenses.id, { amount: parseFloat(dailyExpense) });
+                } else {
+                    addExpense({
+                        type: 'labor',
+                        category: 'Laboral',
+                        amount: parseFloat(dailyExpense),
+                        description: 'Gastos Diarios - Resumen',
+                        timestamp: now
+                    });
+                }
+            }
+
+            toast.success(todayServiceSmart || todayMileage ? 'Resumen actualizado' : 'Resumen guardado');
+        });
     };
 
     return (
         <div className="card" style={{ border: '1px solid var(--accent-primary)' }}>
             <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center' }}>
                 <Calculator size={20} style={{ marginRight: '8px', color: 'var(--accent-primary)' }} />
-                Servicios Totales Diarios
+                Resumen Diario Integral
             </h3>
 
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', fontStyle: 'italic' }}>
-                Nota: Sacado del SmartTD
+                Importe, Kilómetros y Gastos relacionados para el día de hoy.
             </p>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -80,26 +120,38 @@ const DailyTotalForm: React.FC = () => {
                     />
                 </div>
 
-                <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-sm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 'bold' }}>TOTAL TOTAL</span>
-                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--success)' }}>
-                        {total.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-                    </span>
-                </div>
-
                 <div>
                     <label style={{ marginBottom: '4px', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
-                        <Gauge size={16} style={{ marginRight: '6px' }} /> Kms Diarios Totales
+                        <Gauge size={16} style={{ marginRight: '6px' }} /> Kms Recorridos Hoy
                     </label>
                     <input
                         type="number"
                         value={dailyKm} onChange={e => setDailyKm(e.target.value)}
                         placeholder="Ej: 300"
+                        style={{ borderLeft: '4px solid var(--accent-primary)' }}
                     />
                 </div>
 
-                <button type="submit" className="btn btn-primary" disabled={total <= 0}>
-                    <Save size={20} style={{ marginRight: '8px' }} /> Guardar Resumen
+                <div>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Gastos Diarios (€)</label>
+                    <input
+                        type="number" step="0.01"
+                        value={dailyExpense} onChange={e => setDailyExpense(e.target.value)}
+                        placeholder="0.00"
+                        style={{ borderLeft: '4px solid var(--danger)' }}
+                    />
+                </div>
+
+                <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-sm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 'bold' }}>BENEFICIO NETO</span>
+                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: (total - (parseFloat(dailyExpense) || 0)) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                        {(total - (parseFloat(dailyExpense) || 0)).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                    </span>
+                </div>
+
+                <button type="submit" className="btn btn-primary" disabled={isPending}>
+                    {isPending ? <Loader2 size={20} className="animate-spin" style={{ marginRight: '8px' }} /> : <Save size={20} style={{ marginRight: '8px' }} />}
+                    {isPending ? 'Guardando...' : (todayMileage || todayServiceSmart ? 'Actualizar Resumen' : 'Guardar Resumen')}
                 </button>
             </form>
         </div>

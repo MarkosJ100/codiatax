@@ -20,7 +20,7 @@ const MileageWidget: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h3 style={{ fontSize: '1rem', display: 'flex', alignItems: 'center' }}>
                     <Gauge size={20} style={{ marginRight: '8px', color: 'var(--accent-primary)' }} />
-                    Kilómetros
+                    Kilómetros Recorridos Diarios
                 </h3>
                 <button onClick={() => setIsEditing(!isEditing)} className="btn-ghost" style={{ fontSize: '0.8rem', padding: '4px 8px', cursor: 'pointer', border: 'none', background: 'none', color: 'var(--text-secondary)' }}>
                     {isEditing ? 'Cancelar' : 'Añadir Recorrido'}

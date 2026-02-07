@@ -88,12 +88,17 @@ class LocalStorageManager {
     getUsage(): { used: number; total: number; percentage: number } {
         let used = 0;
         try {
-            for (const key in localStorage) {
-                if (localStorage.hasOwnProperty(key)) {
-                    used += localStorage[key].length + key.length;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key) {
+                    const value = localStorage.getItem(key);
+                    if (value) {
+                        used += value.length + key.length;
+                    }
                 }
             }
-        } catch (error) {
+        }
+        catch (error) {
             console.error('Error calculating storage usage:', error);
         }
 

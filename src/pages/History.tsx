@@ -12,7 +12,7 @@ import ExportMenu from '../components/Common/ExportMenu';
 import { Service } from '../types';
 
 const History: React.FC = () => {
-    const { services, expenses, user } = useApp();
+    const { services, expenses, user, updateService, deleteService, showToast } = useApp();
     const toast = useToast();
     const [viewDate, setViewDate] = useState<Date>(new Date());
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -23,6 +23,13 @@ const History: React.FC = () => {
     const [filterMonth, setFilterMonth] = useState<number>(getMonth(new Date()));
     const [filterYear, setFilterYear] = useState<number>(getYear(new Date()));
     const [filterConcept, setFilterConcept] = useState<string>('');
+
+    // Edit State
+    const [editingService, setEditingService] = useState<Service | null>(null);
+    const [editAmount, setEditAmount] = useState<string>('');
+    const [editCompanyName, setEditCompanyName] = useState<string>('');
+    const [editObservation, setEditObservation] = useState<string>('');
+    const [editType, setEditType] = useState<'normal' | 'company' | 'facturado'>('normal');
 
     // Calendar Data
     const daysInMonth = useMemo(() => {
@@ -75,6 +82,49 @@ const History: React.FC = () => {
         }
         setShowFilters(!showFilters);
         setSelectedDate(null);
+    };
+
+    // Handle Edit
+    const handleEdit = (service: Service) => {
+        setEditingService(service);
+        setEditAmount(service.amount.toString());
+        setEditCompanyName(service.companyName || '');
+        setEditObservation(service.observation || '');
+        setEditType(service.type);
+    };
+
+    // Handle Delete
+    const handleDelete = (id: number) => {
+        if (confirm('¿Estás seguro de borrar este servicio?')) {
+            deleteService(id);
+            showToast('Servicio eliminado');
+        }
+    };
+
+    // Handle Save Edit
+    const handleSaveEdit = () => {
+        if (!editingService || !editAmount) return;
+
+        const updatedService: Omit<Service, 'id'> = {
+            amount: parseFloat(editAmount),
+            companyName: editType === 'company' ? editCompanyName : undefined,
+            observation: editObservation || undefined,
+            type: editType,
+            timestamp: editingService.timestamp
+        };
+
+        updateService(editingService.id, updatedService);
+        showToast('Servicio actualizado');
+        setEditingService(null);
+    };
+
+    // Handle Cancel Edit
+    const handleCancelEdit = () => {
+        setEditingService(null);
+        setEditAmount('');
+        setEditCompanyName('');
+        setEditObservation('');
+        setEditType('normal');
     };
 
     // PDF Export Logic
@@ -147,6 +197,73 @@ const History: React.FC = () => {
                     <ExportMenu />
                 </div>
             </div>
+
+            {/* Edit Modal */}
+            {editingService && (
+                <div className="card" style={{ marginBottom: '1rem', border: '2px solid var(--accent-primary)', backgroundColor: 'rgba(59, 130, 246, 0.05)' }}>
+                    <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: 'var(--accent-primary)' }}>Editar Servicio</h3>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <div>
+                            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Tipo</label>
+                            <select
+                                value={editType}
+                                onChange={e => setEditType(e.target.value as 'normal' | 'company' | 'facturado')}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                            >
+                                <option value="normal">Normal</option>
+                                <option value="company">Empresa</option>
+                                <option value="facturado">Facturado</option>
+                            </select>
+                        </div>
+
+                        {editType === 'company' && (
+                            <div>
+                                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Nombre Empresa</label>
+                                <input
+                                    type="text"
+                                    value={editCompanyName}
+                                    onChange={e => setEditCompanyName(e.target.value)}
+                                    placeholder="Nombre de la empresa"
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                                />
+                            </div>
+                        )}
+
+                        <div>
+                            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Importe (€)</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                value={editAmount}
+                                onChange={e => setEditAmount(e.target.value)}
+                                placeholder="0.00"
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)', fontWeight: 'bold' }}
+                            />
+                        </div>
+
+                        <div>
+                            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Observaciones</label>
+                            <input
+                                type="text"
+                                value={editObservation}
+                                onChange={e => setEditObservation(e.target.value)}
+                                placeholder="Opcional"
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                            <button onClick={handleSaveEdit} className="btn btn-primary" style={{ flex: 1 }}>
+                                Guardar Cambios
+                            </button>
+                            <button onClick={handleCancelEdit} className="btn-ghost" style={{ flex: 1, border: '1px solid var(--border-color)' }}>
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {showFilters && (
                 <div style={{ backgroundColor: 'var(--bg-card)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', border: '1px solid var(--border-color)' }}>
@@ -241,7 +358,7 @@ const History: React.FC = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                         {filteredServices.map((service, index) => (
                             <div key={index} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem' }}>
-                                <div>
+                                <div style={{ flex: 1 }}>
                                     <div style={{ fontWeight: 'bold' }}>{service.companyName || 'Servicio'}</div>
                                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                                         {format(new Date(service.timestamp), 'dd MMM - HH:mm', { locale: es })}
@@ -250,8 +367,26 @@ const History: React.FC = () => {
                                         <div style={{ fontSize: '0.8rem', fontStyle: 'italic', marginTop: '2px' }}>"{service.observation}"</div>
                                     )}
                                 </div>
-                                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
-                                    {service.amount.toFixed(2)} €
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                                        {service.amount.toFixed(2)} €
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                        <button
+                                            onClick={() => handleEdit(service)}
+                                            style={{ padding: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-primary)' }}
+                                            title="Editar"
+                                        >
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(service.id)}
+                                            style={{ padding: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+                                            title="Borrar"
+                                        >
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))}

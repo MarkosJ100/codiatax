@@ -40,6 +40,7 @@ export interface Service {
     type: 'normal' | 'company' | 'facturado';
     companyName?: string;
     observation?: string;
+    source?: 'manual' | 'total';
 }
 
 export interface Expense {

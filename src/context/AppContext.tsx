@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
-import { format, addDays, parseISO, isValid } from '../utils/dateHelpers';
+import { format, addDays, parseISO, isValid, isSameDay } from '../utils/dateHelpers';
 import { calculateAirportCycle, filterFutureAssignments } from '../utils/airportLogic';
 import {
   User, Vehicle, Service, Expense, ShiftStorage,
@@ -86,7 +86,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {
       const saved = localStorage.getItem('codiatax_mileage');
       const parsed = saved ? JSON.parse(saved) : null;
-      return Array.isArray(parsed) ? parsed : [];
+      if (!Array.isArray(parsed)) return [];
+
+      // Clean up corrupted entries (those without 'amount' property)
+      const cleaned = parsed.filter(log => typeof log === 'object' && log !== null && typeof log.amount === 'number');
+
+      // If we cleaned any entries, save the cleaned version
+      if (cleaned.length !== parsed.length) {
+        localStorage.setItem('codiatax_mileage', JSON.stringify(cleaned));
+        console.log(`Cleaned ${parsed.length - cleaned.length} corrupted mileage entries`);
+      }
+
+      return cleaned;
     } catch (e) {
       console.error('Error parsing mileage logs', e);
       return [];
@@ -309,7 +320,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const addMileageLog = (log: any) => {
-    setMileageLogs(prev => [...prev, { ...log, id: Date.now() }]);
+    const today = new Date();
+    // Handle both number input and object input
+    const amount = typeof log === 'number' ? log : log.amount;
+    const timestamp = typeof log === 'object' && log.timestamp ? log.timestamp : today.toISOString();
+
+    setMileageLogs(prev => {
+      const existingTodayIndex = prev.findIndex(l => isSameDay(new Date(l.timestamp), today));
+
+      if (existingTodayIndex > -1) {
+        const updated = [...prev];
+        updated[existingTodayIndex] = {
+          ...updated[existingTodayIndex],
+          amount
+        };
+        return updated;
+      } else {
+        const logEntry = { amount, timestamp, id: Date.now() };
+        return [...prev, logEntry];
+      }
+    });
   };
 
   const updateMaintenance = (key: string, lastKm: number) => {

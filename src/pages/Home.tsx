@@ -1,12 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { isSameDay, format, es } from '../utils/dateHelpers';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Calculator } from 'lucide-react';
 import PDFExportButton from '../components/Common/PDFExportButton';
 import StatsDashboard from '../components/Dashboard/StatsDashboard';
-import MileageWidget from '../components/Dashboard/MileageWidget';
-import IncomeChart from '../components/Dashboard/IncomeChart';
+import UnifiedChart from '../components/Dashboard/UnifiedChart';
+import FuelPricesWidget from '../components/Dashboard/FuelPricesWidget';
 import ExportMenu from '../components/Common/ExportMenu';
 import SecuritySettings from '../components/Settings/SecuritySettings';
 
@@ -221,21 +222,54 @@ const Home: React.FC = () => {
                 <StatsDashboard />
             </motion.div>
 
-            {/* Widgets */}
+            {/* Charts Section */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 }}
                 style={{ display: 'grid', gap: '1.25rem', marginBottom: '2rem' }}
             >
-                <MileageWidget />
-                <IncomeChart days={30} />
+                <UnifiedChart />
+                <FuelPricesWidget />
+
+                {/* Calculator Quick Access */}
+                <Link to="/calculator" style={{ textDecoration: 'none' }}>
+                    <motion.div
+                        className="card"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            cursor: 'pointer',
+                            background: 'linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.15), rgba(var(--accent-primary-rgb), 0.05))'
+                        }}
+                    >
+                        <div style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: 'var(--radius-md)',
+                            backgroundColor: 'var(--accent-primary)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            <Calculator size={24} color="#fff" />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>Calculadora de Tarifas</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Tarifas oficiales Jerez 2025</div>
+                        </div>
+                        <div style={{ color: 'var(--text-muted)' }}>→</div>
+                    </motion.div>
+                </Link>
             </motion.div>
 
-            {user?.role === 'employee' && (
+            {user && (
                 <div className="card" style={{ marginTop: '1rem', padding: '1.25rem' }}>
                     <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
-                        Finanzas del Asalariado
+                        Finanzas {user.role === 'owner' ? 'del Propietario' : 'del Asalariado'}
                     </h3>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
@@ -257,8 +291,20 @@ const Home: React.FC = () => {
                 </div>
             )}
 
-            {/* Security Settings */}
-            <SecuritySettings />
+            {/* App Configuration Section */}
+            <div style={{ marginTop: '3rem' }}>
+                <h2 style={{
+                    fontSize: '1.2rem',
+                    fontWeight: '700',
+                    marginBottom: '1rem',
+                    color: 'var(--text-secondary)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                }}>
+                    Configuración de la App
+                </h2>
+                <SecuritySettings />
+            </div>
         </div>
     );
 };

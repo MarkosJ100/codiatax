@@ -1,17 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useOptimistic, useTransition } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../hooks/useToast';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { validators } from '../../utils/validators';
-import { Save, Building2, User } from 'lucide-react';
+import { Save, Building2, User, Loader2 } from 'lucide-react';
+import { Service } from '../../types';
 
 const ServiceForm: React.FC = () => {
-    const { addService } = useApp();
+    const { addService, services } = useApp();
     const toast = useToast();
     const [type, setType] = useState<'normal' | 'company'>('normal');
     const [amount, setAmount] = useState<string>('');
     const [companyName, setCompanyName] = useState<string>('');
     const [observation, setObservation] = useState<string>('');
+    const [isPending, startTransition] = useTransition();
+
+    // Optimistic UI: show the new service immediately
+    const [optimisticServices, addOptimisticService] = useOptimistic(
+        services,
+        (currentServices: Service[], newService: Omit<Service, 'id'>) => [
+            { ...newService, id: Date.now() } as Service,
+            ...currentServices
+        ]
+    );
 
     const { errors, touched, validate, validateAll, handleBlur, resetValidation, hasError, getError } = useFormValidation({
         amount: [
@@ -31,12 +42,18 @@ const ServiceForm: React.FC = () => {
             return;
         }
 
-        addService({
+        const newService = {
             type,
             amount: parseFloat(amount),
             companyName: type === 'company' ? companyName : undefined,
             observation: observation || undefined,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            source: 'manual' as const
+        };
+
+        startTransition(() => {
+            addOptimisticService(newService);
+            addService(newService);
         });
 
         setAmount('');
@@ -133,8 +150,9 @@ const ServiceForm: React.FC = () => {
                     />
                 </div>
 
-                <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
-                    <Save size={20} style={{ marginRight: '8px' }} /> Guardar Servicio
+                <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }} disabled={isPending}>
+                    {isPending ? <Loader2 size={20} className="animate-spin" style={{ marginRight: '8px' }} /> : <Save size={20} style={{ marginRight: '8px' }} />}
+                    {isPending ? 'Guardando...' : 'Guardar Servicio'}
                 </button>
             </form>
         </div>
