@@ -9,6 +9,8 @@ import { supabase } from '../supabase';
 import { Preferences } from '@capacitor/preferences';
 
 interface AppContextType {
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
   user: User | null;
   login: (userData: User, rememberMe: boolean) => void;
   logout: () => void;
@@ -161,7 +163,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   });
 
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('codiatax_theme');
+    return (saved === 'light' || saved === 'dark') ? saved : 'light';
+  });
+
   const [toast, setToast] = useState<{ message: string, type: string } | null>(null);
+
+  // Persistence for Theme
+  useEffect(() => {
+    localStorage.setItem('codiatax_theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   // --- Persistence with Debouncing ---
   const useLocalStorage = (key: string, state: any) => {
@@ -298,6 +311,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  }, []);
 
   const login = (userData: User, rememberMe: boolean) => {
     setUser(userData);
@@ -640,6 +657,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   return (
     <AppContext.Provider value={{
+      theme, toggleTheme,
       user, login, logout,
       vehicle, setVehicle,
       currentOdometer, setInitialOdometer,

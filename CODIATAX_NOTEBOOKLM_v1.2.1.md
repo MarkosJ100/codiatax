@@ -12,7 +12,8 @@
 ## Descripción
 
 CodiaTax es una aplicación completa de gestión para taxistas que incluye:
-- Calculadora de tarifas con GPS
+- Calculadora de tarifas con GPS inteligente y flujo continuo
+- Rediseño Premium con Modo Claro (Confort) y Oscuro Refinado
 - Gestión de servicios y gastos
 - Control de kilometraje y mantenimiento
 - Gestión de turnos de aeropuerto compartidos
@@ -20,62 +21,65 @@ CodiaTax es una aplicación completa de gestión para taxistas que incluye:
 - Sistema de backup y restauración de datos
 - Autenticación biométrica
 
-## Novedades en v1.2.1 (🚀 GPS Pro Update)
+## Novedades en v1.2.1
 
-### 🗺️ Calculadora de Flujo Continuo
-- **Interfaz "Always-On":** Campos de origen y destino siempre visibles en la parte superior.
-- **Auto-Cálculo:** Cálculo automático de ruta, precio, clima y tráfico al seleccionar una sugerencia.
-- **Sin Botón de Reset:** Experiencia fluida donde se puede editar el destino en cualquier momento sin reiniciar la vista.
-- **Origen Interactivo:** Posibilidad de refrescar la ubicación actual pulsando sobre el campo de origen.
+### 🎨 Rediseño Premium (Modo Confort)
 
-### 🌤️ Información Inteligente de Destino
-- **Clima en Tiempo Real:** Temperatura y estado del cielo en el destino mediante Open-Meteo.
-- **Alertas de Tráfico DGT:** Lista detallada de incidencias (obras, retenciones, cierres) en la provincia de destino.
-- **Navegación GPS Nativa:** Botón directo para iniciar la navegación en Google Maps o Apple Maps con la ruta ya cargada.
+#### Modo Claro "Warm Stone"
+- **Objetivo:** Eliminar el deslumbramiento y la fatiga visual.
+- **Paleta:** Base en Gris Piedra Cálido (#e7e7e4) y tarjetas en Crema Suave (#f5f5f4).
+- **Contraste:** Texto en Gris Grafito para una lectura más natural y parecida al papel.
+- **Estandarización:** Todos los widgets y gráficas adaptados automáticamente a esta paleta.
 
-### 🔍 Autocompletado Robusto
-- **Motor OpenStreetMap:** Sugerencias basadas exclusivamente en Nominatim para evitar errores de geocodificación.
-- **Limpieza de Direcciones:** Nombres más cortos y legibles (sin códigos postales ni países redundantes).
-- **Priorización Local:** Búsqueda optimizada para resultados en la zona de Cádiz y Andalucía.
+#### Modo Oscuro Refinado
+- **Estética:** Fondo azul medianoche profundo (#020617) para una apariencia más pro y moderna.
+- **Detalles:** Bordes y sombras optimizados para máxima claridad en pantallas OLED.
 
-## Novedades en v1.2.0 (Anterior)
+#### Selector de Apariencia
+- **Ubicación:** Configuración de la App (Dashboard principal).
+- **Interruptor Premium:** Nuevo switch animado para cambiar entre temas al instante.
 
-### 🎉 Sistema de Backup y Restauración
-- **Ubicación:** Configuración de la App → Gestión de Datos
-- **Formato:** JSON con todos los datos de la aplicación para migración fácil entre dispositivos.
+### 🗺️ GPS Pro (Flujo Continuo)
 
-### 🐛 Correcciones Importantes
-- **Reset Nuclear:** Limpieza total de datos incluyendo Supabase y local storage.
-- **Botón Deshacer:** Rediseño del botón flotante en turnos para no obstruir la navegación.
+#### Arquitectura de Interfaz
+- **Entrada Persistente:** Los campos de búsqueda (Origen/Destino) siempre visibles.
+- **Cálculo Automático:** Al seleccionar una sugerencia, se inicia el cálculo de ruta, tarifa, tráfico y clima sin clics adicionales.
+- **Integración de Navegador:** Botón directo para abrir Google/Apple Maps con las coordenadas exactas.
 
-## Estructura de Datos (Actualización v1.2.1)
+#### Datos Inteligentes
+- **Tráfico en Tiempo Real:** Lista detallada de incidencias DGT.
+- **Clima en Destino:** Temperatura y estado del cielo directo en el resultado.
+- **Autocomplete Optimizado:** Solo direcciones reales de OpenStreetMap con prioridad local.
 
-### Resultados de GPS
-```typescript
-interface GPSInfo {
-  weather: {
-    temperature: number;
-    condition: string;
-    icon: string;
-  };
-  traffic: Array<{
-    road: string;
-    type: string;
-    description: string;
-    level: 'yellow' | 'red';
-  }>;
-}
+## Arquitectura Técnica
+
+### Frontend
+- **Framework:** React 19 con TypeScript
+- **State Management:** Context API (Theme Provider integrado)
+- **UI:** CSS Variables baseline en :root, Framer Motion
+- **Icons:** Lucide React
+
+### Backend y Datos
+- **Base de Datos:** Supabase (PostgreSQL)
+- **Backup:** Exportación JSON manual + Restauración robusta
+- **Sincronización:** Cloud sync bidireccional
+
+## Build y Deployment
+
+### build-apk.bat
+Script automatizado que genera el APK de depuración:
+1. Compila el proyecto React (Vite)
+2. Sincroniza con Capacitor
+3. Compila el código nativo Android
+4. Facilita la ruta del APK generado
+
+### Ubicación APK
+```
+android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## Flujo de Trabajo GPS
-1. **Búsqueda:** El usuario empieza a escribir el destino.
-2. **Selección:** Al elegir una sugerencia, la app dispara `handleCalculate` automáticamente.
-3. **Análisis:** Se obtiene la ruta de OSRM, el clima y los avisos de la DGT.
-4. **Respuesta:** El panel de resultados aparece dinámicamente debajo de los inputs.
-5. **Acción:** El usuario pulsa "INICIAR NAVEGACIÓN" para abrir su app de mapas favorita.
-
 ---
-**Desarrollador:** Antigravity AI Assistant  
-**Repositorio:** https://github.com/MarkosJ100/codiatax  
-**Versión:** 1.2.1  
-**Última actualización:** 8 de Febrero de 2026
+
+## Changelog Detallado
+
+Ver [CHANGELOG.md](CHANGELOG.md) para historial completo de versiones.

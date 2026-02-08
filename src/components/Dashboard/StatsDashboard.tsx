@@ -25,7 +25,7 @@ const StatsDashboard: React.FC = () => {
 
     return (
         <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-light)', paddingBottom: '0.75rem' }}>
                 {['day', 'week', 'month', 'year'].map(p => (
                     <button
                         key={p}
@@ -45,7 +45,7 @@ const StatsDashboard: React.FC = () => {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div style={{ textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ textAlign: 'center', borderRight: '1px solid var(--border-light)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4px', color: 'var(--success)' }}>
                         <Coins size={16} style={{ marginRight: '6px' }} />
                         <span style={{ fontSize: '0.8rem' }}>Recaudación</span>

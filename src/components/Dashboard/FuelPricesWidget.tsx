@@ -65,10 +65,11 @@ const FuelPricesWidget: React.FC = () => {
 
     const PriceCard = ({ station, type }: { station: FuelStation, type: 'diesel' | 'gasoline' }) => (
         <div style={{
-            backgroundColor: 'rgba(255,255,255,0.03)',
+            backgroundColor: 'rgba(var(--accent-primary-rgb), 0.05)',
             borderRadius: 'var(--radius-sm)',
             padding: '0.75rem',
-            flex: 1
+            flex: 1,
+            border: '1px solid var(--border-light)'
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '0.5rem' }}>
                 <TrendingDown size={14} color="var(--success)" />
@@ -91,7 +92,7 @@ const FuelPricesWidget: React.FC = () => {
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '0.5rem 0',
-            borderBottom: '1px solid rgba(255,255,255,0.05)'
+            borderBottom: '1px solid var(--border-light)'
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{
@@ -99,7 +100,7 @@ const FuelPricesWidget: React.FC = () => {
                     height: '20px',
                     borderRadius: '50%',
                     backgroundColor: index < 3 ? 'var(--success)' : 'var(--bg-secondary)',
-                    color: index < 3 ? '#fff' : 'var(--text-muted)',
+                    color: index < 3 ? 'var(--bg-card)' : 'var(--text-muted)',
                     fontSize: '0.65rem',
                     display: 'flex',
                     alignItems: 'center',

@@ -104,7 +104,7 @@ const UnifiedChart: React.FC = () => {
                                 border: 'none',
                                 cursor: 'pointer',
                                 backgroundColor: metric === m ? getColor() : 'var(--bg-secondary)',
-                                color: metric === m ? '#fff' : 'var(--text-muted)',
+                                color: metric === m ? 'var(--bg-card)' : 'var(--text-muted)',
                                 fontWeight: metric === m ? '600' : '400',
                                 transition: 'all 0.2s ease'
                             }}
@@ -124,7 +124,7 @@ const UnifiedChart: React.FC = () => {
                             <stop offset="95%" stopColor={getColor()} stopOpacity={0} />
                         </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" vertical={false} />
                     <XAxis
                         dataKey="date"
                         stroke="var(--text-muted)"
@@ -164,9 +164,9 @@ const UnifiedChart: React.FC = () => {
                             padding: '4px 10px',
                             fontSize: '0.65rem',
                             borderRadius: '6px',
-                            border: days === d ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                            border: days === d ? 'none' : '1px solid var(--border-light)',
                             cursor: 'pointer',
-                            backgroundColor: days === d ? 'rgba(255,255,255,0.1)' : 'transparent',
+                            backgroundColor: days === d ? 'var(--accent-glow)' : 'transparent',
                             color: days === d ? 'var(--text-primary)' : 'var(--text-muted)',
                             fontWeight: days === d ? '600' : '400'
                         }}
@@ -184,7 +184,7 @@ const UnifiedChart: React.FC = () => {
                     gap: '0.5rem',
                     marginTop: '1rem',
                     paddingTop: '0.75rem',
-                    borderTop: '1px solid rgba(255,255,255,0.05)'
+                    borderTop: '1px solid var(--border-light)'
                 }}>
                     {[
                         { label: 'Hoy', value: kmStats.daily, color: 'var(--accent-primary)' },

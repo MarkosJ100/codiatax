@@ -1,27 +1,16 @@
 :root {
-  /* Premium Dark Mode Palette - Deep Obsidian & Gold */
-  --bg-primary: #050505;
-  --bg-secondary: #0d0d0d;
-  --bg-card: #161616;
-  --bg-card-hover: #1c1c1c;
-
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-
+  /* Common Tokens */
   --accent-primary: #facc15;
-  /* taxi-yellow-400 */
+  --accent-primary-rgb: 250, 204, 21;
   --accent-secondary: #eab308;
-  /* taxi-yellow-500 */
-  --accent-glow: rgba(250, 204, 21, 0.2);
+  --accent-glow: rgba(var(--accent-primary-rgb), 0.2);
 
-  --border-light: rgba(255, 255, 255, 0.08);
-  --glass-bg: rgba(22, 22, 22, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
-
-  --danger: #f43f5e;
+  --danger: #ef4444;
+  --danger-rgb: 239, 68, 68;
   --success: #10b981;
+  --success-rgb: 16, 185, 129;
   --warning: #f59e0b;
+  --warning-rgb: 245, 158, 11;
 
   --radius-sm: 8px;
   --radius-md: 16px;
@@ -29,6 +18,45 @@
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Modern Light Theme (System Default Baseline) - Optimized for Comfort */
+  --bg-primary: #e7e7e4;
+  /* Stone 200 - Soft non-white background */
+  --bg-secondary: #d6d3d1;
+  /* Stone 300 */
+  --bg-card: #f5f5f4;
+  /* Stone 100 - Soft non-white cards */
+  --bg-card-hover: #fafaf9;
+
+  --text-primary: #1c1917;
+  /* Stone 900 */
+  --text-secondary: #44403c;
+  --text-muted: #78716c;
+
+  --border-light: rgba(28, 25, 23, 0.08);
+  /* Darker border for the softer palette */
+  --glass-bg: rgba(231, 231, 228, 0.85);
+  --glass-border: rgba(28, 25, 23, 0.1);
+
+  --shadow-premium: 0 4px 12px -2px rgba(28, 25, 23, 0.04);
+}
+
+/* Refined Dark Theme (Pro Override) */
+[data-theme='dark'] {
+  --bg-primary: #020617;
+  --bg-secondary: #0f172a;
+  --bg-card: #1e293b;
+  --bg-card-hover: #334155;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --border-light: rgba(255, 255, 255, 0.06);
+  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+
+  --shadow-premium: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
 }
 
 * {
@@ -114,7 +142,7 @@ textarea:focus {
   margin-bottom: 1.25rem;
   border: 1px solid var(--border-light);
   transition: var(--transition-smooth);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-premium);
 }
 
 .card:hover {
@@ -140,6 +168,9 @@ textarea:focus {
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   color: #000;
   box-shadow: 0 4px 15px var(--accent-glow);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .btn-primary:active {

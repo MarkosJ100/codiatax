@@ -110,7 +110,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                             )}
 
                             {isSelected && !isDayRest && (
-                                <div style={{ position: 'absolute', top: 2, right: 2, backgroundColor: 'white', borderRadius: '50%', padding: '2px' }}>
+                                <div style={{ position: 'absolute', top: 2, right: 2, backgroundColor: 'var(--bg-card)', borderRadius: '50%', padding: '2px' }}>
                                     <Bell size={10} fill={isMorning ? '#16a34a' : '#2563eb'} color="transparent" />
                                 </div>
                             )}
