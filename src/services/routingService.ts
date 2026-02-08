@@ -190,11 +190,31 @@ export interface LocationSuggestion {
     lng: number;
 }
 
+// Helper function to shorten display names (remove postal codes and excessive details)
+const shortenDisplayName = (fullName: string): string => {
+    // Remove postal codes (5 digits)
+    let shortened = fullName.replace(/,?\s*\d{5}\s*/g, '');
+
+    // Split by comma and take only first 2-3 meaningful parts
+    const parts = shortened.split(',').map(p => p.trim());
+
+    // Filter out country names and keep only city/province
+    const filtered = parts.filter(p =>
+        !p.toLowerCase().includes('españa') &&
+        !p.toLowerCase().includes('spain') &&
+        p.length > 0
+    );
+
+    // Return max 2 parts: "City, Province" or just "City"
+    return filtered.slice(0, 2).join(', ');
+};
+
 export const getLocationSuggestions = async (query: string): Promise<LocationSuggestion[]> => {
     if (!query || query.length < 3) return [];
 
     try {
-        // Search in Cadiz, Spain to prioritize local results
+        // Search in Spain, prioritizing Cádiz area for local results
+        // Use viewbox and bounded=0 to prioritize but not strictly limit results
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=es&viewbox=-6.4,36.9,-5.8,36.4&bounded=0`;
 
         const response = await fetch(url, {
@@ -209,8 +229,9 @@ export const getLocationSuggestions = async (query: string): Promise<LocationSug
 
         const data = await response.json();
 
+        // Return suggestions with shortened names for better UI display
         return data.map((item: any) => ({
-            displayName: item.display_name,
+            displayName: shortenDisplayName(item.display_name),
             lat: parseFloat(item.lat),
             lng: parseFloat(item.lon)
         }));

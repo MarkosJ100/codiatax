@@ -5,7 +5,10 @@ import {
 } from 'lucide-react';
 import { getCurrentTariff, getTariffReason } from '../../data/taxiFares2025';
 import { calculateRoute, geocodeAddress, reverseGeocode, calculateFare, Coordinates, FareCalculation, getLocationSuggestions, LocationSuggestion } from '../../services/routingService';
+import { getDestinationWeather, WeatherInfo } from '../../services/weatherService';
+import { getTrafficIncidents, extractProvince, TrafficIncident } from '../../services/trafficService';
 import RouteMap from './RouteMap';
+import { Cloud, Thermometer, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 interface Props {
     onBack: () => void;
@@ -29,6 +32,9 @@ const FreeDestinationCalculator: React.FC<Props> = ({ onBack }) => {
     const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
+    const [selectedSuggestionCoords, setSelectedSuggestionCoords] = useState<Coordinates | null>(null);
+    const [weather, setWeather] = useState<WeatherInfo | null>(null);
+    const [traffic, setTraffic] = useState<TrafficIncident[]>([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
 
     const currentTariff = useMemo(() => getCurrentTariff(), []);
@@ -106,10 +112,17 @@ const FreeDestinationCalculator: React.FC<Props> = ({ onBack }) => {
     const handleSelectSuggestion = (s: LocationSuggestion) => {
         setIsSearching(true);
         setDestination(s.displayName);
+        // Store the coordinates from the suggestion
+        const coords = { lat: s.lat, lng: s.lng };
+        setSelectedSuggestionCoords(coords);
         setSuggestions([]);
         setShowSuggestions(false);
-        // We can immediately trigger calculation or just set the destination
-        setTimeout(() => setIsSearching(false), 500);
+
+        // Auto-calculate immediately
+        setTimeout(() => {
+            setIsSearching(false);
+            handleCalculate(coords, s.displayName);
+        }, 300);
     };
 
     // Close suggestions when clicking outside
@@ -131,29 +144,43 @@ const FreeDestinationCalculator: React.FC<Props> = ({ onBack }) => {
     };
 
     // Calculate route and fare
-    const handleCalculate = async () => {
-        if (!userLocation || !destination.trim()) {
+    const handleCalculate = async (forcedCoords?: Coordinates, forcedName?: string) => {
+        if (!userLocation || (!destination.trim() && !forcedCoords)) {
             setCalcMessage('Necesitas ubicación y destino');
             return;
         }
 
         setCalcStatus('loading');
-        setCalcMessage('Buscando destino...');
 
-        // Geocode destination
-        const geoResult = await geocodeAddress(destination);
-        if (!geoResult.success) {
-            setCalcStatus('error');
-            setCalcMessage(geoResult.error || 'Destino no encontrado');
-            return;
+        let destCoords: Coordinates;
+        let geoDisplayName: string;
+
+        // Use forced coords (from auto-select) or stored coordinates if available
+        if (forcedCoords) {
+            destCoords = forcedCoords;
+            geoDisplayName = forcedName || destination;
+        } else if (selectedSuggestionCoords) {
+            setCalcMessage('Usando destino seleccionado...');
+            destCoords = selectedSuggestionCoords;
+            geoDisplayName = destination;
+        } else {
+            // Otherwise, geocode the destination
+            setCalcMessage('Buscando destino...');
+            const geoResult = await geocodeAddress(destination);
+            if (!geoResult.success) {
+                setCalcStatus('error');
+                setCalcMessage(geoResult.error || 'Destino no encontrado');
+                return;
+            }
+            destCoords = { lat: geoResult.lat, lng: geoResult.lng };
+            geoDisplayName = geoResult.displayName;
         }
 
-        const destCoords = { lat: geoResult.lat, lng: geoResult.lng };
         setDestinationCoords(destCoords);
-        setDestinationName(geoResult.displayName);
+        setDestinationName(geoDisplayName);
 
         // Extract readable destination address
-        const parts = geoResult.displayName.split(',');
+        const parts = geoDisplayName.split(',');
         setDestinationAddress({
             street: parts[0]?.trim() || destination,
             city: parts[1]?.trim() || parts[2]?.trim() || ''
@@ -179,19 +206,45 @@ const FreeDestinationCalculator: React.FC<Props> = ({ onBack }) => {
         setResult(fare);
         setCalcStatus('success');
         setCalcMessage('');
+
+        // Fetch smart info (weather & traffic) in parallel
+        try {
+            const [weatherData, trafficData] = await Promise.all([
+                getDestinationWeather(destCoords.lat, destCoords.lng),
+                getTrafficIncidents(extractProvince(geoDisplayName))
+            ]);
+            setWeather(weatherData);
+            setTraffic(trafficData);
+        } catch (e) {
+            console.error('Error fetching smart info:', e);
+        }
     };
 
-    // Reset calculation
-    const handleReset = () => {
-        setResult(null);
-        setDestination('');
-        setDestinationCoords(null);
-        setCalcStatus('idle');
-        setCalcMessage('');
+    // Launch native navigator
+    const handleOpenNavigator = () => {
+        if (!destinationCoords || !userLocation) return;
+
+        const { lat: destLat, lng: destLng } = destinationCoords;
+        const { lat: userLat, lng: userLng } = userLocation;
+
+        // Google Maps (Universal) - uses 'dir' mode for directions
+        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${destLat},${destLng}&travelmode=driving`;
+
+        // Apple Maps (iOS specialized)
+        const appleMapsUrl = `http://maps.apple.com/?saddr=${userLat},${userLng}&daddr=${destLat},${destLng}&dirflg=d`;
+
+        // Detection for iOS/Safari to use Apple Maps, else Google Maps
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+        if (isIOS) {
+            window.open(appleMapsUrl, '_blank');
+        } else {
+            window.open(googleMapsUrl, '_blank');
+        }
     };
 
     return (
-        <div className="page-container">
+        <div className="page-container" style={{ paddingBottom: '2rem' }}>
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -218,71 +271,77 @@ const FreeDestinationCalculator: React.FC<Props> = ({ onBack }) => {
                                 Calculadora GPS
                             </div>
                             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                                Calcula el precio desde tu ubicación
+                                Calcula el precio y navega al destino
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Current Tariff */}
-                <div className="card" style={{
-                    marginBottom: '1rem',
-                    border: '2px solid',
-                    borderColor: currentTariff.type === 'tarifa8' ? 'var(--warning)' : 'var(--success)',
-                    background: currentTariff.type === 'tarifa8'
-                        ? 'linear-gradient(135deg, rgba(var(--warning-rgb), 0.1), rgba(var(--warning-rgb), 0.05))'
-                        : 'linear-gradient(135deg, rgba(var(--success-rgb), 0.1), rgba(var(--success-rgb), 0.05))',
-                    padding: '1rem'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{
-                                fontSize: '0.65rem',
-                                fontWeight: '700',
-                                color: currentTariff.type === 'tarifa8' ? 'var(--warning)' : 'var(--success)',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em'
-                            }}>
-                                Tarifa Aplicada Ahora
-                            </span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                                <Clock size={18} color={currentTariff.type === 'tarifa8' ? 'var(--warning)' : 'var(--success)'} />
-                                <span style={{ fontWeight: '800', fontSize: '1.2rem' }}>{currentTariff.label}</span>
-                            </div>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-primary)' }}>
-                                📅 {getTariffReason()}
-                            </div>
-                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                                {currentTariff.description}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Result Display */}
-                {result ? (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="card"
-                    >
-                        {/* Route Info: Origin → Destination */}
+                {/* Input Section - ALWAYS VISIBLE */}
+                <div className="card" style={{ marginBottom: '1rem', padding: '1.25rem' }}>
+                    {/* 1. Origin / Location Section */}
+                    <div style={{ marginBottom: '1.25rem' }}>
                         <div style={{
+                            fontSize: '0.75rem',
+                            fontWeight: '700',
+                            marginBottom: '0.75rem',
                             display: 'flex',
-                            flexDirection: 'column',
-                            gap: '0.5rem',
-                            padding: '1rem',
-                            backgroundColor: 'var(--bg-secondary)',
-                            borderRadius: 'var(--radius-md)',
-                            marginBottom: '1rem'
+                            alignItems: 'center',
+                            gap: '8px',
+                            color: 'var(--text-muted)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em'
                         }}>
-                            {/* Origin */}
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                            <Navigation size={14} color={userLocation ? 'var(--success)' : 'var(--accent-primary)'} />
+                            Punto de Origen
+                        </div>
+
+                        {!userLocation ? (
+                            <motion.button
+                                whileHover={{ scale: 1.01 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleGetLocation}
+                                disabled={geoStatus === 'loading'}
+                                style={{
+                                    width: '100%',
+                                    padding: '0.9rem',
+                                    backgroundColor: 'var(--accent-primary)',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: 'var(--radius-md)',
+                                    cursor: geoStatus === 'loading' ? 'wait' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '10px',
+                                    fontWeight: '700',
+                                    fontSize: '0.95rem',
+                                    boxShadow: '0 4px 12px rgba(var(--accent-primary-rgb), 0.2)'
+                                }}
+                            >
+                                {geoStatus === 'loading' ? (
+                                    <><Loader size={18} className="spin" /> Localizando...</>
+                                ) : (
+                                    <><Navigation size={18} /> Usar mi ubicación actual</>
+                                )}
+                            </motion.button>
+                        ) : (
+                            <div
+                                onClick={handleGetLocation}
+                                style={{
+                                    padding: '1rem',
+                                    backgroundColor: 'rgba(var(--success-rgb), 0.05)',
+                                    border: '1px solid rgba(var(--success-rgb), 0.2)',
+                                    borderRadius: 'var(--radius-md)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    cursor: 'pointer'
+                                }}
+                            >
                                 <div style={{
-                                    width: '24px',
-                                    height: '24px',
+                                    width: '32px',
+                                    height: '32px',
                                     borderRadius: '50%',
                                     backgroundColor: 'var(--success)',
                                     display: 'flex',
@@ -290,382 +349,372 @@ const FreeDestinationCalculator: React.FC<Props> = ({ onBack }) => {
                                     justifyContent: 'center',
                                     flexShrink: 0
                                 }}>
-                                    <Navigation size={12} color="#fff" />
+                                    <Navigation size={16} color="#fff" />
                                 </div>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Origen</div>
-                                    <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>
-                                        {originAddress?.street || 'Tu ubicación'}
+                                <div style={{ flex: 1, overflow: 'hidden' }}>
+                                    <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--success)' }}>
+                                        📍 Ubicación detectada
                                     </div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                        {originAddress?.city || ''}
+                                    <div style={{
+                                        fontSize: '0.9rem',
+                                        color: 'var(--text-primary)',
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis'
+                                    }}>
+                                        {originAddress ? `${originAddress.street}${originAddress.city ? `, ${originAddress.city}` : ''}` : 'Detectando dirección...'}
                                     </div>
                                 </div>
                             </div>
+                        )}
+                    </div>
 
-                            {/* Connector Line */}
-                            <div style={{
-                                marginLeft: '11px',
-                                borderLeft: '2px dashed var(--border-light)',
-                                height: '12px'
-                            }} />
+                    {/* 2. Destination Section */}
+                    <div style={{ position: 'relative' }}>
+                        <div style={{
+                            fontSize: '0.75rem',
+                            fontWeight: '700',
+                            marginBottom: '0.75rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            color: 'var(--text-muted)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em'
+                        }}>
+                            <MapPin size={14} color="var(--accent-primary)" />
+                            Destino del Viaje
+                        </div>
 
-                            {/* Destination */}
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                        <div style={{ position: 'relative' }} ref={suggestionsRef}>
+                            <input
+                                type="text"
+                                placeholder="Escribe el destino (ej: Aeropuerto Sevilla)"
+                                value={destination}
+                                onChange={(e) => {
+                                    setDestination(e.target.value);
+                                    setSelectedSuggestionCoords(null);
+                                }}
+                                onFocus={() => destination.length >= 3 && setShowSuggestions(suggestions.length > 0)}
+                                onKeyDown={handleKeyDown}
+                                style={{
+                                    width: '100%',
+                                    padding: '1rem',
+                                    backgroundColor: 'var(--bg-secondary)',
+                                    border: '1px solid var(--border-light)',
+                                    borderRadius: 'var(--radius-md)',
+                                    color: 'var(--text-primary)',
+                                    fontSize: '1rem',
+                                    fontWeight: '600',
+                                    outline: 'none'
+                                }}
+                            />
+                            {showSuggestions && (
                                 <div style={{
-                                    width: '24px',
-                                    height: '24px',
-                                    borderRadius: '50%',
-                                    backgroundColor: 'var(--accent-primary)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    flexShrink: 0
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: 0,
+                                    right: 0,
+                                    zIndex: 1000,
+                                    backgroundColor: 'var(--bg-primary)',
+                                    border: '1px solid var(--border-light)',
+                                    borderRadius: '0 0 var(--radius-md) var(--radius-md)',
+                                    boxShadow: 'var(--shadow-xl)',
+                                    maxHeight: '220px',
+                                    overflowY: 'auto',
+                                    marginTop: '2px'
                                 }}>
-                                    <MapPin size={12} color="#fff" />
+                                    {suggestions.map((s, i) => (
+                                        <div
+                                            key={i}
+                                            onClick={() => handleSelectSuggestion(s)}
+                                            style={{
+                                                padding: '14px 16px',
+                                                fontSize: '0.95rem',
+                                                borderBottom: i === suggestions.length - 1 ? 'none' : '1px solid var(--border-light)',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '12px'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        >
+                                            <MapPin size={16} color="var(--text-muted)" />
+                                            <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: '500' }}>
+                                                {s.displayName}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Destino</div>
-                                    <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>
-                                        {destinationAddress?.street || destination}
-                                    </div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                        {destinationAddress?.city || ''}
-                                    </div>
-                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Manual Calculate Button */}
+                    <motion.button
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleCalculate()}
+                        disabled={!userLocation || !destination.trim() || calcStatus === 'loading'}
+                        style={{
+                            marginTop: '1.25rem',
+                            width: '100%',
+                            padding: '1rem',
+                            backgroundColor: (!userLocation || !destination.trim()) ? 'var(--bg-secondary)' : 'var(--success)',
+                            color: (!userLocation || !destination.trim()) ? 'var(--text-muted)' : '#fff',
+                            border: 'none',
+                            borderRadius: 'var(--radius-md)',
+                            cursor: (!userLocation || !destination.trim() || calcStatus === 'loading') ? 'not-allowed' : 'pointer',
+                            fontWeight: '800',
+                            fontSize: '1rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px'
+                        }}
+                    >
+                        {calcStatus === 'loading' ? (
+                            <><Loader size={20} className="spin" /> {calcMessage || 'Calculando...'}</>
+                        ) : (
+                            <><Route size={20} /> CALCULAR TRAYECTO</>
+                        )}
+                    </motion.button>
+
+                    {calcMessage && calcStatus === 'error' && (
+                        <div style={{
+                            marginTop: '0.75rem',
+                            fontSize: '0.85rem',
+                            color: 'var(--danger)',
+                            textAlign: 'center',
+                            fontWeight: '600'
+                        }}>
+                            ❌ {calcMessage}
+                        </div>
+                    )}
+                </div>
+
+                {/* Tariff Info */}
+                <div className="card" style={{
+                    marginBottom: '1rem',
+                    border: '1px solid',
+                    borderColor: currentTariff.type === 'tarifa8' ? 'rgba(var(--warning-rgb), 0.3)' : 'rgba(var(--success-rgb), 0.3)',
+                    backgroundColor: 'var(--bg-primary)',
+                    padding: '0.85rem'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{
+                                width: '36px',
+                                height: '36px',
+                                borderRadius: '10px',
+                                backgroundColor: currentTariff.type === 'tarifa8' ? 'var(--warning)' : 'var(--success)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <Clock size={20} color="#fff" />
+                            </div>
+                            <div>
+                                <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>TARIFA ACTUAL</div>
+                                <div style={{ fontWeight: '800', fontSize: '1.05rem', color: 'var(--text-primary)' }}>{currentTariff.label}</div>
+                            </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-primary)' }}>{getTariffReason()}</div>
+                            <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{currentTariff.description}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Result Section */}
+                {result && calcStatus !== 'loading' && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="card"
+                        style={{ borderTop: '4px solid var(--success)', padding: '0px', overflow: 'hidden' }}
+                    >
+                        {/* Price Header */}
+                        <div style={{
+                            padding: '1.5rem',
+                            background: 'linear-gradient(135deg, rgba(var(--success-rgb), 0.15), rgba(var(--success-rgb), 0.05))',
+                            textAlign: 'center',
+                            borderBottom: '1px solid var(--border-light)'
+                        }}>
+                            <div style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                                Precio Estimado (con Retorno)
+                            </div>
+                            <div style={{ fontSize: '3rem', fontWeight: '900', color: 'var(--success)', letterSpacing: '-0.02em' }}>
+                                {formatPrice(result.totalFare)}<span style={{ fontSize: '1.5rem', marginLeft: '4px' }}>€</span>
                             </div>
                         </div>
 
                         {/* Route Map */}
                         {userLocation && destinationCoords && (
-                            <RouteMap
-                                origin={[userLocation.lat, userLocation.lng]}
-                                destination={[destinationCoords.lat, destinationCoords.lng]}
-                                geometry={routeGeometry}
-                            />
+                            <div style={{ height: '220px', position: 'relative' }}>
+                                <RouteMap
+                                    origin={[userLocation.lat, userLocation.lng]}
+                                    destination={[destinationCoords.lat, destinationCoords.lng]}
+                                    geometry={routeGeometry}
+                                />
+                                <div style={{
+                                    position: 'absolute',
+                                    bottom: '12px',
+                                    right: '12px',
+                                    padding: '6px 12px',
+                                    backgroundColor: 'rgba(255,255,255,0.9)',
+                                    borderRadius: '20px',
+                                    fontSize: '0.7rem',
+                                    fontWeight: '700',
+                                    color: '#333',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                    zIndex: 1000,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}>
+                                    <Navigation size={12} color="var(--accent-primary)" />
+                                    {routeDistance.toFixed(1)} km
+                                </div>
+                            </div>
                         )}
 
-                        {/* Price */}
-                        <div style={{
-                            padding: '1.5rem',
-                            backgroundColor: 'rgba(var(--success-rgb), 0.1)',
-                            borderRadius: 'var(--radius-lg)',
-                            marginBottom: '1rem'
-                        }}>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                PRECIO ESTIMADO
-                            </div>
-                            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--success)' }}>
-                                {formatPrice(result.totalFare)} €
-                            </div>
-                        </div>
-
-                        {/* Details Grid */}
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(3, 1fr)',
-                            gap: '0.5rem',
-                            marginBottom: '1rem'
-                        }}>
-                            <div style={{ padding: '0.5rem', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)' }}>
-                                <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>DISTANCIA</div>
-                                <div style={{ fontWeight: '600' }}>{routeDistance.toFixed(1)} km</div>
-                            </div>
-                            <div style={{ padding: '0.5rem', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)' }}>
-                                <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>DURACIÓN</div>
-                                <div style={{ fontWeight: '600' }}>{Math.round(routeDuration)} min</div>
-                            </div>
-                            <div style={{ padding: '0.5rem', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)' }}>
-                                <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>PRECIO/KM</div>
-                                <div style={{ fontWeight: '600' }}>{(currentTariff.pricePerKm * 2).toFixed(2)} €</div>
-                            </div>
-                        </div>
-
-                        <div style={{
-                            fontSize: '0.75rem',
-                            color: 'var(--text-muted)',
-                            padding: '0.75rem',
-                            backgroundColor: 'var(--bg-secondary)',
-                            borderRadius: 'var(--radius-sm)',
-                            marginBottom: '1rem'
-                        }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span>Distancia del trayecto:</span>
-                                <span>{routeDistance.toFixed(1)} km</span>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                                <span>Precio interurbano (Ida y Vuelta):</span>
-                                <span>{(currentTariff.pricePerKm * 2).toFixed(2)} €/km</span>
-                            </div>
-                        </div>
-
-                        <div style={{
-                            padding: '0.75rem',
-                            backgroundColor: 'rgba(var(--info-rgb), 0.1)',
-                            borderRadius: 'var(--radius-md)',
-                            textAlign: 'left',
-                            fontSize: '0.7rem',
-                            lineHeight: '1.5'
-                        }}>
-                            <div style={{ fontWeight: '700', marginBottom: '0.5rem', color: 'var(--info)' }}>
-                                🌍 Información Interurbana
-                            </div>
-                            <div>🇪🇸 Trayecto calculado según normativa BOJA para servicios interurbanos. <strong>Incluye el retorno</strong> a Jerez (Tarifa x 2).</div>
-                            <div style={{ marginTop: '4px' }}>🇬🇧 Fare includes the return trip as per official interurban regulations.</div>
-                        </div>
-
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={handleReset}
-                            style={{
-                                marginTop: '1rem',
-                                width: '100%',
-                                padding: '0.75rem',
-                                backgroundColor: 'var(--bg-secondary)',
-                                border: 'none',
-                                borderRadius: 'var(--radius-md)',
-                                cursor: 'pointer',
-                                fontWeight: '600',
-                                color: 'var(--text-primary)'
-                            }}
-                        >
-                            Nuevo cálculo
-                        </motion.button>
-                    </motion.div>
-                ) : (
-                    <div className="card">
-                        {/* Step 1: Location */}
-                        <div style={{ marginBottom: '1.5rem' }}>
+                        <div style={{ padding: '1.25rem' }}>
+                            {/* Details Grid */}
                             <div style={{
-                                fontSize: '0.8rem',
-                                fontWeight: '600',
-                                marginBottom: '0.75rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px'
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(3, 1fr)',
+                                gap: '0.75rem',
+                                marginBottom: '1.5rem'
                             }}>
-                                <span style={{
-                                    width: '20px',
-                                    height: '20px',
-                                    borderRadius: '50%',
-                                    backgroundColor: userLocation ? 'var(--success)' : 'var(--accent-primary)',
-                                    color: '#fff',
+                                <div style={{ padding: '0.85rem', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+                                    <div style={{ fontSize: '0.65rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>TIEMPO</div>
+                                    <div style={{ fontWeight: '800', fontSize: '1rem' }}>{Math.round(routeDuration)} min</div>
+                                </div>
+                                <div style={{ padding: '0.85rem', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+                                    <div style={{ fontSize: '0.65rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>DISTANCIA</div>
+                                    <div style={{ fontWeight: '800', fontSize: '1rem' }}>{routeDistance.toFixed(1)} km</div>
+                                </div>
+                                <div style={{ padding: '0.85rem', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+                                    <div style={{ fontSize: '0.65rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>PRECIO/KM</div>
+                                    <div style={{ fontWeight: '800', fontSize: '1rem' }}>{(currentTariff.pricePerKm * 2).toFixed(2)}€</div>
+                                </div>
+                            </div>
+
+                            {/* Smart Info Section */}
+                            <div style={{
+                                backgroundColor: 'rgba(var(--accent-primary-rgb), 0.03)',
+                                borderRadius: 'var(--radius-lg)',
+                                border: '1px solid rgba(var(--accent-primary-rgb), 0.1)',
+                                padding: '1rem',
+                                marginBottom: '1.5rem'
+                            }}>
+                                <div style={{
+                                    fontSize: '0.8rem',
+                                    fontWeight: '800',
+                                    color: 'var(--accent-primary)',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '0.7rem'
-                                }}>1</span>
-                                Tu ubicación
-                            </div>
+                                    gap: '8px',
+                                    marginBottom: '1rem'
+                                }}>
+                                    <Info size={14} />
+                                    ESTADO DEL DESTINO
+                                </div>
 
-                            {!userLocation ? (
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={handleGetLocation}
-                                    disabled={geoStatus === 'loading'}
-                                    style={{
-                                        width: '100%',
-                                        padding: '1rem',
-                                        backgroundColor: 'var(--accent-primary)',
-                                        color: '#fff',
-                                        border: 'none',
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: traffic.length > 0 ? '1rem' : '0px' }}>
+                                    <div style={{
+                                        padding: '0.75rem',
+                                        backgroundColor: 'var(--bg-primary)',
                                         borderRadius: 'var(--radius-md)',
-                                        cursor: geoStatus === 'loading' ? 'wait' : 'pointer',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '8px',
-                                        fontWeight: '600'
-                                    }}
-                                >
-                                    {geoStatus === 'loading' ? (
-                                        <><Loader size={18} className="spin" /> Localizando...</>
-                                    ) : (
-                                        <><Navigation size={18} /> Obtener mi ubicación</>
-                                    )}
-                                </motion.button>
-                            ) : (
-                                <div style={{
-                                    padding: '0.75rem',
-                                    backgroundColor: 'rgba(var(--success-rgb), 0.1)',
-                                    borderRadius: 'var(--radius-sm)',
-                                    fontSize: '0.8rem',
-                                    color: 'var(--success)'
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                        ✅ Ubicación obtenida
-                                    </div>
-                                    {originAddress && (
-                                        <div style={{
-                                            fontSize: '0.85rem',
-                                            fontWeight: '600',
-                                            color: 'var(--text-primary)',
-                                            marginTop: '4px'
-                                        }}>
-                                            📍 {originAddress.street}{originAddress.city ? `, ${originAddress.city}` : ''}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {geoMessage && geoStatus === 'error' && (
-                                <div style={{
-                                    marginTop: '0.5rem',
-                                    fontSize: '0.75rem',
-                                    color: 'var(--danger)'
-                                }}>
-                                    {geoMessage}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Step 2: Destination */}
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <div style={{
-                                fontSize: '0.8rem',
-                                fontWeight: '600',
-                                marginBottom: '0.75rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px'
-                            }}>
-                                <span style={{
-                                    width: '20px',
-                                    height: '20px',
-                                    borderRadius: '50%',
-                                    backgroundColor: 'var(--accent-primary)',
-                                    color: '#fff',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '0.7rem'
-                                }}>2</span>
-                                Destino (Opcional ayuda predictiva)
-                            </div>
-
-                            <div style={{ position: 'relative' }} ref={suggestionsRef}>
-                                <input
-                                    type="text"
-                                    placeholder="Ej: Cádiz, El Puerto, Sevilla..."
-                                    value={destination}
-                                    onChange={(e) => setDestination(e.target.value)}
-                                    onFocus={() => destination.length >= 3 && setShowSuggestions(suggestions.length > 0)}
-                                    onKeyDown={handleKeyDown}
-                                    style={{
-                                        width: '100%',
-                                        padding: '1rem',
-                                        backgroundColor: 'var(--bg-secondary)',
-                                        border: '1px solid var(--border-light)',
-                                        borderRadius: 'var(--radius-sm)',
-                                        color: 'var(--text-primary)',
-                                        fontSize: '1rem',
-                                        fontWeight: '500'
-                                    }}
-                                />
-                                {showSuggestions && (
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: '100%',
-                                        left: 0,
-                                        right: 0,
-                                        zIndex: 100,
-                                        backgroundColor: 'var(--bg-primary)',
-                                        border: '1px solid var(--border-light)',
-                                        borderRadius: '0 0 var(--radius-md) var(--radius-md)',
-                                        boxShadow: 'var(--shadow-lg)',
-                                        maxHeight: '200px',
-                                        overflowY: 'auto',
-                                        marginTop: '1px'
+                                        gap: '10px',
+                                        border: '1px solid var(--border-light)'
                                     }}>
-                                        {suggestions.map((s, i) => (
-                                            <div
-                                                key={i}
-                                                onClick={() => handleSelectSuggestion(s)}
-                                                style={{
-                                                    padding: '12px 16px',
-                                                    fontSize: '0.9rem',
-                                                    borderBottom: i === suggestions.length - 1 ? 'none' : '1px solid var(--border-light)',
-                                                    cursor: 'pointer',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '10px'
-                                                }}
-                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
-                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                            >
-                                                <MapPin size={14} color="var(--text-muted)" />
-                                                <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                    {s.displayName}
+                                        <div style={{ fontSize: '1.5rem' }}>{weather?.icon || '🌡️'}</div>
+                                        <div>
+                                            <div style={{ fontSize: '0.6rem', fontWeight: '700', color: 'var(--text-muted)' }}>CLIMA</div>
+                                            <div style={{ fontWeight: '800', fontSize: '0.9rem' }}>
+                                                {weather ? `${weather.temperature}°C` : '--°C'}
+                                            </div>
+                                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                                                {weather?.condition || 'Cargando...'}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{
+                                        padding: '0.75rem',
+                                        backgroundColor: traffic.length > 0 ? 'rgba(var(--warning-rgb), 0.05)' : 'rgba(var(--success-rgb), 0.05)',
+                                        borderRadius: 'var(--radius-md)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '10px',
+                                        border: '1px solid',
+                                        borderColor: traffic.length > 0 ? 'rgba(var(--warning-rgb), 0.2)' : 'rgba(var(--success-rgb), 0.2)'
+                                    }}>
+                                        {traffic.length > 0 ? <AlertTriangle size={20} color="var(--warning)" /> : <ShieldCheck size={20} color="var(--success)" />}
+                                        <div>
+                                            <div style={{ fontSize: '0.6rem', fontWeight: '700', color: 'var(--text-muted)' }}>TRÁFICO</div>
+                                            <div style={{ fontWeight: '800', fontSize: '0.9rem', color: traffic.length > 0 ? 'var(--warning)' : 'var(--success)' }}>
+                                                {traffic.length > 0 ? `${traffic.length} Alertas` : 'Vía despejada'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Detailed Traffic Alerts List */}
+                                {traffic.length > 0 && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {traffic.map((t, idx) => (
+                                            <div key={idx} style={{
+                                                padding: '0.85rem',
+                                                backgroundColor: 'var(--bg-primary)',
+                                                borderRadius: 'var(--radius-md)',
+                                                fontSize: '0.75rem',
+                                                borderLeft: `3px solid ${t.level === 'red' ? 'var(--danger)' : 'var(--warning)'}`,
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                            }}>
+                                                <div style={{ fontWeight: '800', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <AlertTriangle size={12} color={t.level === 'red' ? 'var(--danger)' : 'var(--warning)'} />
+                                                    {t.road}: {t.type}
                                                 </div>
+                                                <div style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>{t.description}</div>
                                             </div>
                                         ))}
                                     </div>
                                 )}
                             </div>
+
+                            {/* Navigation Action */}
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleOpenNavigator}
+                                style={{
+                                    width: '100%',
+                                    padding: '1.15rem',
+                                    backgroundColor: 'var(--accent-primary)',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: 'var(--radius-lg)',
+                                    cursor: 'pointer',
+                                    fontWeight: '800',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '12px',
+                                    fontSize: '1.05rem',
+                                    boxShadow: '0 8px 16px rgba(var(--accent-primary-rgb), 0.3)'
+                                }}
+                            >
+                                <Navigation size={22} />
+                                INICIAR NAVEGACIÓN GPS
+                            </motion.button>
                         </div>
-
-                        {/* Calculate Button */}
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={handleCalculate}
-                            disabled={!userLocation || !destination.trim() || calcStatus === 'loading'}
-                            style={{
-                                width: '100%',
-                                padding: '1rem',
-                                backgroundColor: (!userLocation || !destination.trim())
-                                    ? 'var(--bg-secondary)'
-                                    : 'var(--success)',
-                                color: (!userLocation || !destination.trim())
-                                    ? 'var(--text-muted)'
-                                    : '#fff',
-                                border: 'none',
-                                borderRadius: 'var(--radius-md)',
-                                cursor: (!userLocation || !destination.trim() || calcStatus === 'loading')
-                                    ? 'not-allowed'
-                                    : 'pointer',
-                                fontWeight: '700',
-                                fontSize: '1rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '8px'
-                            }}
-                        >
-                            {calcStatus === 'loading' ? (
-                                <><Loader size={20} className="spin" /> {calcMessage}</>
-                            ) : (
-                                <>Calcular precio</>
-                            )}
-                        </motion.button>
-
-                        {calcMessage && calcStatus === 'error' && (
-                            <div style={{
-                                marginTop: '0.75rem',
-                                padding: '0.5rem',
-                                fontSize: '0.8rem',
-                                color: 'var(--danger)',
-                                textAlign: 'center'
-                            }}>
-                                ❌ {calcMessage}
-                            </div>
-                        )}
-
-                        {/* Info */}
-                        <div style={{
-                            marginTop: '1rem',
-                            padding: '0.75rem',
-                            backgroundColor: 'rgba(var(--info-rgb), 0.1)',
-                            borderRadius: 'var(--radius-sm)',
-                            fontSize: '0.75rem',
-                            color: 'var(--text-muted)'
-                        }}>
-                            <Info size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                            El precio se calcula usando la distancia por carretera real (OSRM) y las tarifas oficiales interurbanas del BOJA 2025 (incluyendo retorno).
-                        </div>
-                    </div>
+                    </motion.div>
                 )}
             </motion.div>
         </div>

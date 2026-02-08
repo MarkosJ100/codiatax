@@ -1,5 +1,24 @@
 # CodiaTax - Changelog
 
+## Version 1.2.1 (2026-02-08)
+
+### 🗺️ Continuous Flow GPS Pro
+- **New UI Architecture**: Implemented a "Continuous Flow" model where inputs remain visible at the top and results appear dynamically below.
+- **Auto-Calculation**: Automatic route and price calculation when a destination suggestion is selected.
+- **Improved Autocomplete**: Switched to a pure OpenStreetMap (Nominatim) provider with local prioritization (Cádiz Area).
+- **Navigation Shortcuts**: Added a button to launch native GPS navigation (Google/Apple Maps) with the full route.
+
+### 🌤️ Smart Destination Info
+- **Weather Integration**: Destination temperature and condition display using Open-Meteo.
+- **Real-time Traffic (DGT)**: Detailed list of traffic alerts and incidents from official DGT data.
+- **Address Formatting**: Cleaned up destination names by removing redundant postal codes and country data.
+
+### 🐛 Bug Fixes
+- **Geocoding Reliability**: Fixed "Dirección no encontrada" errors by storing and using exact coordinates from suggestions.
+- **Traffic Alerts**: Restored the detailed list of incidents in the UI (previously only showing count).
+
+---
+
 ## Version 1.2.0 (2026-02-07)
 
 ### 🎉 New Features
