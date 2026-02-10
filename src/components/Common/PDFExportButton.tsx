@@ -39,7 +39,7 @@ const PDFExportButton: React.FC = () => {
             doc.setFontSize(11);
             doc.setTextColor(100, 100, 100);
             doc.text(`Fecha: ${dateStr}`, 14, 28);
-            doc.text(`${user.role === 'owner' ? 'Propietario' : 'Asalariado'}`, 14, 34);
+            doc.text(`${user.role === 'propietario' ? 'Propietario' : 'Asalariado'}`, 14, 34);
 
             doc.setFillColor(245, 245, 245);
             doc.rect(14, 40, 182, 35, 'F');

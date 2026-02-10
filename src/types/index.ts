@@ -1,4 +1,4 @@
-export type UserRole = 'owner' | 'employee';
+export type UserRole = 'propietario' | 'asalariado';
 export type WorkMode = 'solo' | 'fixed' | 'rotating';
 export type ShiftType = 'mañana' | 'tarde' | 'libre';
 

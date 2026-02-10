@@ -36,7 +36,11 @@ export async function appDataLoader(userId: string | null): Promise<LoaderData> 
                 licensePlate: vData.license_plate,
                 model: vData.model,
                 initialOdometer: vData.initial_odometer,
-                maintenance: vData.maintenance_data
+                maintenance: vData.maintenance_data || {
+                    oil: { name: 'Aceite', lastKm: 0, interval: 15000 },
+                    tires: { name: 'Neumáticos', lastKm: 0, interval: 40000 },
+                    brakes: { name: 'Frenos', lastKm: 0, interval: 30000 }
+                }
             } : null,
             shiftStorage: tData?.data_json || null
         };

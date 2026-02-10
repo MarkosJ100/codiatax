@@ -1,12 +1,13 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef, ReactNode } from 'react';
 import { format, addDays, parseISO, isValid, isSameDay } from '../utils/dateHelpers';
 import { calculateAirportCycle, filterFutureAssignments } from '../utils/airportLogic';
 import {
   User, Vehicle, Service, Expense, ShiftStorage,
-  MaintenanceItem, AirportShift, ShiftType, WorkMode
+  MaintenanceItem, AirportShift, ShiftType, WorkMode, UserRole
 } from '../types';
 import { supabase } from '../supabase';
 import { Preferences } from '@capacitor/preferences';
+import { normalizeUsername } from '../utils/userHelpers';
 
 interface AppContextType {
   theme: 'light' | 'dark';
@@ -48,16 +49,16 @@ interface AppContextType {
   undoBuffer: AirportShift[] | null;
   resetAppData: () => void;
   restoreAppData: (backupData: any) => Promise<{ success: boolean; error?: string }>;
+  syncStatus: 'idle' | 'syncing' | 'error' | 'success';
+  lastSyncError: string | null;
+  forceManualSync: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // --- State ---
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('codiatax_user');
-    return saved && saved !== "undefined" ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState<User | null>(null);
 
   const [vehicle, setVehicle] = useState<Vehicle>(() => {
     const defaultVehicle: Vehicle = {
@@ -170,6 +171,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const [toast, setToast] = useState<{ message: string, type: string } | null>(null);
 
+  // --- Sync Diagnosis State ---
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error' | 'success'>('idle');
+  const [lastSyncError, setLastSyncError] = useState<string | null>(null);
+  const isSyncingFromCloud = useRef(false); // Guard to prevent re-uploading data during cloud pull
+
   // Persistence for Theme
   useEffect(() => {
     localStorage.setItem('codiatax_theme', theme);
@@ -183,25 +189,111 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (state !== null && state !== undefined) {
           localStorage.setItem(key, JSON.stringify(state));
 
-          // Trigger Cloud Sync if user is logged in
-          if (user) {
+          // Only sync to cloud if NOT currently pulling from cloud (avoids re-upload loop)
+          if (user && !isSyncingFromCloud.current) {
             triggerCloudSync(key, state);
           }
         }
-      }, 1000); // Increased debounce for cloud sync
+      }, 2000); // 2s debounce to batch changes
 
       return () => clearTimeout(timeoutId);
     }, [key, state]);
   };
 
+  // --- Supabase Auth Integration ---
+  useEffect(() => {
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial Session Check:', session?.user?.email, 'Confirmed:', session?.user?.email_confirmed_at);
+      if (session?.user) {
+        if (session.user.confirmed_at || session.user.email_confirmed_at) {
+          const metadata = session.user.user_metadata;
+          const rawRole = metadata.role || 'propietario';
+          const normalizedRole: UserRole = (rawRole === 'owner' || rawRole === 'propietario') ? 'propietario' : 'asalariado';
+
+          const appUser: User = {
+            name: session.user.user_metadata.name || '',
+            role: normalizedRole,
+            licenseNumber: session.user.user_metadata.licenseNumber || '',
+            isShared: metadata.isShared || false,
+            workMode: metadata.workMode || 'solo',
+            shiftWeek: metadata.shiftWeek || 'Semana A',
+            shiftType: metadata.shiftType || 'mañana',
+            startTime: metadata.startTime || '06:00',
+            endTime: metadata.endTime || '15:00',
+            lastLogin: new Date().toISOString()
+          };
+          // Persist BEFORE setUser so the route loader finds it immediately
+          localStorage.setItem('codiatax_user', JSON.stringify(appUser));
+          setUser(appUser);
+        } else {
+          console.log('Unconfirmed session detected on mount, clearing state.');
+          setUser(null);
+          localStorage.removeItem('codiatax_user');
+        }
+      } else {
+        setUser(null);
+        localStorage.removeItem('codiatax_user');
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Supabase Auth Event:', event, 'User:', session?.user?.email, 'Confirmed:', session?.user?.email_confirmed_at);
+
+      if (session?.user && (session.user.confirmed_at || session.user.email_confirmed_at)) {
+        const metadata = session.user.user_metadata;
+        const rawRole = metadata.role || 'asalariado';
+        const normalizedRole: UserRole = (rawRole === 'owner' || rawRole === 'propietario') ? 'propietario' : 'asalariado';
+
+        const appUser: User = {
+          name: metadata.name || '',
+          role: normalizedRole,
+          licenseNumber: metadata.licenseNumber || '',
+          isShared: metadata.isShared || false,
+          workMode: metadata.workMode || 'solo',
+          shiftWeek: metadata.shiftWeek || 'Semana A',
+          shiftType: metadata.shiftType || 'mañana',
+          startTime: metadata.startTime || '06:00',
+          endTime: metadata.endTime || '15:00',
+          lastLogin: new Date().toISOString()
+        };
+        // Persist BEFORE setUser so the route loader finds it immediately
+        localStorage.setItem('codiatax_user', JSON.stringify(appUser));
+        setUser(appUser);
+      } else {
+        setUser(null);
+        // Special case: if we have a session but unconfirmed, remove from storage to prevent bypass
+        if (session?.user && !(session.user.confirmed_at || session.user.email_confirmed_at)) {
+          console.log('User signed in but not confirmed, cleaning storage.');
+          localStorage.removeItem('codiatax_user');
+        }
+
+        if (event === 'SIGNED_OUT') {
+          localStorage.removeItem('codiatax_user');
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const triggerCloudSync = async (key: string, data: any) => {
     if (!user) return;
 
     try {
-      const uid = user.name;
+      const uid = normalizeUsername(user.name); // Normalize for consistent Supabase queries
       switch (key) {
         case 'codiatax_services':
-          await supabase.from('servicios').upsert(data.map((s: any) => ({ ...s, user_id: uid })));
+          await supabase.from('servicios').upsert(data.map((s: any) => ({
+            id: s.id,
+            timestamp: s.timestamp,
+            amount: s.amount,
+            type: s.type,
+            company_name: s.companyName || null,
+            observation: s.observation || null,
+            user_id: uid
+          })));
           break;
         case 'codiatax_expenses':
           await supabase.from('gastos').upsert(data.map((e: any) => ({ ...e, user_id: uid })));
@@ -228,64 +320,123 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  // --- Initial Cloud Pull ---
-  useEffect(() => {
+  // --- Initial Cloud Pull & Manual Sync ---
+  const fetchCloudData = useCallback(async () => {
     if (!user) return;
 
-    const pullData = async () => {
-      try {
-        const uid = user.name;
+    try {
+      const uid = normalizeUsername(user.name); // Normalize for consistent Supabase queries
+      console.log('Fetching cloud data for:', uid);
 
-        // Parallel fetch
-        const [
-          { data: sData },
-          { data: eData },
-          { data: vData },
-          { data: tData }
-        ] = await Promise.all([
-          supabase.from('servicios').select('*').eq('user_id', uid),
-          supabase.from('gastos').select('*').eq('user_id', uid),
-          supabase.from('vehiculos').select('*').eq('user_id', uid).maybeSingle(),
-          supabase.from('turnos_storage').select('*').eq('user_id', uid).maybeSingle()
-        ]);
+      // Parallel fetch
+      const [
+        { data: sData, error: sError },
+        { data: eData, error: eError },
+        { data: vData, error: vError },
+        { data: tData, error: tError }
+      ] = await Promise.all([
+        supabase.from('servicios').select('*').eq('user_id', uid),
+        supabase.from('gastos').select('*').eq('user_id', uid),
+        supabase.from('vehiculos').select('*').eq('user_id', uid).maybeSingle(),
+        supabase.from('turnos_storage').select('*').eq('user_id', uid).maybeSingle()
+      ]);
 
-        // Simple merge: If cloud exists and local is empty/different, prioritize cloud for this session
-        // or just merge unique IDs
-        if (sData && sData.length > 0) {
-          setServices(prev => {
-            const existingIds = new Set(prev.map(p => p.id));
-            const newOnes = sData.filter(s => !existingIds.has(s.id));
-            return [...prev, ...newOnes].sort((a, b) => b.id - a.id);
-          });
-        }
+      if (sError) throw sError;
+      if (eError) throw eError;
+      if (vError && vError.code !== 'PGRST116') throw vError;
+      if (tError && tError.code !== 'PGRST116') throw tError;
 
-        if (eData && eData.length > 0) {
-          setExpenses(prev => {
-            const existingIds = new Set(prev.map(p => p.id));
-            const newOnes = eData.filter(e => !existingIds.has(e.id));
-            return [...prev, ...newOnes].sort((a, b) => b.id - a.id);
-          });
-        }
+      // Guard: prevent useLocalStorage from re-uploading this data
+      isSyncingFromCloud.current = true;
 
-        if (vData && !vehicle.licensePlate) {
-          setVehicle({
-            licensePlate: vData.license_plate,
-            model: vData.model,
-            initialOdometer: vData.initial_odometer,
-            maintenance: vData.maintenance_data
-          });
-        }
-
-        if (tData && shiftStorage.assignments.length === 0) {
-          setShiftStorage(tData.data_json);
-        }
-      } catch (err) {
-        console.error('Initial pull failed:', err);
+      // Update state with cloud data (Source of Truth)
+      // This ensures deletions on the web are reflected in the app.
+      if (sData) {
+        const mapped = sData.map((s: any) => ({
+          id: s.id,
+          timestamp: s.timestamp,
+          amount: s.amount,
+          type: s.type,
+          companyName: s.company_name || undefined,
+          observation: s.observation || undefined
+        }));
+        setServices(mapped.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
       }
-    };
 
-    pullData();
+      if (eData) {
+        setExpenses(eData.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+      }
+
+      if (vData) {
+        // vehicle logic remains similar but ensures we take cloud truth
+        setVehicle({
+          licensePlate: vData.license_plate,
+          model: vData.model,
+          initialOdometer: vData.initial_odometer,
+          maintenance: vData.maintenance_data || {
+            oil: { name: 'Aceite', lastKm: 0, interval: 15000 },
+            tires: { name: 'Neumáticos', lastKm: 0, interval: 40000 },
+            brakes: { name: 'Frenos', lastKm: 0, interval: 30000 }
+          }
+        });
+      }
+
+      if (tData) {
+        setShiftStorage(tData.data_json);
+      }
+      // Release the guard after a short delay so useLocalStorage effects settle
+      setTimeout(() => { isSyncingFromCloud.current = false; }, 3000);
+    } catch (err: any) {
+      isSyncingFromCloud.current = false;
+      console.error('Initial pull failed:', err);
+      throw err;
+    }
   }, [user]);
+
+  // Fetch cloud data only ONCE after login (not on every re-render)
+  const hasFetchedCloud = useRef(false);
+  useEffect(() => {
+    if (user && !hasFetchedCloud.current) {
+      hasFetchedCloud.current = true;
+      fetchCloudData().catch(e => console.error("Auto fetch failed", e));
+    }
+    if (!user) {
+      hasFetchedCloud.current = false;
+    }
+  }, [user, fetchCloudData]);
+
+  const forceManualSync = async () => {
+    if (!user) {
+      showToast('Debes iniciar sesión para sincronizar', 'error');
+      return;
+    }
+
+    setSyncStatus('syncing');
+    setLastSyncError(null);
+
+    try {
+      // 1. Push local data
+      await Promise.all([
+        triggerCloudSync('codiatax_services', services),
+        triggerCloudSync('codiatax_expenses', expenses),
+        triggerCloudSync('codiatax_vehicle', vehicle),
+        triggerCloudSync('codiatax_shift_storage', shiftStorage)
+      ]);
+
+      // 2. Pull remote data
+      await fetchCloudData();
+
+      setSyncStatus('success');
+      showToast('Sincronización completada', 'success');
+      setTimeout(() => setSyncStatus('idle'), 3000);
+
+    } catch (error: any) {
+      console.error('Manual sync error:', error);
+      setSyncStatus('error');
+      setLastSyncError(error.message || 'Error de conexión');
+      showToast('Error al sincronizar', 'error');
+    }
+  };
 
   // Undo Buffer
   const [undoBuffer, setUndoBuffer] = useState<AirportShift[] | null>(null);
@@ -317,15 +468,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   const login = (userData: User, rememberMe: boolean) => {
+    // Deprecated: Auth is now handled by Supabase listener
     setUser(userData);
     if (rememberMe) {
       localStorage.setItem('codiatax_user', JSON.stringify(userData));
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     localStorage.removeItem('codiatax_user');
+    setSyncStatus('idle');
   };
 
   const checkShiftCollision = (week: string, type: ShiftType, currentUserName: string): string | null => {
@@ -672,7 +826,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       checkShiftCollision, saveUserShiftConfig,
       getShiftForDate,
       generateAirportCycle, clearFutureAirportShifts, undoLastAction, undoBuffer,
-      resetAppData, restoreAppData
+      resetAppData, restoreAppData,
+      syncStatus, lastSyncError, forceManualSync
     }}>
       {children}
     </AppContext.Provider>

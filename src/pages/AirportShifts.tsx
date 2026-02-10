@@ -13,6 +13,7 @@ import ShiftSummaryCard from '../components/Airport/ShiftSummaryCard';
 import QuickLinksCard from '../components/Airport/QuickLinksCard';
 import ShiftActionPanel from '../components/Airport/ShiftActionPanel';
 import ErrorBoundary from '../components/Common/ErrorBoundary';
+import { normalizeUsername } from '../utils/userHelpers';
 
 const AirportShifts: React.FC = () => {
     const {
@@ -35,7 +36,7 @@ const AirportShifts: React.FC = () => {
     const shiftDaysSet = useMemo(() => {
         if (!user || !shiftStorage?.assignments) return new Set<string>();
         const dates = shiftStorage.assignments
-            .filter(a => a.userId === user.name)
+            .filter(a => a.userId === normalizeUsername(user.name))
             .map(a => a.date);
         return new Set(dates);
     }, [shiftStorage, user]);
@@ -167,7 +168,7 @@ const AirportShifts: React.FC = () => {
         daysToExport.forEach(day => {
             const dateStr = format(day, 'yyyy-MM-dd');
             const shift = getShiftForDate(day);
-            const airportShift = (shiftStorage.assignments || []).find(a => a.date === dateStr && a.userId === user.name);
+            const airportShift = (shiftStorage.assignments || []).find(a => a.date === dateStr && a.userId === normalizeUsername(user.name));
 
             if (shift.type !== 'libre' && !isRest(dateStr)) {
                 const startTime = shift.type === 'mañana' ? '060000' : '150000';

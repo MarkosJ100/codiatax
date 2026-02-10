@@ -76,7 +76,7 @@ const Expenses: React.FC = () => {
             description: finalDesc,
             amount: finalAmount,
             timestamp: editingId ? expenses.find(e => e.id === editingId)?.timestamp || new Date().toISOString() : new Date().toISOString(),
-            type: user?.role === 'employee' ? 'labor' : 'expense'
+            type: user?.role === 'asalariado' ? 'labor' : 'expense'
         };
 
         if (editingId) {

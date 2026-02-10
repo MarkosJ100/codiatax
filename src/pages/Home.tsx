@@ -12,6 +12,7 @@ import ExportMenu from '../components/Common/ExportMenu';
 import SecuritySettings from '../components/Settings/SecuritySettings';
 import DataSettings from '../components/Settings/DataSettings';
 import AppearanceSettings from '../components/Settings/AppearanceSettings';
+import { normalizeUsername, displayUsername } from '../utils/userHelpers';
 
 const Home: React.FC = () => {
     const {
@@ -38,15 +39,15 @@ const Home: React.FC = () => {
     const dailyServices = services.filter(service => isSameDay(new Date(service.timestamp), today));
     const grossIncome = dailyServices.reduce((sum, service) => sum + service.amount, 0);
 
-    // Calculate Today's Labor Expenses
-    const dailyLaborExpenses = expenses
-        .filter(e => e.type === 'labor' && isSameDay(new Date(e.timestamp), today))
+    // Calculate Today's Expenses (ALL types including fuel, maintenance, etc.)
+    const dailyExpenses = expenses
+        .filter(e => isSameDay(new Date(e.timestamp), today))
         .reduce((sum, e) => sum + e.amount, 0);
 
-    const netIncome = grossIncome - dailyLaborExpenses;
+    const netIncome = grossIncome - dailyExpenses;
 
     const isRestingToday = (shiftStorage?.restDays || []).includes(format(today, 'yyyy-MM-dd'));
-    const isAirportToday = (shiftStorage?.assignments || []).some(a => a.date === format(today, 'yyyy-MM-dd') && a.userId === user?.name);
+    const isAirportToday = (shiftStorage?.assignments || []).some(a => a.date === format(today, 'yyyy-MM-dd') && a.userId === normalizeUsername(user?.name || ''));
 
     // Calculate shift safely
     const currentShift = useMemo(() => {
@@ -80,7 +81,7 @@ const Home: React.FC = () => {
             return shiftStorage.assignments.some(a => {
                 if (!a || !a.date) return false;
                 const d = new Date(a.date);
-                return a.userId === user.name && a.date >= todayStr && d <= nextWeekDate;
+                return a.userId === normalizeUsername(user.name) && a.date >= todayStr && d <= nextWeekDate;
             });
         } catch (err) {
             console.warn("Error calculating airport week alert:", err);
@@ -98,7 +99,7 @@ const Home: React.FC = () => {
                 style={{ marginBottom: '2rem' }}
             >
                 <h1 style={{ fontSize: '1.85rem', fontWeight: '800', letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
-                    Hola, {user.name}
+                    Hola, {displayUsername(user.name)}
                 </h1>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', fontWeight: '500' }}>
                     {format(new Date(), "EEEE, d 'de' MMMM", { locale: es })}
@@ -271,7 +272,7 @@ const Home: React.FC = () => {
             {user && (
                 <div className="card" style={{ marginTop: '1rem', padding: '1.25rem' }}>
                     <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
-                        Finanzas {user.role === 'owner' ? 'del Propietario' : 'del Asalariado'}
+                        Finanzas {user.role === 'propietario' ? 'del Propietario' : 'del Asalariado'}
                     </h3>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
@@ -280,8 +281,8 @@ const Home: React.FC = () => {
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', color: 'var(--danger)' }}>
-                        <span style={{ display: 'flex', alignItems: 'center' }}>(-) Gastos Laborales</span>
-                        <span>{dailyLaborExpenses.toFixed(2)} €</span>
+                        <span style={{ display: 'flex', alignItems: 'center' }}>(-) Gastos del Día</span>
+                        <span>{dailyExpenses.toFixed(2)} €</span>
                     </div>
 
                     <div style={{ borderTop: '1px dashed rgba(255,255,255,0.2)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -291,7 +292,8 @@ const Home: React.FC = () => {
                         </span>
                     </div>
                 </div>
-            )}
+            )
+            }
 
             {/* App Configuration Section */}
             <div style={{ marginTop: '3rem' }}>
@@ -309,7 +311,7 @@ const Home: React.FC = () => {
                 <AppearanceSettings />
                 <DataSettings />
             </div>
-        </div>
+        </div >
     );
 };
 

@@ -2,7 +2,8 @@ import React from 'react';
 import { createBrowserRouter, RouterProvider, Navigate, redirect } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import MobileShell from './components/Layout/MobileShell';
-import Login from './pages/Login';
+import AuthScreen from './pages/AuthScreen';
+import ProfileSetup from './pages/ProfileSetup';
 import Home from './pages/Home';
 import History from './pages/History';
 import AirportShifts from './pages/AirportShifts';
@@ -11,33 +12,84 @@ import Expenses from './pages/Expenses';
 import Maintenance from './pages/Maintenance';
 import TaxiCalculator from './pages/TaxiCalculator';
 import { appDataLoader, getUserFromStorage } from './loaders/appLoader';
+import { supabase } from './supabase';
+import PinGuard from './components/Auth/PinGuard';
 
-// Protected route wrapper component
+// Check if user has completed profile setup
+const hasCompletedProfile = (user: any): boolean => {
+  return user && user.name && user.licenseNumber;
+};
+
+// Auth route wrapper (only accessible if NOT logged in)
+const AuthRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useApp();
+  if (user) {
+    // If logged in, check if profile is complete
+    if (hasCompletedProfile(user)) {
+      return <Navigate to="/" replace />;
+    } else {
+      return <Navigate to="/setup" replace />;
+    }
+  }
+  return <>{children}</>;
+};
+
+// Setup route wrapper (only accessible if logged in but profile incomplete)
+const SetupRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useApp();
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+  if (hasCompletedProfile(user)) {
+    return <Navigate to="/" replace />;
+  }
+  return <>{children}</>;
+};
+
+// Protected route wrapper (only accessible if logged in AND profile complete)
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useApp();
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+  if (!hasCompletedProfile(user)) {
+    return <Navigate to="/setup" replace />;
+  }
   return <>{children}</>;
 };
 
-// Public route wrapper (redirects to home if logged in)
-const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useApp();
-  if (user) return <Navigate to="/" replace />;
-  return <>{children}</>;
-};
-
-// Create router once (stable reference)
+// Create router
 const router = createBrowserRouter([
   {
-    path: "/login",
-    element: <PublicRoute><Login /></PublicRoute>,
+    path: "/auth",
+    element: <AuthRoute><AuthScreen /></AuthRoute>,
+  },
+  {
+    path: "/setup",
+    element: <SetupRoute><ProfileSetup /></SetupRoute>,
   },
   {
     path: "/",
-    element: <ProtectedRoute><MobileShell /></ProtectedRoute>,
+    element: <ProtectedRoute><PinGuard><MobileShell /></PinGuard></ProtectedRoute>,
     loader: async () => {
-      const user = getUserFromStorage();
-      if (!user) return redirect('/login');
+      let user = getUserFromStorage();
+      // Fallback: if localStorage is empty (race condition), check the live Supabase session
+      if (!user) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const metadata = session.user.user_metadata;
+          user = {
+            name: metadata.name || '',
+            role: metadata.role || 'propietario',
+            licenseNumber: metadata.licenseNumber || '',
+          };
+          // Persist for next time
+          localStorage.setItem('codiatax_user', JSON.stringify(user));
+        } else {
+          return redirect('/auth');
+        }
+      }
+      if (!hasCompletedProfile(user)) return redirect('/setup');
       return appDataLoader(user.name);
     },
     children: [
@@ -49,6 +101,11 @@ const router = createBrowserRouter([
       { path: "maintenance", element: <Maintenance /> },
       { path: "calculator", element: <TaxiCalculator /> },
     ],
+  },
+  // Redirect old /login to /auth
+  {
+    path: "/login",
+    element: <Navigate to="/auth" replace />,
   },
 ]);
 

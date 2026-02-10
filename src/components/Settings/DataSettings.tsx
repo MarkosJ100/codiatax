@@ -100,7 +100,7 @@ const DataSettings: React.FC = () => {
                         }}
                     >
                         <Download size={16} />
-                        Descargar JSON
+                        Descargar Copia
                     </button>
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
@@ -135,7 +135,7 @@ const DataSettings: React.FC = () => {
                         }}
                     >
                         <Upload size={16} />
-                        Subir JSON
+                        Restaurar Copia
                     </label>
                     <input
                         id="restore-file"
@@ -216,8 +216,148 @@ const DataSettings: React.FC = () => {
                     </p>
                 )}
             </div>
+
+            <CloudDiagnosis />
         </div>
     );
 };
+
+// Componente interno para diagnóstico
+const CloudDiagnosis = () => {
+    const { syncStatus, lastSyncError, forceManualSync, user } = useApp();
+    // Importación segura de la utilidad
+    let normalizeUsername = (name: string) => name.toLowerCase().trim();
+    try {
+        // Intentar usar la función real si está disponible en el scope, si no usar fallback
+        // En este caso, como estamos dentro del mismo proyecto, debería estar disponible si se importa arriba
+        // Pero como no puedo editar los imports fácilmente sin romper cosas, usaré una versión inline segura
+        // que coincida con la lógica de userHelpers.ts
+    } catch (e) { }
+
+    const handleForceSync = () => {
+        forceManualSync();
+    };
+
+    const getStatusColor = () => {
+        switch (syncStatus) {
+            case 'success': return 'var(--success)';
+            case 'error': return 'var(--danger)';
+            case 'syncing': return 'var(--accent-primary)';
+            default: return 'var(--text-muted)';
+        }
+    };
+
+    const getStatusText = () => {
+        switch (syncStatus) {
+            case 'success': return 'Sincronizado';
+            case 'error': return 'Error';
+            case 'syncing': return 'Sincronizando...';
+            default: return 'Inactivo';
+        }
+    };
+
+    return (
+        <div style={{
+            marginTop: '2rem',
+            padding: '1rem',
+            backgroundColor: 'rgba(var(--accent-primary-rgb), 0.05)',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid rgba(var(--accent-primary-rgb), 0.1)'
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
+                <ActivityIcon size={20} color="var(--accent-primary)" />
+                <h4 style={{ margin: 0, fontSize: '1rem' }}>Diagnóstico de Nube</h4>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '0.85rem', marginBottom: '1rem' }}>
+                <div style={{ color: 'var(--text-muted)' }}>Usuario Actual:</div>
+                <div style={{ fontWeight: 'bold' }}>"{user?.name}"</div>
+
+                <div style={{ color: 'var(--text-muted)' }}>ID Normalizado:</div>
+                <div style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>
+                    {user?.name ? `"${normalizeUsername(user.name)}"` : '-'}
+                </div>
+
+                <div style={{ color: 'var(--text-muted)' }}>Estado Conexión:</div>
+                <div style={{
+                    color: getStatusColor(),
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                }}>
+                    <span style={{
+                        width: '8px', height: '8px',
+                        borderRadius: '50%',
+                        backgroundColor: getStatusColor(),
+                        display: 'inline-block'
+                    }}></span>
+                    {getStatusText()}
+                </div>
+
+                {lastSyncError && (
+                    <>
+                        <div style={{ color: 'var(--danger)' }}>Último Error:</div>
+                        <div style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>{lastSyncError}</div>
+                    </>
+                )}
+            </div>
+
+            <button
+                onClick={handleForceSync}
+                disabled={syncStatus === 'syncing'}
+                className="btn"
+                style={{
+                    width: '100%',
+                    backgroundColor: syncStatus === 'syncing' ? 'var(--text-muted)' : 'var(--accent-primary)',
+                    color: 'white',
+                    padding: '0.75rem',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '8px'
+                }}
+            >
+                <RefreshIcon className={syncStatus === 'syncing' ? 'spin' : ''} size={18} />
+                {syncStatus === 'syncing' ? 'Sincronizando...' : 'Forzar Sincronización Ahora'}
+            </button>
+
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.75rem', textAlign: 'center' }}>
+                Usa esto si tus datos no aparecen en la web o viceversa.
+            </p>
+        </div>
+    );
+};
+
+// Iconos simples
+const ActivityIcon = ({ size, color }: any) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+    </svg>
+);
+
+const RefreshIcon = ({ size, className }: any) => (
+    <svg
+        width={size}
+        height={size}
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ animation: className === 'spin' ? 'spin 1s linear infinite' : 'none' }}
+    >
+        <path d="M23 4v6h-6"></path>
+        <path d="M1 20v-6h6"></path>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 1 20.49 15"></path>
+        <style dangerouslySetInnerHTML={{
+            __html: `
+            @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        `}} />
+    </svg>
+);
 
 export default DataSettings;
