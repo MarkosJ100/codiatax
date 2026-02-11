@@ -1,68 +1,55 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { isSameDay, isSameWeek, isSameMonth, isSameYear } from '../../utils/dateHelpers';
-import { Coins, Gauge } from 'lucide-react';
+import { calculateTotals, Period } from '../../utils/financeHelpers';
 
 const StatsDashboard: React.FC = () => {
-    const { services, mileageLogs } = useApp();
-    const [period, setPeriod] = useState<string>('day');
+    const { services, expenses, mileageLogs } = useApp();
+    const [period, setPeriod] = useState<Period>('day');
 
     const now = new Date();
+    const { grossIncome, totalExpenses, netIncome, totalKms } = calculateTotals(services, expenses, mileageLogs, period, now);
 
-    const filterByPeriod = (item: any, dateField: string) => {
-        const d = new Date(item[dateField]);
-        switch (period) {
-            case 'day': return isSameDay(d, now);
-            case 'week': return isSameWeek(d, now, { weekStartsOn: 1 });
-            case 'month': return isSameMonth(d, now);
-            case 'year': return isSameYear(d, now);
-            default: return false;
-        }
-    };
-
-    const income = services.filter(s => filterByPeriod(s, 'timestamp')).reduce((acc, curr) => acc + curr.amount, 0);
-    const kms = mileageLogs.filter(l => filterByPeriod(l, 'timestamp')).reduce((acc, curr) => acc + curr.amount, 0);
+    const formatCurr = (val: number) => val.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
 
     return (
-        <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-light)', paddingBottom: '0.75rem' }}>
+        <div className="card" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '12px', padding: '4px' }}>
                 {['day', 'week', 'month', 'year'].map(p => (
                     <button
                         key={p}
-                        onClick={() => setPeriod(p)}
+                        onClick={() => setPeriod(p as Period)}
                         style={{
-                            color: period === p ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                            fontWeight: period === p ? 'bold' : 'normal',
-                            textTransform: 'capitalize',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer'
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            fontSize: '0.75rem',
+                            color: period === p ? 'var(--text-primary)' : 'var(--text-muted)',
+                            background: period === p ? 'var(--bg-card)' : 'transparent',
+                            boxShadow: period === p ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                            fontWeight: period === p ? '700' : '500',
+                            flex: 1
                         }}
                     >
-                        {p === 'day' ? 'Día' : p === 'week' ? 'Sem' : p === 'month' ? 'Mes' : 'Año'}
+                        {p === 'day' ? 'Hoy' : p === 'week' ? 'Sem' : p === 'month' ? 'Mes' : 'Año'}
                     </button>
                 ))}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div style={{ textAlign: 'center', borderRight: '1px solid var(--border-light)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4px', color: 'var(--success)' }}>
-                        <Coins size={16} style={{ marginRight: '6px' }} />
-                        <span style={{ fontSize: '0.8rem' }}>Recaudación</span>
-                    </div>
-                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-                        {income.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
-                    </p>
-                </div>
-
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                 <div style={{ textAlign: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4px', color: 'var(--text-secondary)' }}>
-                        <Gauge size={16} style={{ marginRight: '6px' }} />
-                        <span style={{ fontSize: '0.8rem' }}>Recorrido</span>
-                    </div>
-                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-                        {kms.toLocaleString()} <span style={{ fontSize: '0.9rem', fontWeight: 'normal' }}>km</span>
-                    </p>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Bruto</div>
+                    <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--success)' }}>{formatCurr(grossIncome)}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Gastos</div>
+                    <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--danger)' }}>{formatCurr(totalExpenses)}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Neto</div>
+                    <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--accent-primary)' }}>{formatCurr(netIncome)}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Dist.</div>
+                    <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>{totalKms.toLocaleString()} <span style={{ fontSize: '0.6rem', fontWeight: '400' }}>km</span></div>
                 </div>
             </div>
         </div>

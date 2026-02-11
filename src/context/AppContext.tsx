@@ -3,7 +3,7 @@ import { format, addDays, parseISO, isValid, isSameDay } from '../utils/dateHelp
 import { calculateAirportCycle, filterFutureAssignments } from '../utils/airportLogic';
 import {
   User, Vehicle, Service, Expense, ShiftStorage,
-  MaintenanceItem, AirportShift, ShiftType, WorkMode, UserRole
+  MaintenanceItem, AirportShift, ShiftType, WorkMode, UserRole, Subscriber
 } from '../types';
 import { supabase } from '../supabase';
 import { Preferences } from '@capacitor/preferences';
@@ -52,6 +52,10 @@ interface AppContextType {
   syncStatus: 'idle' | 'syncing' | 'error' | 'success';
   lastSyncError: string | null;
   forceManualSync: () => Promise<void>;
+  subscribers: Subscriber[];
+  addSubscriber: (subscriber: Omit<Subscriber, 'id' | 'createdAt'>) => void;
+  updateSubscriber: (id: string, updates: Partial<Subscriber>) => void;
+  deleteSubscriber: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -170,6 +174,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   const [toast, setToast] = useState<{ message: string, type: string } | null>(null);
+
+  const [subscribers, setSubscribers] = useState<Subscriber[]>(() => {
+    try {
+      const saved = localStorage.getItem('codiatax_subscribers');
+      if (saved) return JSON.parse(saved);
+
+      // Default subscribers as requested
+      const defaults: Subscriber[] = [
+        { id: '1', name: 'RENAULT', isCapped: true, capAmount: 7, createdAt: new Date().toISOString() },
+        { id: '2', name: 'DACIA', isCapped: true, capAmount: 7, createdAt: new Date().toISOString() },
+        { id: '3', name: 'FIAT', isCapped: true, capAmount: 7, createdAt: new Date().toISOString() },
+        { id: '4', name: 'ALFA ROMEO', isCapped: true, capAmount: 7, createdAt: new Date().toISOString() },
+      ];
+      return defaults;
+    } catch (e) {
+      return [];
+    }
+  });
 
   // --- Sync Diagnosis State ---
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error' | 'success'>('idle');
@@ -456,6 +478,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useLocalStorage('codiatax_expenses', expenses);
   useLocalStorage('codiatax_annual_config', annualConfig);
   useLocalStorage('codiatax_shift_storage', shiftStorage);
+  useLocalStorage('codiatax_subscribers', subscribers);
 
   // --- Actions ---
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {
@@ -563,6 +586,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const deleteExpense = (id: number) => {
     setExpenses(prev => prev.filter(e => e.id !== id));
+  };
+
+  const addSubscriber = (subscriberData: Omit<Subscriber, 'id' | 'createdAt'>) => {
+    const newSub: Subscriber = {
+      ...subscriberData,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString()
+    };
+    setSubscribers(prev => [...prev, newSub]);
+  };
+
+  const deleteSubscriber = (id: string) => {
+    setSubscribers(prev => prev.filter(s => s.id !== id));
+  };
+
+  const updateSubscriber = (id: string, updates: Partial<Subscriber>) => {
+    setSubscribers(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
   };
 
   const setAppPin = (pin: string) => {
@@ -827,7 +867,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       getShiftForDate,
       generateAirportCycle, clearFutureAirportShifts, undoLastAction, undoBuffer,
       resetAppData, restoreAppData,
-      syncStatus, lastSyncError, forceManualSync
+      syncStatus,
+      lastSyncError,
+      forceManualSync,
+      subscribers,
+      addSubscriber,
+      updateSubscriber,
+      deleteSubscriber
     }}>
       {children}
     </AppContext.Provider>

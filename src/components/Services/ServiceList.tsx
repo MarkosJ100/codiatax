@@ -9,7 +9,7 @@ interface ServiceListProps {
 }
 
 const ServiceList: React.FC<ServiceListProps> = ({ filterSource }) => {
-    const { services, updateService, deleteService } = useApp();
+    const { services, updateService, deleteService, subscribers, updateSubscriber } = useApp();
     const [editingId, setEditingId] = useState<number | null>(null);
 
     const filteredServices = services.filter(s => {
@@ -22,6 +22,8 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource }) => {
     const [editType, setEditType] = useState<'normal' | 'company' | 'facturado'>('normal');
     const [editObs, setEditObs] = useState<string>('');
     const [editCompany, setEditCompany] = useState<string>('');
+    const [editOfficeNumber, setEditOfficeNumber] = useState<string>('');
+    const [editSubscriberId, setEditSubscriberId] = useState<string | undefined>(undefined);
 
     const handleEditClick = (service: Service) => {
         setEditingId(service.id);
@@ -29,6 +31,16 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource }) => {
         setEditType(service.type);
         setEditObs(service.observation || '');
         setEditCompany(service.companyName || '');
+
+        // Populate office number if subscriber linked
+        if (service.subscriberId) {
+            const sub = subscribers.find(s => s.id === service.subscriberId);
+            setEditOfficeNumber(sub?.officeNumber || '');
+            setEditSubscriberId(service.subscriberId);
+        } else {
+            setEditOfficeNumber('');
+            setEditSubscriberId(undefined);
+        }
     };
 
     const handleDeleteClick = (id: number) => {
@@ -38,11 +50,20 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource }) => {
     };
 
     const handleSave = (id: number) => {
+        // Auto-update subscriber if office number changed in edit
+        if (editType === 'company' && editSubscriberId && editOfficeNumber) {
+            const sub = subscribers.find(s => s.id === editSubscriberId);
+            if (sub && sub.officeNumber !== editOfficeNumber) {
+                updateSubscriber(editSubscriberId, { officeNumber: editOfficeNumber });
+            }
+        }
+
         updateService(id, {
             amount: typeof editAmount === 'string' ? parseFloat(editAmount) : editAmount,
             type: editType,
             observation: editObs,
-            companyName: editType === 'company' ? editCompany : undefined
+            companyName: editType === 'company' ? editCompany : undefined,
+            subscriberId: editType === 'company' ? editSubscriberId : undefined
         });
         setEditingId(null);
     };
@@ -80,10 +101,43 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource }) => {
                                 </div>
 
                                 {editType === 'company' && (
-                                    <input
-                                        placeholder="Nombre Compañía"
-                                        value={editCompany} onChange={e => setEditCompany(e.target.value)}
-                                    />
+                                    <>
+                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                            <input
+                                                placeholder="Nº Despacho"
+                                                value={editOfficeNumber}
+                                                onChange={(e) => {
+                                                    // Same formatting logic as ServiceForm
+                                                    let raw = e.target.value.replace(/\D/g, '');
+                                                    let formatted = '';
+                                                    if (raw.length > 3) {
+                                                        formatted = raw.slice(0, 3) + '.' + raw.slice(3, 6);
+                                                        if (raw.length > 6) formatted += '.' + raw.slice(6);
+                                                    } else {
+                                                        formatted = raw;
+                                                    }
+                                                    setEditOfficeNumber(formatted);
+
+                                                    // Search for subscriber
+                                                    const sub = subscribers.find(s => s.officeNumber === formatted);
+                                                    if (sub) {
+                                                        setEditCompany(sub.name);
+                                                        setEditSubscriberId(sub.id);
+                                                    } else {
+                                                        // If not found, we don't necessarily clear company name, but we clear the ID link check?
+                                                        // Or we keep the ID if it was set but now matches nothing? No, clear ID.
+                                                        setEditSubscriberId(undefined);
+                                                    }
+                                                }}
+                                                style={{ width: '100px' }}
+                                            />
+                                            <input
+                                                placeholder="Nombre Compañía"
+                                                value={editCompany} onChange={e => setEditCompany(e.target.value)}
+                                                style={{ flex: 1 }}
+                                            />
+                                        </div>
+                                    </>
                                 )}
 
                                 <input

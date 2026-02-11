@@ -11,6 +11,7 @@ import { Services } from './pages/Services';
 import Expenses from './pages/Expenses';
 import Maintenance from './pages/Maintenance';
 import TaxiCalculator from './pages/TaxiCalculator';
+import Billing from './pages/Billing';
 import { appDataLoader, getUserFromStorage } from './loaders/appLoader';
 import { supabase } from './supabase';
 import PinGuard from './components/Auth/PinGuard';
@@ -100,6 +101,7 @@ const router = createBrowserRouter([
       { path: "expenses", element: <Expenses /> },
       { path: "maintenance", element: <Maintenance /> },
       { path: "calculator", element: <TaxiCalculator /> },
+      { path: "billing", element: <Billing /> },
     ],
   },
   // Redirect old /login to /auth

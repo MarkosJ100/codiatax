@@ -22,17 +22,17 @@ const UnifiedChart: React.FC = () => {
             const date = subDays(today, i);
 
             const dayServices = services.filter(s => isSameDay(new Date(s.timestamp), date));
-            const dayExpenses = expenses.filter(e => e.type === 'labor' && isSameDay(new Date(e.timestamp), date));
+            const dayExpenses = expenses.filter(e => isSameDay(new Date(e.timestamp), date));
             const dayKm = mileageLogs
                 .filter(log => log.timestamp && isSameDay(new Date(log.timestamp), date))
-                .reduce((sum, log) => sum + (log.amount || 0), 0);
+                .reduce((sum, log) => sum + (Number(log.amount) || 0), 0);
 
-            const income = dayServices.reduce((sum, s) => sum + s.amount, 0);
-            const laborExpenses = dayExpenses.reduce((sum, e) => sum + e.amount, 0);
+            const income = dayServices.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+            const allExpenses = dayExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
             data.push({
                 date: format(date, days === 7 ? 'EEE' : 'dd/MM'),
-                value: metric === 'net' ? income - laborExpenses : metric === 'income' ? income : dayKm
+                value: metric === 'net' ? income - allExpenses : metric === 'income' ? income : dayKm
             });
         }
 

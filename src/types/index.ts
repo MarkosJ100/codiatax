@@ -33,12 +33,24 @@ export interface Vehicle {
     };
 }
 
+export interface Subscriber {
+    id: string;
+    name: string;
+    isCapped: boolean;
+    capAmount: number;
+    officeNumber?: string;
+    createdAt: string;
+}
+
 export interface Service {
     id: number;
     timestamp: string;
-    amount: number;
+    amount: number; // This should be the final amount to be paid/recorded
+    originalAmount?: number; // Optional: what was on the meter
     type: 'normal' | 'company' | 'facturado';
     companyName?: string;
+    subscriberId?: string; // Link to the new Subscriber model
+    isPaid?: boolean; // For subscriber services that take 2-3 months to collect
     observation?: string;
     source?: 'manual' | 'total';
 }
