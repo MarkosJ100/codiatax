@@ -35,28 +35,34 @@
 
   --border-light: rgba(28, 25, 23, 0.08);
   /* Darker border for the softer palette */
-  --glass-bg: rgba(231, 231, 228, 0.85);
-  --glass-border: rgba(28, 25, 23, 0.1);
+  --glass-bg: rgba(231, 231, 228, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.4);
 
-  --shadow-premium: 0 4px 12px -2px rgba(28, 25, 23, 0.04);
+  --shadow-premium:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-hover:
+    0 10px 15px -3px rgba(0, 0, 0, 0.05),
+    0 4px 6px -2px rgba(0, 0, 0, 0.025);
 }
 
 /* Refined Dark Theme (Pro Override) */
 [data-theme='dark'] {
-  --bg-primary: #020617;
-  --bg-secondary: #0f172a;
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
   --bg-card: #1e293b;
   --bg-card-hover: #334155;
 
   --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
 
-  --border-light: rgba(255, 255, 255, 0.06);
-  --glass-bg: rgba(30, 41, 59, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --border-light: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(15, 23, 42, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
 
-  --shadow-premium: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+  --shadow-premium: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -149,6 +155,7 @@ textarea:focus {
   border-color: var(--accent-glow);
   transform: translateY(-2px);
   background-color: var(--bg-card-hover);
+  box-shadow: var(--shadow-hover);
 }
 
 .btn {

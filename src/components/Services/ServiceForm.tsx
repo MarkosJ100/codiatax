@@ -149,7 +149,7 @@ const ServiceForm: React.FC = () => {
                         padding: '1rem',
                         background: activeTab === 'taxi' ? 'var(--accent-primary)' : 'var(--bg-card)',
                         border: 'none',
-                        color: activeTab === 'taxi' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                        color: activeTab === 'taxi' ? '#ffffff' : 'var(--text-secondary)',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -157,7 +157,7 @@ const ServiceForm: React.FC = () => {
                         gap: '8px',
                         fontWeight: activeTab === 'taxi' ? 'bold' : 'normal',
                         transition: 'all 0.2s',
-                        borderRadius: 'var(--radius-md) 0 0 var(--radius-md)'
+                        borderRadius: 'var(--radius-md) 0 0 0'
                     }}
                 >
                     <CarTaxiFront size={18} /> Taxi
@@ -168,9 +168,9 @@ const ServiceForm: React.FC = () => {
                     style={{
                         flex: 1,
                         padding: '1rem',
-                        background: activeTab === 'subscriber' ? 'var(--accent-primary)' : 'var(--bg-card)',
+                        background: activeTab === 'subscriber' ? '#8b5cf6' : 'var(--bg-card)',
                         border: 'none',
-                        color: activeTab === 'subscriber' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                        color: activeTab === 'subscriber' ? '#ffffff' : 'var(--text-secondary)',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -178,7 +178,7 @@ const ServiceForm: React.FC = () => {
                         gap: '8px',
                         fontWeight: activeTab === 'subscriber' ? 'bold' : 'normal',
                         transition: 'all 0.2s',
-                        borderRadius: '0 var(--radius-md) var(--radius-md) 0'
+                        borderRadius: '0 var(--radius-md) 0 0'
                     }}
                 >
                     <Building2 size={18} /> Abonados

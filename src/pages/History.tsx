@@ -23,6 +23,7 @@ const History: React.FC = () => {
     const [filterMonth, setFilterMonth] = useState<number>(getMonth(new Date()));
     const [filterYear, setFilterYear] = useState<number>(getYear(new Date()));
     const [filterConcept, setFilterConcept] = useState<string>('');
+    const [serviceTypeFilter, setServiceTypeFilter] = useState<'all' | 'taxi' | 'company'>('all');
 
     // Edit State
     const [editingService, setEditingService] = useState<Service | null>(null);
@@ -49,7 +50,7 @@ const History: React.FC = () => {
 
     // Derived Filtered Data
     const filteredServices = useMemo(() => {
-        return services.filter(service => {
+        let results = services.filter(service => {
             const date = new Date(service.timestamp);
 
             if (showFilters) {
@@ -67,8 +68,17 @@ const History: React.FC = () => {
                 return isSameDay(date, selectedDate);
             }
             return isSameMonth(date, viewDate);
-        }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    }, [services, showFilters, filterDay, filterMonth, filterYear, filterConcept, selectedDate, viewDate]);
+        });
+
+        // Apply type filter
+        if (serviceTypeFilter === 'taxi') {
+            results = results.filter(s => s.type === 'normal' || s.type === 'facturado');
+        } else if (serviceTypeFilter === 'company') {
+            results = results.filter(s => s.type === 'company');
+        }
+
+        return results.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    }, [services, showFilters, filterDay, filterMonth, filterYear, filterConcept, selectedDate, viewDate, serviceTypeFilter]);
 
     const totalAmount = filteredServices.reduce((sum, s) => sum + s.amount, 0);
 
@@ -542,11 +552,53 @@ const History: React.FC = () => {
             )}
 
             <div>
+                {/* Results Tabs */}
+                <div style={{ display: 'flex', gap: '4px', marginBottom: '1rem', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '4px' }}>
+                    <button
+                        onClick={() => setServiceTypeFilter('all')}
+                        style={{
+                            flex: 1, padding: '8px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+                            backgroundColor: serviceTypeFilter === 'all' ? 'var(--bg-card)' : 'transparent',
+                            color: serviceTypeFilter === 'all' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                            fontSize: '0.85rem', fontWeight: 'bold', transition: 'all 0.2s'
+                        }}
+                    >
+                        Todo
+                    </button>
+                    <button
+                        onClick={() => setServiceTypeFilter('taxi')}
+                        style={{
+                            flex: 1, padding: '8px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+                            backgroundColor: serviceTypeFilter === 'taxi' ? 'var(--bg-card)' : 'transparent',
+                            color: serviceTypeFilter === 'taxi' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                            fontSize: '0.85rem', fontWeight: 'bold', transition: 'all 0.2s'
+                        }}
+                    >
+                        🚖 Taxi
+                    </button>
+                    <button
+                        onClick={() => setServiceTypeFilter('company')}
+                        style={{
+                            flex: 1, padding: '8px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+                            backgroundColor: serviceTypeFilter === 'company' ? 'var(--bg-card)' : 'transparent',
+                            color: serviceTypeFilter === 'company' ? '#8b5cf6' : 'var(--text-secondary)',
+                            fontSize: '0.85rem', fontWeight: 'bold', transition: 'all 0.2s'
+                        }}
+                    >
+                        🏢 Abonados
+                    </button>
+                </div>
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                     <h3 style={{ fontSize: '1rem', opacity: 0.8 }}>
-                        {selectedDate ? `Servicios del día ${getDate(selectedDate)}` : 'Resultados'}
+                        {selectedDate ? `Día ${getDate(selectedDate)}` : 'Resultados'}
+                        {serviceTypeFilter !== 'all' && (
+                            <span style={{ fontSize: '0.8rem', marginLeft: '8px', color: serviceTypeFilter === 'taxi' ? 'var(--accent-primary)' : '#8b5cf6' }}>
+                                ({serviceTypeFilter === 'taxi' ? 'Solo Taxi' : 'Solo Abonados'})
+                            </span>
+                        )}
                     </h3>
-                    <span style={{ fontWeight: 'bold', color: 'var(--success)' }}>Total: {totalAmount.toFixed(2)} €</span>
+                    <span style={{ fontWeight: 'bold', color: 'var(--success)' }}>{totalAmount.toFixed(2)} €</span>
                 </div>
 
                 {filteredServices.length === 0 ? (

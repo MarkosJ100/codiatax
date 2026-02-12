@@ -1,6 +1,20 @@
 # CodiaTax - Changelog
 
-## Version 1.2.1 (2026-02-08)
+## [1.2.3] - 2026-02-12
+### Added
+- Nuevo sistema de pestañas diferenciadas para **Taxi** (Azul) y **Abonados** (Violeta).
+- Desglose financiero detallado en el Dashboard (Taxi vs Autónomos vs Total).
+- Pestañas de filtrado por tipo de servicio en el registro diario e historial completo.
+- Componente `PageTransition` para animaciones suaves entre pantallas.
+- Configuración de firma de lanzamiento (`release signing`) para APKs de Android.
+
+### Changed
+- **Rendimiento**: Implementación de **Lazy Loading** en todas las rutas para reducir el tiempo de carga inicial.
+- **Rendimiento**: Implementación de **Paginación** en el historial (`ServiceList`) para mejorar la fluidez con grandes volúmenes de datos.
+- **Visual**: Refinado sistema de sombras y bordes ("Glassmorphism 2.0") en `index.css`.
+- Actualizada la versión del proyecto a 1.2.3.
+
+## Version 1.2.2 (2026-02-10)
 
 ### 🗺️ Continuous Flow GPS Pro
 - **New UI Architecture**: Implemented a "Continuous Flow" model where inputs remain visible at the top and results appear dynamically below.

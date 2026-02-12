@@ -1,20 +1,40 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate, redirect } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import MobileShell from './components/Layout/MobileShell';
-import AuthScreen from './pages/AuthScreen';
-import ProfileSetup from './pages/ProfileSetup';
-import Home from './pages/Home';
-import History from './pages/History';
-import AirportShifts from './pages/AirportShifts';
-import { Services } from './pages/Services';
-import Expenses from './pages/Expenses';
-import Maintenance from './pages/Maintenance';
-import TaxiCalculator from './pages/TaxiCalculator';
-import Billing from './pages/Billing';
 import { appDataLoader, getUserFromStorage } from './loaders/appLoader';
 import { supabase } from './supabase';
 import PinGuard from './components/Auth/PinGuard';
+import PageTransition from './components/Layout/PageTransition';
+
+// Lazy Loaded Pages
+const AuthScreen = lazy(() => import('./pages/AuthScreen'));
+const ProfileSetup = lazy(() => import('./pages/ProfileSetup'));
+const Home = lazy(() => import('./pages/Home'));
+const History = lazy(() => import('./pages/History'));
+const AirportShifts = lazy(() => import('./pages/AirportShifts'));
+const ServicesPage = lazy(() => import('./pages/Services').then(module => ({ default: module.Services })));
+const Expenses = lazy(() => import('./pages/Expenses'));
+const Maintenance = lazy(() => import('./pages/Maintenance'));
+const TaxiCalculator = lazy(() => import('./pages/TaxiCalculator'));
+const Billing = lazy(() => import('./pages/Billing'));
+
+// Loading Component
+const LoadingFallback = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '1rem' }}>
+    <div className="loading-spinner"></div>
+    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Cargando...</p>
+  </div>
+);
+
+// Wrapper for Lazy Pages with Transition
+const PageWrapper = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<LoadingFallback />}>
+    <PageTransition>
+      {children}
+    </PageTransition>
+  </Suspense>
+);
 
 // Check if user has completed profile setup
 const hasCompletedProfile = (user: any): boolean => {
@@ -94,14 +114,14 @@ const router = createBrowserRouter([
       return appDataLoader(user.name);
     },
     children: [
-      { index: true, element: <Home /> },
-      { path: "services", element: <Services /> },
-      { path: "history", element: <History /> },
-      { path: "airport", element: <AirportShifts /> },
-      { path: "expenses", element: <Expenses /> },
-      { path: "maintenance", element: <Maintenance /> },
-      { path: "calculator", element: <TaxiCalculator /> },
-      { path: "billing", element: <Billing /> },
+      { index: true, element: <PageWrapper><Home /></PageWrapper> },
+      { path: "services", element: <PageWrapper><ServicesPage /></PageWrapper> },
+      { path: "history", element: <PageWrapper><History /></PageWrapper> },
+      { path: "airport", element: <PageWrapper><AirportShifts /></PageWrapper> },
+      { path: "expenses", element: <PageWrapper><Expenses /></PageWrapper> },
+      { path: "maintenance", element: <PageWrapper><Maintenance /></PageWrapper> },
+      { path: "calculator", element: <PageWrapper><TaxiCalculator /></PageWrapper> },
+      { path: "billing", element: <PageWrapper><Billing /></PageWrapper> },
     ],
   },
   // Redirect old /login to /auth

@@ -142,30 +142,30 @@ const DailyTotalForm: React.FC = () => {
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Importe Taxímetro / Efectivo (€)</label>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem', color: 'var(--accent-primary)', fontWeight: 'bold' }}>🚖 Importe Taxímetro / Efectivo (€)</label>
                     <input
                         type="number" step="0.01"
                         value={smartAmount} onChange={e => setSmartAmount(e.target.value)}
                         placeholder="0.00"
-                        style={{ fontSize: '1.1rem' }}
+                        style={{ fontSize: '1.1rem', borderColor: 'var(--accent-primary)', backgroundColor: 'rgba(59, 130, 246, 0.05)' }}
                     />
                 </div>
 
                 <div>
-                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Importe Compañía / Vales (€)</label>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem', color: '#8b5cf6', fontWeight: 'bold' }}>🏢 Importe Compañía / Vales (€)</label>
                     <input
                         type="number" step="0.01"
                         value={companyAmount} onChange={e => setCompanyAmount(e.target.value)}
                         placeholder="0.00"
-                        style={{ fontSize: '1.1rem' }}
+                        style={{ fontSize: '1.1rem', borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.05)' }}
                     />
                     {individualCompanyTotal > 0 && (
-                        <p style={{ fontSize: '0.75rem', marginTop: '4px', color: 'var(--accent-primary)', fontWeight: 'bold' }}>
+                        <p style={{ fontSize: '0.75rem', marginTop: '4px', color: '#8b5cf6', fontWeight: 'bold' }}>
                             💡 Ya has registrado {individualCompanyTotal.toFixed(2)}€ individualmente hoy.
                             <button
                                 type="button"
                                 onClick={() => setCompanyAmount(individualCompanyTotal.toString())}
-                                style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', textDecoration: 'underline', marginLeft: '8px', cursor: 'pointer', fontSize: '0.7rem' }}
+                                style={{ background: 'none', border: 'none', color: '#8b5cf6', textDecoration: 'underline', marginLeft: '8px', cursor: 'pointer', fontSize: '0.7rem' }}
                             >
                                 Usar esta cifra
                             </button>

@@ -7,6 +7,7 @@ import { PenTool, Calculator } from 'lucide-react';
 
 export const Services: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'manual' | 'total'>('total');
+    const [historyTypeFilter, setHistoryTypeFilter] = useState<'all' | 'taxi' | 'company'>('all');
 
     return (
         <div>
@@ -37,10 +38,34 @@ export const Services: React.FC = () => {
                 <DailyTotalForm />
             )}
 
-            <h3 style={{ marginTop: '2rem', marginBottom: '1rem', fontSize: '1.2rem', color: 'var(--text-secondary)' }}>
-                Historial ({activeTab === 'manual' ? 'Manual' : 'Totales'})
-            </h3>
-            <ServiceList filterSource={activeTab} />
+            <div style={{ marginTop: '2.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-secondary)' }}>
+                    Historial ({activeTab === 'manual' ? 'Manual' : 'Totales'})
+                </h3>
+
+                <div style={{ display: 'flex', gap: '4px', backgroundColor: 'var(--bg-secondary)', padding: '2px', borderRadius: '8px' }}>
+                    <button
+                        onClick={() => setHistoryTypeFilter('all')}
+                        style={{ padding: '4px 12px', fontSize: '0.75rem', borderRadius: '6px', border: 'none', cursor: 'pointer', background: historyTypeFilter === 'all' ? 'var(--bg-card)' : 'transparent', color: 'var(--text-primary)', fontWeight: 'bold' }}
+                    >
+                        Todo
+                    </button>
+                    <button
+                        onClick={() => setHistoryTypeFilter('taxi')}
+                        style={{ padding: '4px 12px', fontSize: '0.75rem', borderRadius: '6px', border: 'none', cursor: 'pointer', background: historyTypeFilter === 'taxi' ? 'var(--bg-card)' : 'transparent', color: 'var(--accent-primary)', fontWeight: 'bold' }}
+                    >
+                        🚖 Taxi
+                    </button>
+                    <button
+                        onClick={() => setHistoryTypeFilter('company')}
+                        style={{ padding: '4px 12px', fontSize: '0.75rem', borderRadius: '6px', border: 'none', cursor: 'pointer', background: historyTypeFilter === 'company' ? 'var(--bg-card)' : 'transparent', color: '#8b5cf6', fontWeight: 'bold' }}
+                    >
+                        🏢 Abonados
+                    </button>
+                </div>
+            </div>
+
+            <ServiceList filterSource={activeTab} typeFilter={historyTypeFilter} />
         </div>
     );
 };

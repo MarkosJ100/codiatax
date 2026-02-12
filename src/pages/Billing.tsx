@@ -78,12 +78,16 @@ const Billing: React.FC = () => {
     return (
         <div className="page-container" style={{ paddingBottom: '80px' }}>
             <div style={{ marginBottom: '1.5rem' }}>
-                <h2 className="text-2xl font-bold" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Wallet className="text-accent-primary" /> Facturación
+                <h2 className="text-2xl font-bold" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8b5cf6' }}>
+                    <Wallet size={24} /> Facturación de Abonados
                 </h2>
-                <div className="card" style={{ marginTop: '1rem', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%)', border: '1px solid var(--accent-primary)' }}>
+                <div className="card" style={{
+                    marginTop: '1rem',
+                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%)',
+                    border: '1px solid #8b5cf6'
+                }}>
                     <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Total Pendiente de Cobro</div>
-                    <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#8b5cf6' }}>
                         {globalPending.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
                     </div>
                 </div>

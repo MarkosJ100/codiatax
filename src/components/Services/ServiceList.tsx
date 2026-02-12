@@ -6,17 +6,38 @@ import { Service } from '../../types';
 
 interface ServiceListProps {
     filterSource?: 'manual' | 'total';
+    typeFilter?: 'all' | 'taxi' | 'company';
 }
 
-const ServiceList: React.FC<ServiceListProps> = ({ filterSource }) => {
+const ServiceList: React.FC<ServiceListProps> = ({ filterSource, typeFilter = 'all' }) => {
     const { services, updateService, deleteService, subscribers, updateSubscriber } = useApp();
     const [editingId, setEditingId] = useState<number | null>(null);
 
     const filteredServices = services.filter(s => {
-        if (!filterSource) return true;
-        if (filterSource === 'manual') return s.source === 'manual' || !s.source;
-        return s.source === filterSource;
-    });
+        // Source filter
+        if (filterSource) {
+            const matchesSource = filterSource === 'manual' ? (s.source === 'manual' || !s.source) : s.source === filterSource;
+            if (!matchesSource) return false;
+        }
+
+        // Type filter
+        if (typeFilter === 'taxi') {
+            return s.type === 'normal' || s.type === 'facturado';
+        }
+        if (typeFilter === 'company') {
+            return s.type === 'company';
+        }
+
+        return true;
+    }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    // Pagination Logic
+    const [visibleCount, setVisibleCount] = useState(20);
+    const visibleServices = filteredServices.slice(0, visibleCount);
+
+    const handleLoadMore = () => {
+        setVisibleCount(prev => prev + 20);
+    };
 
     const [editAmount, setEditAmount] = useState<number | string>('');
     const [editType, setEditType] = useState<'normal' | 'company' | 'facturado'>('normal');
@@ -74,7 +95,7 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource }) => {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {filteredServices.map(service => {
+            {visibleServices.map(service => {
                 const isEditing = editingId === service.id;
 
                 if (isEditing) {
@@ -165,12 +186,22 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource }) => {
                     <div key={service.id} className="card" style={{
                         padding: '1rem',
                         marginBottom: 0,
-                        borderLeft: service.type === 'company' ? '4px solid var(--accent-secondary)' : '4px solid var(--accent-primary)'
+                        borderLeft: service.type === 'company' ? '6px solid #8b5cf6' : '4px solid var(--accent-primary)',
+                        backgroundColor: service.type === 'company' ? 'rgba(139, 92, 246, 0.05)' : 'var(--bg-card)',
+                        transition: 'all 0.2s'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
-                                <p style={{ fontWeight: '500', fontSize: '1rem' }}>
-                                    {service.type === 'company' ? (service.companyName || 'Compañía') : 'Servicio Normal'}
+                                <p style={{
+                                    fontWeight: '700',
+                                    fontSize: '1rem',
+                                    color: service.type === 'company' ? '#8b5cf6' : 'var(--text-primary)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                }}>
+                                    {service.type === 'company' && <span>🏢</span>}
+                                    {service.type === 'company' ? (service.companyName || 'Abonado') : '🚖 Servicio Taxi'}
                                 </p>
                                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                                     {format(new Date(service.timestamp), 'dd/MM/yyyy HH:mm')}
@@ -198,6 +229,27 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource }) => {
                     </div>
                 );
             })}
+
+            {visibleCount < filteredServices.length && (
+                <button
+                    onClick={handleLoadMore}
+                    style={{
+                        padding: '12px',
+                        marginTop: '1rem',
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border-light)',
+                        borderRadius: 'var(--radius-md)',
+                        color: 'var(--text-secondary)',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        width: '100%',
+                        transition: 'all 0.2s'
+                    }}
+                >
+                    Cargar más servicios ({filteredServices.length - visibleCount} restantes)
+                </button>
+            )}
+
             {filteredServices.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No hay servicios registrados en esta categoría.</p>}
         </div>
     );

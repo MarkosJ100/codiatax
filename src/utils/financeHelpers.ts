@@ -21,7 +21,15 @@ export const calculateTotals = (services: any[], expenses: any[], mileageLogs: a
     const periodExpenses = expenses.filter(e => filterByPeriod(e, 'timestamp', period, now));
     const periodMileage = mileageLogs.filter(l => filterByPeriod(l, 'timestamp', period, now));
 
-    const grossIncome = periodServices.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+    const taxiIncome = periodServices
+        .filter(s => s.type === 'normal' || s.type === 'facturado')
+        .reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+
+    const subscriberIncome = periodServices
+        .filter(s => s.type === 'company')
+        .reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+
+    const grossIncome = taxiIncome + subscriberIncome;
     const totalExpenses = periodExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
     const totalKms = periodMileage.reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
 
@@ -32,6 +40,8 @@ export const calculateTotals = (services: any[], expenses: any[], mileageLogs: a
 
     return {
         grossIncome,
+        taxiIncome,
+        subscriberIncome,
         totalExpenses,
         netIncome: grossIncome - totalExpenses,
         totalKms,
