@@ -1,16 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
+import { ENV } from './config/env';
 import supabaseStorage from './utils/supabaseStorage';
 
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
-const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
+// Credentials are now validated in config/env.ts
 
-if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase credentials missing. Cloud sync will be disabled.');
-}
 
 export const supabase = createClient(
-    supabaseUrl || 'https://placeholder.supabase.co',
-    supabaseAnonKey || 'placeholder',
+    ENV.SUPABASE_URL,
+    ENV.SUPABASE_ANON_KEY,
     {
         auth: {
             storage: supabaseStorage,

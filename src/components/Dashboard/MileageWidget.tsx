@@ -9,7 +9,7 @@ const MileageWidget: React.FC = () => {
 
     const handleUpdate = () => {
         if (inputKm) {
-            addMileageLog(parseInt(inputKm));
+            addMileageLog({ amount: parseInt(inputKm), timestamp: new Date().toISOString() });
             setInputKm('');
             setIsEditing(false);
         }
