@@ -689,6 +689,9 @@ npx cap open android
 npm run build:android
 ```
 
+> [!NOTE]
+> APK Generado (v1.2.3 Revertido): `android/app/build/outputs/apk/debug/app-debug.apk`
+
 ### Compilación iOS (IPA)
 
 **Pasos:**

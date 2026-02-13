@@ -36,7 +36,7 @@ const DailyMileageInput: React.FC = () => {
             return;
         }
 
-        addMileageLog(parseInt(km));
+        addMileageLog({ amount: parseInt(km), timestamp: new Date().toISOString() });
         if (!todayLog) setKm('');
         resetValidation();
         toast.success(todayLog ? 'Kilometraje actualizado' : 'Kilometraje registrado');

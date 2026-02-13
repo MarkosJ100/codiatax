@@ -96,3 +96,16 @@ export interface ShiftInfo {
     type: ShiftType;
     weekLabel: string;
 }
+
+export interface MileageLog {
+    id: number;
+    timestamp: string; // Updated from date to timestamp for consistent date parsing
+    amount: number;
+    notes?: string;
+}
+
+export type VehicleData = Vehicle;
+
+
+
+

@@ -58,7 +58,7 @@ const DailyTotalForm: React.FC = () => {
         startTransition(() => {
             // KM registration
             if (dailyKm) {
-                addMileageLog(parseInt(dailyKm));
+                addMileageLog({ amount: parseInt(dailyKm), timestamp });
             }
 
             // SmartTD Update/Add
