@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { calculateTotals, Period } from '../../utils/financeHelpers';
+import { Period } from '../../types';
+import { useFinanceData } from '../../hooks/useFinanceData';
 
 const StatsDashboard: React.FC = () => {
     const { services, expenses, mileageLogs } = useApp();
     const [period, setPeriod] = useState<Period>('day');
     const [viewMode, setViewMode] = useState<'total' | 'taxi' | 'company'>('total');
 
-    const now = new Date();
-    const totals = calculateTotals(services, expenses, mileageLogs, period, now);
+    const totals = useFinanceData(services, expenses, mileageLogs, period);
 
     // Dynamic metrics based on viewMode
     const displayGross = viewMode === 'total' ? totals.grossIncome :

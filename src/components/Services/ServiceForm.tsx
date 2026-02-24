@@ -4,11 +4,11 @@ import { useApp } from '../../context/AppContext';
 import { useToast } from '../../hooks/useToast';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { validators } from '../../utils/validators';
-import { Save, Building2, CarTaxiFront, Loader2, Calendar, UserPlus, XCircle } from 'lucide-react';
+import { Save, Building2, CarTaxiFront, Loader2, Calendar, UserPlus, XCircle, Trash2 } from 'lucide-react';
 import { Service } from '../../types';
 
 const ServiceForm: React.FC = () => {
-    const { addService, services, subscribers, addSubscriber, updateSubscriber } = useApp();
+    const { addService, services, subscribers, addSubscriber, updateSubscriber, deleteSubscriber } = useApp();
     const toast = useToast();
     const [activeTab, setActiveTab] = useState<'taxi' | 'subscriber'>('taxi');
     const [amount, setAmount] = useState<string>('');
@@ -18,8 +18,9 @@ const ServiceForm: React.FC = () => {
     const [serviceDate, setServiceDate] = useState<string>(new Date().toISOString().split('T')[0]);
     const [isPending, startTransition] = useTransition();
 
-    // Subscriber creation state
+    // Subscriber management state
     const [showNewSubscriberModal, setShowNewSubscriberModal] = useState(false);
+    const [showManageSubscribersModal, setShowManageSubscribersModal] = useState(false);
     const [newSubName, setNewSubName] = useState('');
     const [newSubOfficeNumber, setNewSubOfficeNumber] = useState('');
     const [isSubCapped, setIsSubCapped] = useState(false);
@@ -231,6 +232,22 @@ const ServiceForm: React.FC = () => {
                                             }}
                                         >
                                             <span style={{ fontSize: '1.1em' }}>+</span> Nuevo
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowManageSubscribersModal(true)}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                color: 'var(--text-tertiary)',
+                                                fontSize: '0.8rem',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '4px'
+                                            }}
+                                        >
+                                            <Save size={14} /> Gestionar
                                         </button>
                                     </div>
                                     <div style={{ position: 'relative' }}>
@@ -524,6 +541,97 @@ const ServiceForm: React.FC = () => {
                                 Guardar
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Manage Subscribers Modal */}
+            {showManageSubscribersModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1000,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+                }}>
+                    <div className="card" style={{ width: '100%', maxWidth: '450px', backgroundColor: 'var(--bg-card)', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <h3 style={{ margin: 0 }}>Gestionar Abonados</h3>
+                            <button
+                                onClick={() => setShowManageSubscribersModal(false)}
+                                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                            >
+                                <XCircle size={24} />
+                            </button>
+                        </div>
+
+                        <div style={{ overflowY: 'auto', flex: 1, paddingRight: '0.5rem' }}>
+                            {subscribers.length === 0 ? (
+                                <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem 1rem' }}>No tienes abonados creados.</p>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    {subscribers.map(sub => (
+                                        <div key={sub.id} style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            padding: '0.75rem',
+                                            backgroundColor: 'rgba(255,255,255,0.03)',
+                                            borderRadius: 'var(--radius-md)',
+                                            border: '1px solid rgba(255,255,255,0.05)'
+                                        }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                                                <span style={{ fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {sub.name}
+                                                </span>
+                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                                    {sub.officeNumber ? `D: ${sub.officeNumber}` : 'Sin despacho'}
+                                                    {sub.isCapped ? ` • ${sub.capAmount}€` : ''}
+                                                </span>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    if (window.confirm(`¿Seguro que quieres borrar a "${sub.name}"? Esto no borrará los servicios ya registrados.`)) {
+                                                        deleteSubscriber(sub.id);
+                                                        if (selectedSubscriberId === sub.id) {
+                                                            setSelectedSubscriberId('');
+                                                            setOfficeNumberSearchTerm('');
+                                                            setAmount('');
+                                                        }
+                                                        toast.success('Abonado eliminado');
+                                                    }
+                                                }}
+                                                style={{
+                                                    background: 'rgba(var(--danger-rgb), 0.1)',
+                                                    border: 'none',
+                                                    color: 'var(--danger)',
+                                                    width: '32px',
+                                                    height: '32px',
+                                                    borderRadius: '50%',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    cursor: 'pointer'
+                                                }}
+                                                title="Eliminar abonado"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={() => {
+                                setShowManageSubscribersModal(false);
+                                setShowNewSubscriberModal(true);
+                            }}
+                            style={{ marginTop: '1.5rem', width: '100%' }}
+                        >
+                            <UserPlus size={18} style={{ marginRight: '8px' }} /> Añadir Nuevo Abonado
+                        </button>
                     </div>
                 </div>
             )}

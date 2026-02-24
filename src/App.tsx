@@ -18,6 +18,7 @@ const Expenses = lazy(() => import('./pages/Expenses'));
 const Maintenance = lazy(() => import('./pages/Maintenance'));
 const TaxiCalculator = lazy(() => import('./pages/TaxiCalculator'));
 const Billing = lazy(() => import('./pages/Billing'));
+const Invoicing = lazy(() => import('./pages/Invoicing'));
 
 // Loading Component
 const LoadingFallback = () => (
@@ -122,6 +123,7 @@ const router = createBrowserRouter([
       { path: "maintenance", element: <PageWrapper><Maintenance /></PageWrapper> },
       { path: "calculator", element: <PageWrapper><TaxiCalculator /></PageWrapper> },
       { path: "billing", element: <PageWrapper><Billing /></PageWrapper> },
+      { path: "invoicing", element: <PageWrapper><Invoicing /></PageWrapper> },
     ],
   },
   // Redirect old /login to /auth

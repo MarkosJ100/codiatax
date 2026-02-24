@@ -1,17 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { ShiftStorage, AirportShift, ShiftType } from '../types';
-import { supabase } from '../supabase';
-import { normalizeUsername } from '../utils/userHelpers';
+import { ShiftStorage, AirportShift, ShiftType, UserShiftConfig } from '../types';
 import { calculateAirportCycle, filterFutureAssignments } from '../utils/airportLogic';
-import { format } from '../utils/dateHelpers';
 import { useAuth } from './AuthContext';
+import { ShiftRepository } from '../services/repositories/ShiftRepository';
 
 interface ShiftContextType {
     shiftStorage: ShiftStorage;
     toggleAirportShift: (dateStr: string, type?: string, userName?: string | null) => { success: boolean, action?: string, type?: string, error?: string };
     toggleRestDay: (dateStr: string) => void;
     checkShiftCollision: (week: string, type: ShiftType, currentUserName: string) => string | null;
-    saveUserShiftConfig: (config: any) => void;
+    saveUserShiftConfig: (config: UserShiftConfig) => void;
     getShiftForDate: (date: Date) => any;
     generateAirportCycle: (startDateStr: string, type?: string) => { success: boolean, count?: number, error?: string };
     clearFutureAirportShifts: (fromDateStr: string) => { success: boolean, error?: string };
@@ -36,27 +34,37 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     useEffect(() => {
         localStorage.setItem('codiatax_shift_storage', JSON.stringify(shiftStorage));
         if (user) {
-            const uid = normalizeUsername(user.name);
-            supabase.from('turnos_storage').upsert({
-                user_id: uid,
-                data_json: shiftStorage,
-                updated_at: new Date().toISOString()
-            }).then(({ error }) => { if (error) console.warn('Shift sync failed', error); });
+            const sync = async () => {
+                try {
+                    if (navigator.onLine) {
+                        await ShiftRepository.upsert(shiftStorage, user.name);
+                    } else {
+                        throw new Error('Offline');
+                    }
+                } catch (e) {
+                    const { syncService } = await import('../services/SyncService');
+                    syncService.addToQueue({
+                        entityId: 'current',
+                        entityType: 'SHIFT',
+                        operation: 'UPSERT',
+                        data: shiftStorage,
+                        userName: user.name
+                    });
+                }
+            };
+            sync();
         }
     }, [shiftStorage, user]);
 
     // Fetch
     useEffect(() => {
         if (user) {
-            const uid = normalizeUsername(user.name);
-            supabase.from('turnos_storage').select('*').eq('user_id', uid).maybeSingle()
-                .then(({ data }) => {
-                    if (data) setShiftStorage(data.data_json);
-                });
+            ShiftRepository.get(user.name).then(cloudStorage => {
+                if (cloudStorage) setShiftStorage(cloudStorage);
+            }).catch(e => console.warn('Shift fetch failed', e));
         }
     }, [user]);
 
-    // Logic from AppContext
     const toggleAirportShift = (dateStr: string, type: string = 'standard', userName: string | null = null) => {
         const targetUser = userName || user?.name;
         if (!targetUser) return { success: false, error: 'User name required' };
@@ -104,10 +112,8 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const getShiftForDate = useCallback((date: Date) => {
         if (!user) return { type: 'libre', label: 'Servicio Libre' };
-        // Simplified logic for brevity, matches AppContext logic usually
         if (user.workMode === 'solo') return { type: 'libre', label: 'Conductor Único', isSolo: true };
-        // ... complete logic would go here
-        return { type: 'mañana', startTime: '06:00', endTime: '15:00' }; // Placeholder for now
+        return { type: 'mañana', startTime: '06:00', endTime: '15:00' };
     }, [user]);
 
     const generateAirportCycle = (startDateStr: string, type: string = 'standard') => {

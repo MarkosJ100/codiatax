@@ -3,7 +3,10 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { isSameDay, format, es } from '../utils/dateHelpers';
-import { calculateTotals, Period } from '../utils/financeHelpers';
+import { Service, Expense, MileageLog, Period } from '../types';
+import { calculateTotals } from '../utils/financeHelpers';
+import { useMaintenance } from '../hooks/useMaintenance';
+import { useFinanceData } from '../hooks/useFinanceData';
 import { AlertTriangle, Calculator, PlusCircle, Wallet, History, ArrowRight, Settings, Sun, Moon, ChevronDown } from 'lucide-react';
 import PDFExportButton from '../components/Common/PDFExportButton';
 
@@ -28,26 +31,22 @@ const Home: React.FC = () => {
     const [period, setPeriod] = useState<Period>('day');
     const [showSettings, setShowSettings] = useState(false);
 
-    // Check for maintenance alerts
+    // Use Maintenance Hook for alerts
+    const { maintenanceStatuses } = useMaintenance(vehicle, currentOdometer);
     const alerts = useMemo(() => {
-        return Object.entries(vehicle.maintenance)
-            .map(([_, item]) => {
-                const nextServiceKm = item.lastKm + item.interval;
-                const remaining = nextServiceKm - currentOdometer;
-                return { name: item.name, remaining };
-            })
-            .filter(item => item.remaining <= 1000);
-    }, [vehicle, currentOdometer]);
+        return maintenanceStatuses
+            .filter(s => s.remaining <= 1000)
+            .map(s => ({ name: s.name, remaining: s.remaining }));
+    }, [maintenanceStatuses]);
 
-    // Calculate Metrics using robust utility with selectable period
+    // Use Finance Hook for metrics
     const today = new Date();
     const {
         grossIncome,
         totalExpenses,
         netIncome,
-        totalKms,
-        pendingSubscriberBalance
-    } = calculateTotals(services, expenses, mileageLogs, period, today);
+        totalKms
+    } = useFinanceData(services, expenses, mileageLogs, period);
 
     const isRestingToday = (shiftStorage?.restDays || []).includes(format(today, 'yyyy-MM-dd'));
     const isAirportToday = (shiftStorage?.assignments || []).some(a => a.date === format(today, 'yyyy-MM-dd') && a.userId === normalizeUsername(user?.name || ''));
@@ -285,7 +284,7 @@ const Home: React.FC = () => {
                             marginBottom: '1.5rem',
                             padding: '16px',
                             borderRadius: '20px',
-                            borderLeft: `4px solid ${isRestingToday ? 'var(--danger)' : 'var(--accent-primary)'}`,
+                            borderLeft: `4px solid ${isRestingToday ? 'var(--danger)' : 'var(--accent-primary)'} `,
                             opacity: isRestingToday ? 0.8 : 1,
                             background: isRestingToday ? 'rgba(239, 68, 68, 0.05)' : 'rgba(255, 255, 255, 0.03)'
                         }}
@@ -296,7 +295,7 @@ const Home: React.FC = () => {
                                     {isAirportToday ? 'Turno Aeropuerto' : (isRestingToday ? 'Día de Descanso' : 'Turno de Trabajo')}
                                 </div>
                                 <div style={{ fontWeight: '700', fontSize: '1rem', marginTop: '4px', color: 'var(--text-primary)' }}>
-                                    {isRestingToday ? 'No Laborable' : (user?.isShared && currentShift ? `${currentShift.weekLabel} - ${currentShift.startTime} a ${currentShift.endTime}` : 'Servicio Libre')}
+                                    {isRestingToday ? 'No Laborable' : (user?.isShared && currentShift ? `${currentShift.weekLabel} - ${currentShift.startTime} a ${currentShift.endTime} ` : 'Servicio Libre')}
                                 </div>
                             </div>
                             <div style={{ textAlign: 'right' }}>
@@ -334,7 +333,7 @@ const Home: React.FC = () => {
                         </div>
                         <div style={{ flex: 1 }}>
                             <div style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '2px' }}>Calculadora de Tarifas</div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Consulta los precios oficiales 2025</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Consulta los precios oficiales 2026</div>
                         </div>
                         <ArrowRight size={18} color="var(--text-muted)" />
                     </div>
@@ -436,7 +435,7 @@ const Home: React.FC = () => {
                     <motion.div variants={itemVariants} style={{ marginBottom: '2rem' }}>
                         <h2 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Alertas de Vehículo</h2>
                         <div style={{ display: 'grid', gap: '10px' }}>
-                            {alerts.map((alert, idx) => (
+                            {alerts.map((alert: { name: string, remaining: number }, idx: number) => (
                                 <div key={idx} className="glass" style={{
                                     padding: '12px 16px',
                                     borderRadius: '16px',

@@ -1,27 +1,28 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
-import { Service, Expense, Subscriber } from '../types';
-import { supabase } from '../supabase';
-import { normalizeUsername } from '../utils/userHelpers';
+import { Service, Expense, Subscriber, AnnualConfig } from '../types';
 import { useAuth } from './AuthContext';
 import { useUI } from './UIContext';
+import { ServiceRepository } from '../services/repositories/ServiceRepository';
+import { ExpenseRepository } from '../services/repositories/ExpenseRepository';
+import { SubscriberRepository } from '../services/repositories/SubscriberRepository';
 
 interface ServiceContextType {
     services: Service[];
-    addService: (service: Omit<Service, 'id'>) => void;
-    updateService: (id: number, updates: Partial<Service>) => void;
-    deleteService: (id: number) => void;
+    addService: (service: Omit<Service, 'id'>) => Promise<void>;
+    updateService: (id: number, updates: Partial<Service>) => Promise<void>;
+    deleteService: (id: number) => Promise<void>;
     expenses: Expense[];
-    addExpense: (expense: Omit<Expense, 'id'>) => void;
-    updateExpense: (id: number, updates: Partial<Expense>) => void;
-    deleteExpense: (id: number) => void;
+    addExpense: (expense: Omit<Expense, 'id'>) => Promise<void>;
+    updateExpense: (id: number, updates: Partial<Expense>) => Promise<void>;
+    deleteExpense: (id: number) => Promise<void>;
     subscribers: Subscriber[];
-    addSubscriber: (subscriber: Omit<Subscriber, 'id' | 'createdAt'>) => void;
-    updateSubscriber: (id: string, updates: Partial<Subscriber>) => void;
-    deleteSubscriber: (id: string) => void;
+    addSubscriber: (subscriber: Omit<Subscriber, 'id' | 'createdAt'>) => Promise<void>;
+    updateSubscriber: (id: string, updates: Partial<Subscriber>) => Promise<void>;
+    deleteSubscriber: (id: string) => Promise<void>;
     syncStatus: 'idle' | 'syncing' | 'error' | 'success';
     forceManualSync: () => Promise<void>;
-    annualConfig: any;
-    updateAnnualConfig: (config: any) => void;
+    annualConfig: AnnualConfig;
+    updateAnnualConfig: (config: Partial<AnnualConfig>) => void;
 }
 
 const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
@@ -56,7 +57,7 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
     });
 
     // -- Annual Config --
-    const [annualConfig, setAnnualConfig] = useState<any>(() => {
+    const [annualConfig, setAnnualConfig] = useState<AnnualConfig>(() => {
         try {
             const saved = localStorage.getItem('codiatax_annual_config');
             return saved ? JSON.parse(saved) : { yearStartKm: 0, yearEndKm: 0, manualGrossIncome: 0 };
@@ -77,30 +78,16 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (!user || isSyncing.current) return;
         isSyncing.current = true;
         try {
-            const uid = normalizeUsername(user.name);
-            const [sRes, eRes, subRes] = await Promise.all([
-                supabase.from('servicios').select('*').eq('user_id', uid),
-                supabase.from('gastos').select('*').eq('user_id', uid),
-                supabase.from('abonados').select('*').eq('user_id', uid)
+            const [cloudServices, cloudExpenses, cloudSubscribers] = await Promise.all([
+                ServiceRepository.getAll(user.name),
+                ExpenseRepository.getAll(user.name),
+                SubscriberRepository.getAll(user.name)
             ]);
 
-            if (sRes.data) {
-                const mapped = sRes.data.map((s: any) => ({
-                    id: s.id, timestamp: s.timestamp, amount: s.amount, type: s.type,
-                    companyName: s.company_name, observation: s.observation
-                }));
-                setServices(mapped.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
-            }
-            if (eRes.data) {
-                setExpenses(eRes.data.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
-            }
-            if (subRes.data) {
-                const mappedSubs = subRes.data.map((s: any) => ({
-                    id: s.id, name: s.name, officeNumber: s.office_number,
-                    isCapped: s.is_capped, capAmount: s.cap_amount, createdAt: s.created_at
-                }));
-                setSubscribers(mappedSubs);
-            }
+            setServices(cloudServices);
+            setExpenses(cloudExpenses);
+            setSubscribers(cloudSubscribers);
+
             setSyncStatus('success');
         } catch (e) {
             console.error('Fetch failed', e);
@@ -117,97 +104,241 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // -- Actions --
     const addService = async (service: Omit<Service, 'id'>) => {
-        const newService = { ...service, id: Date.now() };
-        setServices(prev => [newService, ...prev]);
+        const localId = Date.now();
+        const localService = { ...service, id: localId };
+
+        // Optimistic update
+        setServices(prev => [localService, ...prev]);
+
         if (user) {
-            const uid = normalizeUsername(user.name);
             try {
-                await supabase.from('servicios').insert([{
-                    id: newService.id, timestamp: newService.timestamp, amount: newService.amount,
-                    type: newService.type, company_name: newService.companyName,
-                    observation: newService.observation, user_id: uid
-                }]);
-                showToast('Servicio guardado en nube', 'success');
+                if (navigator.onLine) {
+                    const newService = await ServiceRepository.create(service, user.name);
+                    // Update the local service with the one from the database (real ID)
+                    setServices(prev => prev.map(s => s.id === localId ? newService : s));
+                    showToast('Servicio sincronizado', 'success');
+                } else {
+                    throw new Error('Offline');
+                }
             } catch (error) {
-                showToast('Guardado local (sin conexión)', 'warning');
+                import('../services/SyncService').then(({ syncService }) => {
+                    syncService.addToQueue({
+                        entityId: localId,
+                        entityType: 'SERVICE',
+                        operation: 'CREATE',
+                        data: service,
+                        userName: user.name
+                    });
+                });
+                showToast('Guardado local (pendiente de sincronizar)', 'warning');
             }
+        } else {
+            showToast('Guardado local (sin sesión)', 'warning');
         }
     };
 
-    const deleteService = (id: number) => {
+    const deleteService = async (id: number) => {
         setServices(prev => prev.filter(s => s.id !== id));
-        if (user) supabase.from('servicios').delete().eq('id', id);
-    };
-
-    const updateService = (id: number, updates: Partial<Service>) => {
-        setServices(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
-        // Full update logic omitted for brevity, simpler to delete/insert or use upsert
         if (user) {
-            // Re-sync specific item logic or rely on background sync
-            // For now, implementing direct update for critical fields
-            const s = services.find(x => x.id === id);
-            if (s) {
-                const merged = { ...s, ...updates };
-                const uid = normalizeUsername(user.name);
-                supabase.from('servicios').upsert({
-                    id: merged.id, timestamp: merged.timestamp, amount: merged.amount,
-                    type: merged.type, company_name: merged.companyName,
-                    observation: merged.observation, user_id: uid
+            try {
+                if (navigator.onLine) {
+                    await ServiceRepository.delete(id);
+                } else {
+                    throw new Error('Offline');
+                }
+            } catch (e) {
+                import('../services/SyncService').then(({ syncService }) => {
+                    syncService.addToQueue({
+                        entityId: id,
+                        entityType: 'SERVICE',
+                        operation: 'DELETE',
+                        data: null,
+                        userName: user.name
+                    });
                 });
             }
         }
     };
 
-    // Expenses & Subscribers (Simplified similar logic)
-    const addExpense = (expense: Omit<Expense, 'id'>) => {
-        const newExpense = { ...expense, id: Date.now() };
-        setExpenses(prev => [newExpense, ...prev]);
+    const updateService = async (id: number, updates: Partial<Service>) => {
+        setServices(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
         if (user) {
-            const uid = normalizeUsername(user.name);
-            supabase.from('gastos').insert([{ ...newExpense, user_id: uid }]);
+            try {
+                if (navigator.onLine) {
+                    await ServiceRepository.update(id, updates, user.name);
+                } else {
+                    throw new Error('Offline');
+                }
+            } catch (e) {
+                import('../services/SyncService').then(({ syncService }) => {
+                    syncService.addToQueue({
+                        entityId: id,
+                        entityType: 'SERVICE',
+                        operation: 'UPDATE',
+                        data: updates,
+                        userName: user.name
+                    });
+                });
+            }
         }
     };
 
-    const deleteExpense = (id: number) => {
+    const addExpense = async (expense: Omit<Expense, 'id'>) => {
+        const localId = Date.now();
+        setExpenses(prev => [{ ...expense, id: localId }, ...prev]);
+
+        if (user) {
+            try {
+                if (navigator.onLine) {
+                    const newExpense = await ExpenseRepository.create(expense, user.name);
+                    setExpenses(prev => prev.map(e => e.id === localId ? newExpense : e));
+                } else {
+                    throw new Error('Offline');
+                }
+            } catch (error) {
+                import('../services/SyncService').then(({ syncService }) => {
+                    syncService.addToQueue({
+                        entityId: localId,
+                        entityType: 'EXPENSE',
+                        operation: 'CREATE',
+                        data: expense,
+                        userName: user.name
+                    });
+                });
+            }
+        }
+    };
+
+    const deleteExpense = async (id: number) => {
         setExpenses(prev => prev.filter(e => e.id !== id));
-        if (user) supabase.from('gastos').delete().eq('id', id);
-    };
-
-    const updateExpense = (id: number, updates: Partial<Expense>) => {
-        setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
-        // Sync logic
-    };
-
-    const addSubscriber = (data: Omit<Subscriber, 'id' | 'createdAt'>) => {
-        const newSub = { ...data, id: Date.now().toString(), createdAt: new Date().toISOString() };
-        setSubscribers(prev => [...prev, newSub]);
         if (user) {
-            const uid = normalizeUsername(user.name);
-            supabase.from('abonados').insert([{
-                id: newSub.id, name: newSub.name, office_number: newSub.officeNumber,
-                is_capped: newSub.isCapped, cap_amount: newSub.capAmount,
-                created_at: newSub.createdAt, user_id: uid
-            }]);
+            try {
+                if (navigator.onLine) {
+                    await ExpenseRepository.delete(id);
+                } else {
+                    throw new Error('Offline');
+                }
+            } catch (e) {
+                import('../services/SyncService').then(({ syncService }) => {
+                    syncService.addToQueue({
+                        entityId: id,
+                        entityType: 'EXPENSE',
+                        operation: 'DELETE',
+                        data: null,
+                        userName: user.name
+                    });
+                });
+            }
         }
     };
 
-    const deleteSubscriber = (id: string) => {
-        setSubscribers(prev => prev.filter(s => s.id !== id));
-        if (user) supabase.from('abonados').delete().eq('id', id);
+    const updateExpense = async (id: number, updates: Partial<Expense>) => {
+        setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
+        if (user) {
+            try {
+                if (navigator.onLine) {
+                    await ExpenseRepository.update(id, updates);
+                } else {
+                    throw new Error('Offline');
+                }
+            } catch (e) {
+                import('../services/SyncService').then(({ syncService }) => {
+                    syncService.addToQueue({
+                        entityId: id,
+                        entityType: 'EXPENSE',
+                        operation: 'UPDATE',
+                        data: updates,
+                        userName: user.name
+                    });
+                });
+            }
+        }
     };
 
-    const updateSubscriber = (id: string, updates: Partial<Subscriber>) => {
+    const addSubscriber = async (data: Omit<Subscriber, 'id' | 'createdAt'>) => {
+        const localId = Date.now().toString();
+        setSubscribers(prev => [...prev, { ...data, id: localId, createdAt: new Date().toISOString() }]);
+
+        if (user) {
+            try {
+                if (navigator.onLine) {
+                    const newSub = await SubscriberRepository.create(data, user.name);
+                    setSubscribers(prev => prev.map(s => s.id === localId ? newSub : s));
+                } else {
+                    throw new Error('Offline');
+                }
+            } catch (error) {
+                import('../services/SyncService').then(({ syncService }) => {
+                    syncService.addToQueue({
+                        entityId: localId,
+                        entityType: 'SUBSCRIBER',
+                        operation: 'CREATE',
+                        data: data,
+                        userName: user.name
+                    });
+                });
+            }
+        }
+    };
+
+    const deleteSubscriber = async (id: string) => {
+        setSubscribers(prev => prev.filter(s => s.id !== id));
+        if (user) {
+            try {
+                if (navigator.onLine) {
+                    await SubscriberRepository.delete(id);
+                } else {
+                    throw new Error('Offline');
+                }
+            } catch (e) {
+                import('../services/SyncService').then(({ syncService }) => {
+                    syncService.addToQueue({
+                        entityId: id,
+                        entityType: 'SUBSCRIBER',
+                        operation: 'DELETE',
+                        data: null,
+                        userName: user.name
+                    });
+                });
+            }
+        }
+    };
+
+    const updateSubscriber = async (id: string, updates: Partial<Subscriber>) => {
         setSubscribers(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+        if (user) {
+            try {
+                if (navigator.onLine) {
+                    await SubscriberRepository.update(id, updates);
+                } else {
+                    throw new Error('Offline');
+                }
+            } catch (e) {
+                import('../services/SyncService').then(({ syncService }) => {
+                    syncService.addToQueue({
+                        entityId: id,
+                        entityType: 'SUBSCRIBER',
+                        operation: 'UPDATE',
+                        data: updates,
+                        userName: user.name
+                    });
+                });
+            }
+        }
     };
 
     const forceManualSync = async () => {
         setSyncStatus('syncing');
+        // Gatillo para la cola offline
+        const { syncService } = await import('../services/SyncService');
+        await syncService.processQueue();
+
         await fetchCloudData();
         setSyncStatus('success');
     };
 
-    const updateAnnualConfig = (newConfig: any) => {
-        setAnnualConfig((prev: any) => ({ ...prev, ...newConfig }));
+    const updateAnnualConfig = (newConfig: Partial<AnnualConfig>) => {
+        setAnnualConfig((prev: AnnualConfig) => ({ ...prev, ...newConfig }));
     };
 
     return (

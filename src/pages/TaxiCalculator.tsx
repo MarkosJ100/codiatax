@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     getCurrentTariff, getTariffReason, searchDestinations, CATEGORIES,
     FareDestination, TariffInfo
-} from '../data/taxiFares2025';
+} from '../data/taxiFares2026';
 import FreeDestinationCalculator from '../components/Calculator/FreeDestinationCalculator';
 
 // Coordinates for origin detection
@@ -120,7 +120,7 @@ const TaxiCalculator: React.FC = () => {
                     <Calculator size={48} color="var(--accent-primary)" style={{ marginBottom: '1rem' }} />
                     <h1 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Calculadora de Tarifas</h1>
                     <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-                        Tarifas oficiales Jerez 2025
+                        Tarifas oficiales Jerez 2026
                     </p>
 
                     {/* Current Tariff Info */}
@@ -383,7 +383,11 @@ const TaxiCalculator: React.FC = () => {
                                 borderRadius: 'var(--radius-sm)'
                             }}>
                                 <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>€/KM</div>
-                                <div style={{ fontWeight: '600' }}>{currentTariff.pricePerKm.toFixed(2)} €</div>
+                                <div style={{ fontWeight: '600' }}>
+                                    {selectedFare.category === 'general'
+                                        ? (currentTariff.type === 'tarifa7' ? '0.71' : '0.82')
+                                        : currentTariff.pricePerKm.toFixed(2)} €
+                                </div>
                             </div>
                         </div>
 

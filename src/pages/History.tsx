@@ -487,7 +487,7 @@ const History: React.FC = () => {
                             ))}
                         </select>
                         <select className="input" value={filterYear.toString()} onChange={e => setFilterYear(parseInt(e.target.value))}>
-                            {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+                            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
                         </select>
                     </div>
                     <input

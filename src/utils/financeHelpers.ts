@@ -1,10 +1,15 @@
+import { Service, Expense, MileageLog } from '../types';
 import { isSameDay, isSameWeek, isSameMonth, isSameYear } from './dateHelpers';
 
 export type Period = 'day' | 'week' | 'month' | 'year';
 
-export const filterByPeriod = (item: any, dateField: string, period: Period, now: Date = new Date()) => {
-    if (!item || !item[dateField]) return false;
-    const d = new Date(item[dateField]);
+interface Titled {
+    timestamp: string | number | Date;
+}
+
+export const filterByPeriod = <T extends Titled>(item: T, period: Period, now: Date = new Date()) => {
+    if (!item || !item.timestamp) return false;
+    const d = new Date(item.timestamp);
     if (isNaN(d.getTime())) return false;
 
     switch (period) {
@@ -16,10 +21,10 @@ export const filterByPeriod = (item: any, dateField: string, period: Period, now
     }
 };
 
-export const calculateTotals = (services: any[], expenses: any[], mileageLogs: any[], period: Period, now: Date = new Date()) => {
-    const periodServices = services.filter(s => filterByPeriod(s, 'timestamp', period, now));
-    const periodExpenses = expenses.filter(e => filterByPeriod(e, 'timestamp', period, now));
-    const periodMileage = mileageLogs.filter(l => filterByPeriod(l, 'timestamp', period, now));
+export const calculateTotals = (services: Service[], expenses: Expense[], mileageLogs: MileageLog[], period: Period, now: Date = new Date()) => {
+    const periodServices = services.filter(s => filterByPeriod(s, period, now));
+    const periodExpenses = expenses.filter(e => filterByPeriod(e, period, now));
+    const periodMileage = mileageLogs.filter(l => filterByPeriod(l, period, now));
 
     const taxiIncome = periodServices
         .filter(s => s.type === 'normal' || s.type === 'facturado')
@@ -33,7 +38,6 @@ export const calculateTotals = (services: any[], expenses: any[], mileageLogs: a
     const totalExpenses = periodExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
     const totalKms = periodMileage.reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
 
-    // Added: Pending income from company services not yet paid
     const pendingSubscriberBalance = periodServices
         .filter(s => s.type === 'company' && s.isPaid !== true)
         .reduce((sum, s) => sum + (Number(s.amount) || 0), 0);

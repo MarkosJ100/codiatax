@@ -4,11 +4,14 @@ import { UIProvider, useUI } from './UIContext';
 import { VehicleProvider, useVehicle } from './VehicleContext';
 import { ServiceProvider, useServices } from './ServiceContext';
 import { ShiftProvider, useShifts } from './ShiftContext';
-import { supabase } from '../supabase';
-import { normalizeUsername } from '../utils/userHelpers';
+import { DataRepository } from '../services/repositories/DataRepository';
 
 // Re-export types if needed, or import them
-import { Service, Expense, Subscriber, ShiftStorage, VehicleData, MileageLog, MaintenanceItem, ShiftType } from '../types/index';
+import {
+  Service, Expense, Subscriber, ShiftStorage, VehicleData, MileageLog,
+  MaintenanceItem, ShiftType, AnnualConfig, UserShiftConfig,
+  BackupData, AirportShift, User
+} from '../types/index';
 
 // Define the COMPLETE monolithic interface
 interface AppContextType {
@@ -19,7 +22,7 @@ interface AppContextType {
   showToast: (message: string, type?: 'success' | 'error' | 'warning' | 'info') => void;
 
   // Auth
-  user: any;
+  user: User | null;
   login: (name: string, licenseNumber: string, pin: string) => void;
   logout: () => void;
   setAppPin: (pin: string) => void;
@@ -37,38 +40,38 @@ interface AppContextType {
 
   // Services
   services: Service[];
-  addService: (service: Omit<Service, 'id'>) => void;
-  updateService: (id: number, updates: Partial<Service>) => void;
-  deleteService: (id: number) => void;
+  addService: (service: Omit<Service, 'id'>) => Promise<void>;
+  updateService: (id: number, updates: Partial<Service>) => Promise<void>;
+  deleteService: (id: number) => Promise<void>;
   expenses: Expense[];
-  addExpense: (expense: Omit<Expense, 'id'>) => void;
-  updateExpense: (id: number, updates: Partial<Expense>) => void;
-  deleteExpense: (id: number) => void;
+  addExpense: (expense: Omit<Expense, 'id'>) => Promise<void>;
+  updateExpense: (id: number, updates: Partial<Expense>) => Promise<void>;
+  deleteExpense: (id: number) => Promise<void>;
   subscribers: Subscriber[];
-  addSubscriber: (subscriber: Omit<Subscriber, 'id' | 'createdAt'>) => void;
-  updateSubscriber: (id: string, updates: Partial<Subscriber>) => void;
-  deleteSubscriber: (id: string) => void;
+  addSubscriber: (subscriber: Omit<Subscriber, 'id' | 'createdAt'>) => Promise<void>;
+  updateSubscriber: (id: string, updates: Partial<Subscriber>) => Promise<void>;
+  deleteSubscriber: (id: string) => Promise<void>;
   syncStatus: 'idle' | 'syncing' | 'error' | 'success';
   forceManualSync: () => Promise<void>;
-  lastSyncError?: string; // Optional in case I missed it
-  annualConfig: any;
-  updateAnnualConfig: (config: any) => void;
+  lastSyncError?: string;
+  annualConfig: AnnualConfig;
+  updateAnnualConfig: (config: Partial<AnnualConfig>) => void;
 
   // Shifts
   shiftStorage: ShiftStorage;
-  toggleAirportShift: (dateStr: string, type?: string, userName?: string | null) => any;
+  toggleAirportShift: (dateStr: string, type?: string, userName?: string | null) => { success: boolean, action?: string, type?: string, error?: string };
   toggleRestDay: (dateStr: string) => void;
   checkShiftCollision: (week: string, type: ShiftType, currentUserName: string) => string | null;
-  saveUserShiftConfig: (config: any) => void;
+  saveUserShiftConfig: (config: UserShiftConfig) => void;
   getShiftForDate: (date: Date) => any;
-  generateAirportCycle: (startDateStr: string, type?: string) => any;
-  clearFutureAirportShifts: (fromDateStr: string) => any;
-  undoLastAction: () => any;
-  undoBuffer: any[]; // Added for compatibility with AirportShifts
+  generateAirportCycle: (startDateStr: string, type?: string) => { success: boolean, count?: number, error?: string };
+  clearFutureAirportShifts: (fromDateStr: string) => { success: boolean, error?: string };
+  undoLastAction: () => { success: boolean };
+  undoBuffer: AirportShift[] | null;
 
   // Global
   resetAppData: () => void;
-  restoreAppData: (backup: any) => Promise<{ success: boolean; error?: string }>;
+  restoreAppData: (backup: BackupData) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -84,29 +87,21 @@ const AppBridge: React.FC<{ children: ReactNode }> = ({ children }) => {
     if (window.confirm('¿Seguro que quieres borrar TODO?')) {
       localStorage.clear();
       if (auth.user) {
-        const uid = normalizeUsername(auth.user.name);
-        await supabase.from('servicios').delete().eq('user_id', uid);
-        await supabase.from('gastos').delete().eq('user_id', uid);
-        await supabase.from('vehiculos').delete().eq('user_id', uid);
-        await supabase.from('turnos_storage').delete().eq('user_id', uid);
-        await supabase.from('abonados').delete().eq('user_id', uid);
+        try {
+          await DataRepository.resetAllData(auth.user.name);
+        } catch (e) {
+          console.error('Reset failed', e);
+        }
       }
       window.location.reload();
     }
   };
 
-  const restoreAppData = async (backup: any) => {
+  const restoreAppData = async (backup: BackupData) => {
     try {
       if (backup.services) localStorage.setItem('codiatax_services', JSON.stringify(backup.services));
       if (backup.expenses) localStorage.setItem('codiatax_expenses', JSON.stringify(backup.expenses));
       if (backup.vehicle) localStorage.setItem('codiatax_vehicle', JSON.stringify(backup.vehicle));
-
-      // Return success before reload (though reload might interrupt it, it satisfies the interface)
-      // Actually, if we reload, the promise won't resolve. 
-      // But we can return the object, and THEN reload after a short delay or let the caller handle reload.
-      // For now, let's keep the reload here but return the object first? No, that's impossible.
-      // Let's remove window.location.reload() from here and let the caller do it if success?
-      // Or just return { success: true } and reload.
 
       setTimeout(() => window.location.reload(), 500);
       return { success: true };
@@ -117,7 +112,7 @@ const AppBridge: React.FC<{ children: ReactNode }> = ({ children }) => {
   };
 
   const loginAdapter = (name: string, licenseNumber: string, pin: string) => {
-    const mockUser: any = {
+    const mockUser: User = {
       name,
       licenseNumber,
       role: 'propietario',
@@ -132,19 +127,44 @@ const AppBridge: React.FC<{ children: ReactNode }> = ({ children }) => {
     auth.login(mockUser, true);
   };
 
-  // Need to cast the mix of contexts to AppContextType because of minor mismatches we are bridging
-  const contextValue: any = {
+  // Sync Queue State Monitoring
+  const [syncQueueStatus, setSyncQueueStatus] = React.useState<{ pending: number; isSyncing: boolean; lastError: string | null }>({
+    pending: 0,
+    isSyncing: false,
+    lastError: null
+  });
+
+  React.useEffect(() => {
+    let unsubscribe: () => void;
+    import('../services/SyncService').then(({ syncService }) => {
+      unsubscribe = syncService.subscribe((status) => {
+        setSyncQueueStatus(status);
+      });
+    });
+    return () => unsubscribe && unsubscribe();
+  }, []);
+
+  const getDerivedSyncStatus = () => {
+    if (syncQueueStatus.isSyncing) return 'syncing';
+    if (syncQueueStatus.lastError) return 'error';
+    if (syncQueueStatus.pending > 0) return 'idle'; // It's idle but has pending items (Inactivo/Pendiente)
+    return services.syncStatus;
+  };
+
+  const contextValue: AppContextType = {
     ...ui,
     ...auth,
     login: loginAdapter,
     ...vehicle,
     ...services,
-    updateMaintenance: vehicle.updateMaintenance, // Explicit map if needed
+    syncStatus: getDerivedSyncStatus(),
+    updateMaintenance: vehicle.updateMaintenance,
     addMaintenanceItem: vehicle.addMaintenanceItem,
     ...shifts,
+    undoBuffer: null,
     resetAppData,
     restoreAppData,
-    lastSyncError: undefined
+    lastSyncError: syncQueueStatus.lastError || undefined
   };
 
   return (

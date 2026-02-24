@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Home, PlusCircle, Scroll, Wallet, Wrench, PlaneLanding, LogOut } from 'lucide-react';
+import { Home, PlusCircle, Scroll, Wallet, Wrench, PlaneLanding, LogOut, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
 import { format, es } from '../../utils/dateHelpers';
@@ -90,6 +90,10 @@ const MobileShell: React.FC = () => {
                 <NavLink to="/maintenance" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
                     <Wrench size={22} />
                     <span>Taller</span>
+                </NavLink>
+                <NavLink to="/invoicing" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+                    <FileText size={22} />
+                    <span>Facturas</span>
                 </NavLink>
                 <NavLink to="/airport" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
                     <PlaneLanding size={22} />

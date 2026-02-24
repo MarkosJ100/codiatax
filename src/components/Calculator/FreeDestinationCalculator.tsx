@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
     MapPin, Navigation, Loader, Info, ArrowLeft, Clock, Route
 } from 'lucide-react';
-import { getCurrentTariff, getTariffReason } from '../../data/taxiFares2025';
+import { getCurrentTariff, getTariffReason, INTERURBAN_TARIFFS } from '../../data/taxiFares2026';
 import { calculateRoute, geocodeAddress, reverseGeocode, calculateFare, Coordinates, FareCalculation, getLocationSuggestions, LocationSuggestion } from '../../services/routingService';
 import { getDestinationWeather, WeatherInfo } from '../../services/weatherService';
 import { getTrafficIncidents, extractProvince, TrafficIncident } from '../../services/trafficService';
@@ -598,7 +598,7 @@ const FreeDestinationCalculator: React.FC<Props> = ({ onBack }) => {
                                 </div>
                                 <div style={{ padding: '0.85rem', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                                     <div style={{ fontSize: '0.65rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>PRECIO/KM</div>
-                                    <div style={{ fontWeight: '800', fontSize: '1rem' }}>{(currentTariff.pricePerKm * 2).toFixed(2)}€</div>
+                                    <div style={{ fontWeight: '800', fontSize: '1rem' }}>{(INTERURBAN_TARIFFS[currentTariff.type].pricePerKm * 2).toFixed(2)}€</div>
                                 </div>
                             </div>
 

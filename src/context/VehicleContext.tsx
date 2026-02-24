@@ -1,17 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
-import { Vehicle, MaintenanceItem } from '../types';
-import { supabase } from '../supabase';
-import { normalizeUsername } from '../utils/userHelpers';
+import { Vehicle, MaintenanceItem, MileageLog } from '../types';
 import { useAuth } from './AuthContext';
 import { useUI } from './UIContext';
+import { VehicleRepository } from '../services/repositories/VehicleRepository';
 
 interface VehicleContextType {
     vehicle: Vehicle;
     setVehicle: React.Dispatch<React.SetStateAction<Vehicle>>;
     currentOdometer: number;
     setInitialOdometer: (km: string | number) => void;
-    mileageLogs: any[];
-    addMileageLog: (log: any) => void;
+    mileageLogs: MileageLog[];
+    addMileageLog: (log: Omit<MileageLog, 'id'>) => void;
     updateMaintenance: (key: string, lastKm: number) => void;
     addMaintenanceItem: (key: string, data: MaintenanceItem) => void;
 }
@@ -23,7 +22,6 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children })
     const { showToast } = useUI();
 
     const [vehicle, setVehicle] = useState<Vehicle>(() => {
-        // Default initialization logic (same as AppContext)
         const defaultVehicle: Vehicle = {
             licensePlate: '',
             model: '',
@@ -59,17 +57,26 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // Persistence
     useEffect(() => {
-        const timeout = setTimeout(() => {
+        const timeout = setTimeout(async () => {
             localStorage.setItem('codiatax_vehicle', JSON.stringify(vehicle));
             if (user) {
-                const uid = normalizeUsername(user.name);
-                supabase.from('vehiculos').upsert({
-                    license_plate: vehicle.licensePlate,
-                    model: vehicle.model,
-                    initial_odometer: vehicle.initialOdometer,
-                    maintenance_data: vehicle.maintenance,
-                    user_id: uid
-                }).then(({ error }) => { if (error) console.warn('Vehicle sync failed', error); });
+                try {
+                    if (navigator.onLine) {
+                        await VehicleRepository.upsert(vehicle, user.name);
+                    } else {
+                        throw new Error('Offline');
+                    }
+                } catch (e) {
+                    import('../services/SyncService').then(({ syncService }) => {
+                        syncService.addToQueue({
+                            entityId: 'current',
+                            entityType: 'VEHICLE',
+                            operation: 'UPSERT',
+                            data: vehicle,
+                            userName: user.name
+                        });
+                    });
+                }
             }
         }, 2000);
         return () => clearTimeout(timeout);
@@ -79,21 +86,12 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children })
         localStorage.setItem('codiatax_mileage', JSON.stringify(mileageLogs));
     }, [mileageLogs]);
 
-    // Sync Fetch Logic for Vehicle (Simplified)
+    // Sync Fetch Logic
     useEffect(() => {
         if (user) {
-            const uid = normalizeUsername(user.name);
-            supabase.from('vehiculos').select('*').eq('user_id', uid).maybeSingle()
-                .then(({ data }) => {
-                    if (data) {
-                        setVehicle({
-                            licensePlate: data.license_plate,
-                            model: data.model,
-                            initialOdometer: data.initial_odometer,
-                            maintenance: data.maintenance_data
-                        });
-                    }
-                });
+            VehicleRepository.get(user.name).then(cloudVehicle => {
+                if (cloudVehicle) setVehicle(cloudVehicle);
+            }).catch(e => console.warn('Vehicle fetch failed', e));
         }
     }, [user]);
 
@@ -104,7 +102,6 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     const addMileageLog = (log: any) => {
         setMileageLogs(prev => [...prev, { ...log, id: Date.now() }]);
-        // Note: Mileage is not currently synced to Supabase in AppContext, limiting scope to match original behavior for now
     };
 
     const updateMaintenance = (key: string, lastKm: number) => {

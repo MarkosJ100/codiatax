@@ -1,10 +1,11 @@
-import { supabase } from '../supabase';
+import { Service, Expense, Vehicle, ShiftStorage } from '../types';
+import { DataRepository } from '../services/repositories/DataRepository';
 
 export interface LoaderData {
-    services: any[];
-    expenses: any[];
-    vehicle: any | null;
-    shiftStorage: any | null;
+    services: Service[];
+    expenses: Expense[];
+    vehicle: Vehicle | null;
+    shiftStorage: ShiftStorage | null;
 }
 
 /**
@@ -17,32 +18,12 @@ export async function appDataLoader(userId: string | null): Promise<LoaderData> 
     }
 
     try {
-        const [
-            { data: sData },
-            { data: eData },
-            { data: vData },
-            { data: tData }
-        ] = await Promise.all([
-            supabase.from('servicios').select('*').eq('user_id', userId),
-            supabase.from('gastos').select('*').eq('user_id', userId),
-            supabase.from('vehiculos').select('*').eq('user_id', userId).maybeSingle(),
-            supabase.from('turnos_storage').select('*').eq('user_id', userId).maybeSingle()
-        ]);
-
+        const data = await DataRepository.fetchInitialAppData(userId);
         return {
-            services: sData || [],
-            expenses: eData || [],
-            vehicle: vData ? {
-                licensePlate: vData.license_plate,
-                model: vData.model,
-                initialOdometer: vData.initial_odometer,
-                maintenance: vData.maintenance_data || {
-                    oil: { name: 'Aceite', lastKm: 0, interval: 15000 },
-                    tires: { name: 'Neumáticos', lastKm: 0, interval: 40000 },
-                    brakes: { name: 'Frenos', lastKm: 0, interval: 30000 }
-                }
-            } : null,
-            shiftStorage: tData?.data_json || null
+            services: data.services || [],
+            expenses: data.expenses || [],
+            vehicle: data.vehicle,
+            shiftStorage: data.shiftStorage
         };
     } catch (err) {
         console.warn('Loader failed (offline?):', err);

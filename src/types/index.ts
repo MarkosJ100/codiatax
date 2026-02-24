@@ -80,10 +80,34 @@ export interface AirportShift {
     type: string;
 }
 
+export interface AnnualConfig {
+    yearStartKm: number;
+    yearEndKm: number;
+    manualGrossIncome: number;
+}
+
+export interface UserShiftConfig {
+    userName: string;
+    shiftWeek: string;
+    shiftType: ShiftType;
+    startTime: string;
+    endTime: string;
+}
+
 export interface ShiftStorage {
     assignments: AirportShift[];
     restDays: string[];
-    userConfigs: any[];
+    userConfigs: UserShiftConfig[];
+}
+
+export type Period = 'day' | 'week' | 'month' | 'year';
+
+export interface BackupData {
+    services?: Service[];
+    expenses?: Expense[];
+    vehicle?: Vehicle;
+    subscribers?: Subscriber[];
+    shiftStorage?: ShiftStorage;
 }
 
 export interface Toast {
@@ -104,8 +128,39 @@ export interface MileageLog {
     notes?: string;
 }
 
-export type VehicleData = Vehicle;
+export type VehicleData = Vehicle; export interface DriverProfile {
+    userId: string;
+    fullName: string;
+    dni?: string;
+    nif: string;
+    address: string;
+    licenseNo: string;
+    municipality: string;
+    phone?: string;
+    email?: string;
+    regime: string;
+}
 
-
-
-
+export interface Invoice {
+    id: string;
+    userId: string;
+    number: string;
+    series: string;
+    dateEmission: string;
+    dateService: string;
+    origin: string;
+    destination: string;
+    timeStart?: string;
+    timeEnd?: string;
+    km?: number;
+    baseAmount: number;
+    ivaRate: number;
+    ivaAmount: number;
+    totalAmount: number;
+    paymentMethod: 'Efectivo' | 'Tarjeta' | 'Bizum' | 'Transferencia';
+    clientName: string;
+    clientNif?: string;
+    clientAddress?: string;
+    clientEmail?: string;
+    createdAt: string;
+}

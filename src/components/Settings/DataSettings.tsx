@@ -248,12 +248,13 @@ const CloudDiagnosis = () => {
     };
 
     const getStatusText = () => {
-        switch (syncStatus) {
-            case 'success': return 'Sincronizado';
-            case 'error': return 'Error';
-            case 'syncing': return 'Sincronizando...';
-            default: return 'Inactivo';
-        }
+        // Accedemos indirectamente a si hay pendientes por el syncStatus que viene del contexto
+        if (syncStatus === 'syncing') return 'Sincronizando...';
+        if (syncStatus === 'error') return 'Error de Sincronización';
+
+        // Si el estado es idle pero sabemos que hay algo (esto se deduce mejor si pasamos el pending count, 
+        // pero por ahora usemos una descripción más clara)
+        return 'Conectado / Al día';
     };
 
     return (
@@ -331,13 +332,13 @@ const CloudDiagnosis = () => {
 };
 
 // Iconos simples
-const ActivityIcon = ({ size, color }: any) => (
+const ActivityIcon = ({ size, color }: { size: number, color: string }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
     </svg>
 );
 
-const RefreshIcon = ({ size, className }: any) => (
+const RefreshIcon = ({ size, className }: { size: number, className: string }) => (
     <svg
         width={size}
         height={size}

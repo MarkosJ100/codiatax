@@ -40,13 +40,15 @@ export const validateDateFormat = (dateString: string): boolean => {
     return date instanceof Date && !isNaN(date.getTime());
 };
 
+import { Service, Expense } from '../types';
+
 /**
  * Limpia y valida input numérico
  */
-export const sanitizeNumber = (input: any): number | null => {
-    const num = parseFloat(input);
-    if (isNaN(num) || !isFinite(num)) return null;
-    return num;
+export const sanitizeNumber = (input: string | number | null | undefined): number | null => {
+    if (input === null || input === undefined) return null;
+    const num = Number(input);
+    return isNaN(num) ? null : num;
 };
 
 /**

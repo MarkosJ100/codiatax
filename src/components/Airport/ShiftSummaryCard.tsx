@@ -2,9 +2,14 @@ import React from 'react';
 import { format, es } from '../../utils/dateHelpers';
 import { User } from '../../types';
 
+interface CurrentShift {
+    weekLabel: string;
+    type: string;
+}
+
 interface ShiftSummaryCardProps {
     user: User;
-    currentShift: any;
+    currentShift: CurrentShift | null;
     shiftDays: string[];
     viewDate: Date;
 }

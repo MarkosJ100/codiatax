@@ -1,8 +1,8 @@
 # 🚖 CODIATAX - Documentación Completa del Proyecto
 
-**Versión:** 1.2.3 (Estable)  
+**Versión:** 1.2.4 (Estable)  
 **Fecha de Creación:** Diciembre 2024  
-**Última Actualización:** Febrero 2026 (v2.1)  
+**Última Actualización:** 24 Febrero 2026 (v2.2)  
 **Tipo:** Aplicación Móvil Híbrida (Android/iOS/Web)  
 **Propósito:** Gestión Integral para Profesionales del Taxi con Sincronización Cloud
 
@@ -59,6 +59,7 @@ La aplicación distingue claramente entre dos tipos de usuarios:
 | 🤷 Olvidar gastos | 🔔 Recordatorios y avisos |
 | ⏰ Tiempo buscando datos | 🔍 Búsqueda instantánea |
 | 📊 Sin estadísticas | 📈 Gráficas y análisis automático |
+| 🚖 Tarifas desactualizadas | 📅 **Precios Oficiales 2026** (BOJA 17/02/2026) |
 
 ---
 

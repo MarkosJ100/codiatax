@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole } from '../types';
 import { supabase } from '../supabase';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface AuthContextType {
     user: User | null;
@@ -43,7 +44,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return () => subscription.unsubscribe();
     }, []);
 
-    const mapSessionToUser = (authUser: any) => {
+    const mapSessionToUser = (authUser: SupabaseUser) => {
         const metadata = authUser.user_metadata || {};
         const rawRole = metadata.role || 'propietario';
         const normalizedRole: UserRole = (rawRole === 'owner' || rawRole === 'propietario') ? 'propietario' : 'asalariado';
@@ -65,7 +66,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const login = (userData: User, rememberMe: boolean) => {
-        // Legacy support or manual override if needed
         setUser(userData);
         if (rememberMe) {
             localStorage.setItem('codiatax_user', JSON.stringify(userData));

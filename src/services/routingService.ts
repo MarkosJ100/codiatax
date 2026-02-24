@@ -15,6 +15,34 @@ export interface Coordinates {
     lng: number;
 }
 
+interface OSRMResponse {
+    code: string;
+    routes: {
+        distance: number;
+        duration: number;
+        geometry: {
+            coordinates: [number, number][];
+        };
+    }[];
+}
+
+interface NominatimResult {
+    lat: string;
+    lon: string;
+    display_name: string;
+    address?: {
+        road?: string;
+        pedestrian?: string;
+        footway?: string;
+        house_number?: string;
+        city?: string;
+        town?: string;
+        village?: string;
+        municipality?: string;
+    };
+    error?: string;
+}
+
 // Calculate route between two points using OSRM
 export const calculateRoute = async (
     origin: Coordinates,
@@ -31,7 +59,7 @@ export const calculateRoute = async (
             throw new Error(`HTTP error: ${response.status}`);
         }
 
-        const data = await response.json();
+        const data: OSRMResponse = await response.json();
 
         if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
             return {
@@ -45,7 +73,7 @@ export const calculateRoute = async (
         const route = data.routes[0];
 
         // Convert [lng, lat] from OSRM to [lat, lng] for Leaflet
-        const geometry = route.geometry?.coordinates?.map((coord: [number, number]) => [coord[1], coord[0]]) || [];
+        const geometry: [number, number][] = route.geometry?.coordinates?.map((coord: [number, number]): [number, number] => [coord[1], coord[0]]) || [];
 
         return {
             distance: route.distance / 1000, // Convert meters to km
@@ -89,7 +117,7 @@ export const geocodeAddress = async (address: string): Promise<GeocodingResult> 
             throw new Error(`HTTP error: ${response.status}`);
         }
 
-        const data = await response.json();
+        const data: NominatimResult[] = await response.json();
 
         if (!data || data.length === 0) {
             return {
@@ -144,7 +172,7 @@ export const reverseGeocode = async (coords: Coordinates): Promise<ReverseGeocod
             throw new Error(`HTTP error: ${response.status}`);
         }
 
-        const data = await response.json();
+        const data: NominatimResult = await response.json();
 
         if (!data || data.error) {
             return {
@@ -227,10 +255,10 @@ export const getLocationSuggestions = async (query: string): Promise<LocationSug
             throw new Error(`HTTP error: ${response.status}`);
         }
 
-        const data = await response.json();
+        const data: NominatimResult[] = await response.json();
 
         // Return suggestions with shortened names for better UI display
-        return data.map((item: any) => ({
+        return data.map((item) => ({
             displayName: shortenDisplayName(item.display_name),
             lat: parseFloat(item.lat),
             lng: parseFloat(item.lon)
@@ -256,7 +284,7 @@ export const calculateFare = (
     distanceKm: number,
     tariffType: 'tarifa7' | 'tarifa8'
 ): FareCalculation => {
-    // Tariff rates from BOJA 2025 (Interurban rules)
+    // Interurban rates (Andalucía) remain at 0.71 / 0.82
     // Rate is doubled to cover the return trip
     const tariffs = {
         tarifa7: {

@@ -14,6 +14,7 @@ import QuickLinksCard from '../components/Airport/QuickLinksCard';
 import ShiftActionPanel from '../components/Airport/ShiftActionPanel';
 import ErrorBoundary from '../components/Common/ErrorBoundary';
 import { normalizeUsername } from '../utils/userHelpers';
+import { useShiftLogic } from '../hooks/useShiftLogic';
 
 const AirportShifts: React.FC = () => {
     const {
@@ -21,6 +22,8 @@ const AirportShifts: React.FC = () => {
         toggleRestDay, getShiftForDate, generateAirportCycle,
         clearFutureAirportShifts, undoLastAction, undoBuffer
     } = useApp();
+
+    const { userAssignments } = useShiftLogic(shiftStorage, user?.name);
 
     const [viewDate, setViewDate] = useState<Date>(new Date());
     const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
@@ -34,12 +37,8 @@ const AirportShifts: React.FC = () => {
     }, [getShiftForDate, user]);
 
     const shiftDaysSet = useMemo(() => {
-        if (!user || !shiftStorage?.assignments) return new Set<string>();
-        const dates = shiftStorage.assignments
-            .filter(a => a.userId === normalizeUsername(user.name))
-            .map(a => a.date);
-        return new Set(dates);
-    }, [shiftStorage, user]);
+        return new Set(userAssignments.map(a => a.date));
+    }, [userAssignments]);
 
     const shiftDays = useMemo(() => Array.from(shiftDaysSet), [shiftDaysSet]);
 

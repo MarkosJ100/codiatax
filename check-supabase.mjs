@@ -95,11 +95,27 @@ if (serviciosHoy && serviciosHoy.length > 0) {
 
 console.log('\n---\n');
 
-// 5. Verificar todos los user_id únicos
+// 6. Abonados
+const { data: abonados, error: errorAbonados } = await supabase
+    .from('abonados')
+    .select('*');
+
+console.log(`📋 Total de abonados encontrados: ${abonados?.length || 0}`);
+
+if (abonados && abonados.length > 0) {
+    abonados.forEach((a, idx) => {
+        console.log(`${idx + 1}. ${a.name} (ID: ${a.id}) (user: ${a.user_id})`);
+    });
+}
+
+console.log('\n---\n');
+
+// 7. Verificar todos los user_id únicos (incluyendo abonados)
 const allUserIds = new Set();
 if (servicios) servicios.forEach(s => allUserIds.add(s.user_id));
 if (gastos) gastos.forEach(g => allUserIds.add(g.user_id));
 if (vehiculos) vehiculos.forEach(v => allUserIds.add(v.user_id));
+if (abonados) abonados.forEach(a => allUserIds.add(a.user_id));
 
 console.log('👥 Usuarios únicos encontrados:');
 if (allUserIds.size > 0) {
