@@ -136,7 +136,7 @@ const router = createBrowserRouter([
 function App() {
   return (
     <AppProvider>
-      <RouterProvider router={router} />
+      <RouterProvider router={router} fallbackElement={<LoadingFallback />} />
     </AppProvider>
   );
 }
