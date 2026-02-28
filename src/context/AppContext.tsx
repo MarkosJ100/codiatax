@@ -6,7 +6,7 @@ import { ServiceProvider, useServices } from './ServiceContext';
 import { ShiftProvider, useShifts } from './ShiftContext';
 import { DataRepository } from '../services/repositories/DataRepository';
 import { createDefaultUser } from '../utils/userHelpers';
-import { PersistenceService } from '../services/PersistenceService';
+import { PersistenceService, PersistenceResult } from '../services/PersistenceService';
 
 // Re-export types if needed, or import them
 import {

@@ -34,7 +34,7 @@ describe('SyncService', () => {
     });
 
     it('should add items to the queue and notify listeners', () => {
-        const mockItem = { entityType: 'SERVICE' as any, operation: 'CREATE' as any, data: { amount: 10 }, userName: 'u1' };
+        const mockItem = { entityType: 'SERVICE' as any, operation: 'CREATE' as any, entityId: 1, data: { amount: 10 }, userName: 'u1' };
         syncService.addToQueue(mockItem);
 
         expect(storage.setItem).toHaveBeenCalledWith('codiatax_sync_queue', expect.any(Array));
@@ -42,7 +42,7 @@ describe('SyncService', () => {
 
     it('should process queue when online', async () => {
         (storage.isOnline as any).mockReturnValue(false); // Offline to add without sync
-        const mockItem = { entityType: 'SERVICE' as any, operation: 'CREATE' as any, data: { amount: 10 }, userName: 'u1' };
+        const mockItem = { entityType: 'SERVICE' as any, operation: 'CREATE' as any, entityId: 1, data: { amount: 10 }, userName: 'u1' };
         syncService.addToQueue(mockItem);
 
         (storage.isOnline as any).mockReturnValue(true);
@@ -54,7 +54,7 @@ describe('SyncService', () => {
 
     it('should not process queue when offline', async () => {
         (storage.isOnline as any).mockReturnValue(false);
-        const mockItem = { entityType: 'SERVICE' as any, operation: 'CREATE' as any, data: { amount: 10 }, userName: 'u1' };
+        const mockItem = { entityType: 'SERVICE' as any, operation: 'CREATE' as any, entityId: 1, data: { amount: 10 }, userName: 'u1' };
         syncService.addToQueue(mockItem);
 
         await syncService.processQueue();
