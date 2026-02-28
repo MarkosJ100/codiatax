@@ -3,6 +3,9 @@ import { ShiftStorage, AirportShift, ShiftType, UserShiftConfig } from '../types
 import { calculateAirportCycle, filterFutureAssignments } from '../utils/airportLogic';
 import { useAuth } from './AuthContext';
 import { ShiftRepository } from '../services/repositories/ShiftRepository';
+import { storage } from '../utils/storage';
+import { syncService } from '../services/SyncService';
+import { ShiftService } from '../services/ShiftService';
 
 interface ShiftContextType {
     shiftStorage: ShiftStorage;
@@ -14,6 +17,7 @@ interface ShiftContextType {
     generateAirportCycle: (startDateStr: string, type?: string) => { success: boolean, count?: number, error?: string };
     clearFutureAirportShifts: (fromDateStr: string) => { success: boolean, error?: string };
     undoLastAction: () => { success: boolean };
+    undoBuffer: AirportShift[] | null;
 }
 
 const ShiftContext = createContext<ShiftContextType | undefined>(undefined);
@@ -22,27 +26,23 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const { user } = useAuth();
 
     const [shiftStorage, setShiftStorage] = useState<ShiftStorage>(() => {
-        try {
-            const saved = localStorage.getItem('codiatax_shift_storage');
-            return saved ? JSON.parse(saved) : { assignments: [], restDays: [], userConfigs: [] };
-        } catch { return { assignments: [], restDays: [], userConfigs: [] }; }
+        return storage.getItem<ShiftStorage>('codiatax_shift_storage', { assignments: [], restDays: [], userConfigs: [] });
     });
 
     const [undoBuffer, setUndoBuffer] = useState<AirportShift[] | null>(null);
 
-    // Persistence
+    // Persistence & Sync
     useEffect(() => {
-        localStorage.setItem('codiatax_shift_storage', JSON.stringify(shiftStorage));
+        storage.setItem('codiatax_shift_storage', shiftStorage);
         if (user) {
             const sync = async () => {
                 try {
-                    if (navigator.onLine) {
+                    if (storage.isOnline()) {
                         await ShiftRepository.upsert(shiftStorage, user.name);
                     } else {
                         throw new Error('Offline');
                     }
                 } catch (e) {
-                    const { syncService } = await import('../services/SyncService');
                     syncService.addToQueue({
                         entityId: 'current',
                         entityType: 'SHIFT',
@@ -70,21 +70,18 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!targetUser) return { success: false, error: 'User name required' };
 
         const assignments = shiftStorage.assignments || [];
-        const existing = assignments.find(a => a.date === dateStr && a.userId === targetUser);
+        const isAlreadyAssigned = assignments.some(a => a.date === dateStr && a.userId === targetUser);
 
-        if (existing) {
-            setShiftStorage(prev => ({
-                ...prev,
-                assignments: (prev.assignments || []).filter(a => !(a.date === dateStr && a.userId === targetUser))
-            }));
-            return { success: true, action: 'removed' };
-        } else {
-            setShiftStorage(prev => ({
-                ...prev,
-                assignments: [...assignments, { date: dateStr, userId: targetUser, type }]
-            }));
-            return { success: true, action: 'added', type };
-        }
+        setShiftStorage(prev => ({
+            ...prev,
+            assignments: ShiftService.toggleAssignment(prev.assignments || [], dateStr, targetUser, type)
+        }));
+
+        return {
+            success: true,
+            action: isAlreadyAssigned ? 'removed' : 'added',
+            type
+        };
     };
 
     const toggleRestDay = (dateStr: string) => {
@@ -98,9 +95,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     const checkShiftCollision = (week: string, type: ShiftType, currentUserName: string): string | null => {
-        const configs = shiftStorage.userConfigs || [];
-        const collision = configs.find(c => c.shiftWeek === week && c.shiftType === type && c.userName !== currentUserName);
-        return collision ? collision.userName : null;
+        return ShiftService.getCollision(shiftStorage.userConfigs || [], week, type, currentUserName);
     };
 
     const saveUserShiftConfig = (config: any) => {
@@ -119,8 +114,10 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const generateAirportCycle = (startDateStr: string, type: string = 'standard') => {
         if (!user) return { success: false, error: 'User required' };
         setUndoBuffer(shiftStorage.assignments);
-        const future = filterFutureAssignments(shiftStorage.assignments || [], user.name, startDateStr);
-        const newItems = calculateAirportCycle(startDateStr, user.name, type);
+
+        const future = ShiftService.clearFutureAssignments(shiftStorage.assignments || [], user.name, startDateStr);
+        const newItems = ShiftService.generateCycle(startDateStr, user.name, type);
+
         if (newItems.length === 0) return { success: false, error: 'Invalid date' };
         setShiftStorage(prev => ({ ...prev, assignments: [...future, ...newItems] }));
         return { success: true, count: newItems.length };
@@ -130,7 +127,8 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!user) return { success: false, error: 'User required' };
         setUndoBuffer(shiftStorage.assignments);
         setShiftStorage(prev => ({
-            ...prev, assignments: filterFutureAssignments(prev.assignments || [], user.name, fromDateStr)
+            ...prev,
+            assignments: ShiftService.clearFutureAssignments(prev.assignments || [], user.name, fromDateStr)
         }));
         return { success: true };
     };
@@ -148,7 +146,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         <ShiftContext.Provider value={{
             shiftStorage, toggleAirportShift, toggleRestDay, checkShiftCollision,
             saveUserShiftConfig, getShiftForDate, generateAirportCycle,
-            clearFutureAirportShifts, undoLastAction
+            clearFutureAirportShifts, undoLastAction, undoBuffer
         }}>
             {children}
         </ShiftContext.Provider>

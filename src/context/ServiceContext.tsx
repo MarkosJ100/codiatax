@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
 import { Service, Expense, Subscriber, AnnualConfig } from '../types';
 import { useAuth } from './AuthContext';
-import { useUI } from './UIContext';
 import { ServiceRepository } from '../services/repositories/ServiceRepository';
 import { ExpenseRepository } from '../services/repositories/ExpenseRepository';
 import { SubscriberRepository } from '../services/repositories/SubscriberRepository';
+import { storage } from '../utils/storage';
+import { syncService } from '../services/SyncService';
 
 interface ServiceContextType {
     services: Service[];
@@ -29,47 +30,29 @@ const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
 
 export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
-    const { showToast } = useUI();
     const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error' | 'success'>('idle');
 
-    // -- Services State --
     const [services, setServices] = useState<Service[]>(() => {
-        try {
-            const saved = localStorage.getItem('codiatax_services');
-            return saved ? JSON.parse(saved) : [];
-        } catch { return []; }
+        return storage.getItem<Service[]>('codiatax_services', []);
     });
 
-    // -- Expenses State --
     const [expenses, setExpenses] = useState<Expense[]>(() => {
-        try {
-            const saved = localStorage.getItem('codiatax_expenses');
-            return saved ? JSON.parse(saved) : [];
-        } catch { return []; }
+        return storage.getItem<Expense[]>('codiatax_expenses', []);
     });
 
-    // -- Subscribers State --
     const [subscribers, setSubscribers] = useState<Subscriber[]>(() => {
-        try {
-            const saved = localStorage.getItem('codiatax_subscribers');
-            return saved ? JSON.parse(saved) : [];
-        } catch { return []; }
+        return storage.getItem<Subscriber[]>('codiatax_subscribers', []);
     });
 
-    // -- Annual Config --
     const [annualConfig, setAnnualConfig] = useState<AnnualConfig>(() => {
-        try {
-            const saved = localStorage.getItem('codiatax_annual_config');
-            return saved ? JSON.parse(saved) : { yearStartKm: 0, yearEndKm: 0, manualGrossIncome: 0 };
-        } catch { return { yearStartKm: 0, yearEndKm: 0, manualGrossIncome: 0 }; }
+        return storage.getItem<AnnualConfig>('codiatax_annual_config', { yearStartKm: 0, yearEndKm: 0, manualGrossIncome: 0 });
     });
 
-    useEffect(() => { localStorage.setItem('codiatax_annual_config', JSON.stringify(annualConfig)); }, [annualConfig]);
+    useEffect(() => { storage.setItem('codiatax_annual_config', annualConfig); }, [annualConfig]);
 
-    // -- Persistence --
-    useEffect(() => { localStorage.setItem('codiatax_services', JSON.stringify(services)); }, [services]);
-    useEffect(() => { localStorage.setItem('codiatax_expenses', JSON.stringify(expenses)); }, [expenses]);
-    useEffect(() => { localStorage.setItem('codiatax_subscribers', JSON.stringify(subscribers)); }, [subscribers]);
+    useEffect(() => { storage.setItem('codiatax_services', services); }, [services]);
+    useEffect(() => { storage.setItem('codiatax_expenses', expenses); }, [expenses]);
+    useEffect(() => { storage.setItem('codiatax_subscribers', subscribers); }, [subscribers]);
 
     // -- Cloud Sync Logic --
     const isSyncing = useRef(false);
@@ -112,28 +95,22 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         if (user) {
             try {
-                if (navigator.onLine) {
+                if (storage.isOnline()) {
                     const newService = await ServiceRepository.create(service, user.name);
                     // Update the local service with the one from the database (real ID)
                     setServices(prev => prev.map(s => s.id === localId ? newService : s));
-                    showToast('Servicio sincronizado', 'success');
                 } else {
                     throw new Error('Offline');
                 }
             } catch (error) {
-                import('../services/SyncService').then(({ syncService }) => {
-                    syncService.addToQueue({
-                        entityId: localId,
-                        entityType: 'SERVICE',
-                        operation: 'CREATE',
-                        data: service,
-                        userName: user.name
-                    });
+                syncService.addToQueue({
+                    entityId: localId,
+                    entityType: 'SERVICE',
+                    operation: 'CREATE',
+                    data: service,
+                    userName: user.name
                 });
-                showToast('Guardado local (pendiente de sincronizar)', 'warning');
             }
-        } else {
-            showToast('Guardado local (sin sesión)', 'warning');
         }
     };
 
@@ -141,20 +118,18 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
         setServices(prev => prev.filter(s => s.id !== id));
         if (user) {
             try {
-                if (navigator.onLine) {
+                if (storage.isOnline()) {
                     await ServiceRepository.delete(id);
                 } else {
                     throw new Error('Offline');
                 }
             } catch (e) {
-                import('../services/SyncService').then(({ syncService }) => {
-                    syncService.addToQueue({
-                        entityId: id,
-                        entityType: 'SERVICE',
-                        operation: 'DELETE',
-                        data: null,
-                        userName: user.name
-                    });
+                syncService.addToQueue({
+                    entityId: id,
+                    entityType: 'SERVICE',
+                    operation: 'DELETE',
+                    data: null,
+                    userName: user.name
                 });
             }
         }
@@ -164,20 +139,18 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
         setServices(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
         if (user) {
             try {
-                if (navigator.onLine) {
+                if (storage.isOnline()) {
                     await ServiceRepository.update(id, updates, user.name);
                 } else {
                     throw new Error('Offline');
                 }
             } catch (e) {
-                import('../services/SyncService').then(({ syncService }) => {
-                    syncService.addToQueue({
-                        entityId: id,
-                        entityType: 'SERVICE',
-                        operation: 'UPDATE',
-                        data: updates,
-                        userName: user.name
-                    });
+                syncService.addToQueue({
+                    entityId: id,
+                    entityType: 'SERVICE',
+                    operation: 'UPDATE',
+                    data: updates,
+                    userName: user.name
                 });
             }
         }
@@ -189,21 +162,19 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         if (user) {
             try {
-                if (navigator.onLine) {
+                if (storage.isOnline()) {
                     const newExpense = await ExpenseRepository.create(expense, user.name);
                     setExpenses(prev => prev.map(e => e.id === localId ? newExpense : e));
                 } else {
                     throw new Error('Offline');
                 }
             } catch (error) {
-                import('../services/SyncService').then(({ syncService }) => {
-                    syncService.addToQueue({
-                        entityId: localId,
-                        entityType: 'EXPENSE',
-                        operation: 'CREATE',
-                        data: expense,
-                        userName: user.name
-                    });
+                syncService.addToQueue({
+                    entityId: localId,
+                    entityType: 'EXPENSE',
+                    operation: 'CREATE',
+                    data: expense,
+                    userName: user.name
                 });
             }
         }
@@ -213,20 +184,18 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
         setExpenses(prev => prev.filter(e => e.id !== id));
         if (user) {
             try {
-                if (navigator.onLine) {
+                if (storage.isOnline()) {
                     await ExpenseRepository.delete(id);
                 } else {
                     throw new Error('Offline');
                 }
             } catch (e) {
-                import('../services/SyncService').then(({ syncService }) => {
-                    syncService.addToQueue({
-                        entityId: id,
-                        entityType: 'EXPENSE',
-                        operation: 'DELETE',
-                        data: null,
-                        userName: user.name
-                    });
+                syncService.addToQueue({
+                    entityId: id,
+                    entityType: 'EXPENSE',
+                    operation: 'DELETE',
+                    data: null,
+                    userName: user.name
                 });
             }
         }
@@ -236,20 +205,18 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
         setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
         if (user) {
             try {
-                if (navigator.onLine) {
+                if (storage.isOnline()) {
                     await ExpenseRepository.update(id, updates);
                 } else {
                     throw new Error('Offline');
                 }
             } catch (e) {
-                import('../services/SyncService').then(({ syncService }) => {
-                    syncService.addToQueue({
-                        entityId: id,
-                        entityType: 'EXPENSE',
-                        operation: 'UPDATE',
-                        data: updates,
-                        userName: user.name
-                    });
+                syncService.addToQueue({
+                    entityId: id,
+                    entityType: 'EXPENSE',
+                    operation: 'UPDATE',
+                    data: updates,
+                    userName: user.name
                 });
             }
         }
@@ -261,21 +228,19 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         if (user) {
             try {
-                if (navigator.onLine) {
+                if (storage.isOnline()) {
                     const newSub = await SubscriberRepository.create(data, user.name);
                     setSubscribers(prev => prev.map(s => s.id === localId ? newSub : s));
                 } else {
                     throw new Error('Offline');
                 }
             } catch (error) {
-                import('../services/SyncService').then(({ syncService }) => {
-                    syncService.addToQueue({
-                        entityId: localId,
-                        entityType: 'SUBSCRIBER',
-                        operation: 'CREATE',
-                        data: data,
-                        userName: user.name
-                    });
+                syncService.addToQueue({
+                    entityId: localId,
+                    entityType: 'SUBSCRIBER',
+                    operation: 'CREATE',
+                    data: data,
+                    userName: user.name
                 });
             }
         }
@@ -285,20 +250,18 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
         setSubscribers(prev => prev.filter(s => s.id !== id));
         if (user) {
             try {
-                if (navigator.onLine) {
+                if (storage.isOnline()) {
                     await SubscriberRepository.delete(id);
                 } else {
                     throw new Error('Offline');
                 }
             } catch (e) {
-                import('../services/SyncService').then(({ syncService }) => {
-                    syncService.addToQueue({
-                        entityId: id,
-                        entityType: 'SUBSCRIBER',
-                        operation: 'DELETE',
-                        data: null,
-                        userName: user.name
-                    });
+                syncService.addToQueue({
+                    entityId: id,
+                    entityType: 'SUBSCRIBER',
+                    operation: 'DELETE',
+                    data: null,
+                    userName: user.name
                 });
             }
         }
@@ -308,20 +271,18 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
         setSubscribers(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
         if (user) {
             try {
-                if (navigator.onLine) {
+                if (storage.isOnline()) {
                     await SubscriberRepository.update(id, updates);
                 } else {
                     throw new Error('Offline');
                 }
             } catch (e) {
-                import('../services/SyncService').then(({ syncService }) => {
-                    syncService.addToQueue({
-                        entityId: id,
-                        entityType: 'SUBSCRIBER',
-                        operation: 'UPDATE',
-                        data: updates,
-                        userName: user.name
-                    });
+                syncService.addToQueue({
+                    entityId: id,
+                    entityType: 'SUBSCRIBER',
+                    operation: 'UPDATE',
+                    data: updates,
+                    userName: user.name
                 });
             }
         }

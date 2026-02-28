@@ -6,7 +6,8 @@ import {
     CheckCircle2, AlertCircle, Calendar, MapPin,
     Trash2, AlertTriangle, ChevronDown, Eye
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
+import { useUI } from '../../context/UIContext';
 import { Invoice, DriverProfile } from '../../types';
 import { invoiceService } from '../../services/invoiceService';
 import { downloadInvoicePDF, printInvoicePDF, generateQRCodeDataUrl } from '../../utils/pdfGenerator';
@@ -43,7 +44,8 @@ const validateNIF = (nif: string): boolean => {
 const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ initialData, onClose }) => {
-    const { user, showToast } = useApp();
+    const { user } = useAuth();
+    const { showToast } = useUI();
     const [view, setView] = useState<'history' | 'form' | 'profile'>('history');
     const [profile, setProfile] = useState<DriverProfile | null>(null);
     const [invoices, setInvoices] = useState<Invoice[]>([]);

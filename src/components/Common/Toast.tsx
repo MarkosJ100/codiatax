@@ -1,12 +1,12 @@
 import React from 'react';
-import { useApp } from '../../context/AppContext';
+import { useUI } from '../../context/UIContext';
 
 interface ToastProps {
     // Add props if needed, currently it might be internal or passed from context
 }
 
 const Toast: React.FC = () => {
-    const { toast } = useApp();
+    const { toast } = useUI();
 
     if (!toast) return null;
 

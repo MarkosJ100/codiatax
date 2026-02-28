@@ -1,7 +1,5 @@
-import { Service, Expense, MileageLog } from '../types';
+import { Service, Expense, MileageLog, Money, Km, Period } from '../types';
 import { isSameDay, isSameWeek, isSameMonth, isSameYear } from './dateHelpers';
-
-export type Period = 'day' | 'week' | 'month' | 'year';
 
 interface Titled {
     timestamp: string | number | Date;
@@ -26,19 +24,19 @@ export const calculateTotals = (services: Service[], expenses: Expense[], mileag
     const periodExpenses = expenses.filter(e => filterByPeriod(e, period, now));
     const periodMileage = mileageLogs.filter(l => filterByPeriod(l, period, now));
 
-    const taxiIncome = periodServices
+    const taxiIncome: Money = periodServices
         .filter(s => s.type === 'normal' || s.type === 'facturado')
         .reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
 
-    const subscriberIncome = periodServices
+    const subscriberIncome: Money = periodServices
         .filter(s => s.type === 'company')
         .reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
 
-    const grossIncome = taxiIncome + subscriberIncome;
-    const totalExpenses = periodExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-    const totalKms = periodMileage.reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
+    const grossIncome: Money = taxiIncome + subscriberIncome;
+    const totalExpenses: Money = periodExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const totalKms: Km = periodMileage.reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
 
-    const pendingSubscriberBalance = periodServices
+    const pendingSubscriberBalance: Money = periodServices
         .filter(s => s.type === 'company' && s.isPaid !== true)
         .reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
 

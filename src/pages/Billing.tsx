@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { useApp } from '../context/AppContext';
+import { useServices } from '../context/ServiceContext';
 import { format } from '../utils/dateHelpers';
 import { CheckCircle2, XCircle, Search, Building2, Wallet } from 'lucide-react';
 import { Service } from '../types';
 
 const Billing: React.FC = () => {
-    const { services, subscribers, updateService } = useApp();
+    const { services, subscribers, updateService } = useServices();
     const [searchTerm, setSearchTerm] = useState('');
     const [showPaid, setShowPaid] = useState(false);
 

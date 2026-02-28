@@ -109,6 +109,19 @@ class LocalStorageManager {
             percentage: (used / total) * 100
         };
     }
+
+    clearAll(): void {
+        try {
+            localStorage.clear();
+        } catch (error) {
+            console.error('Error clearing localStorage:', error);
+        }
+    }
+
+    isOnline(): boolean {
+        if (typeof navigator === 'undefined') return true;
+        return navigator.onLine;
+    }
 }
 
 export const storage = LocalStorageManager.getInstance();

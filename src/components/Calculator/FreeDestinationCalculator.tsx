@@ -3,8 +3,12 @@ import { motion } from 'framer-motion';
 import {
     MapPin, Navigation, Loader, Info, ArrowLeft, Clock, Route
 } from 'lucide-react';
-import { getCurrentTariff, getTariffReason, INTERURBAN_TARIFFS } from '../../data/taxiFares2026';
-import { calculateRoute, geocodeAddress, reverseGeocode, calculateFare, Coordinates, FareCalculation, getLocationSuggestions, LocationSuggestion } from '../../services/routingService';
+import { getTariffReason } from '../../data/taxiFares2026';
+import { FareService, FareResult } from '../../services/FareService';
+import {
+    calculateRoute, geocodeAddress, reverseGeocode,
+    Coordinates, getLocationSuggestions, LocationSuggestion
+} from '../../services/routingService';
 import { getDestinationWeather, WeatherInfo } from '../../services/weatherService';
 import { getTrafficIncidents, extractProvince, TrafficIncident } from '../../services/trafficService';
 import RouteMap from './RouteMap';
@@ -25,7 +29,7 @@ const FreeDestinationCalculator: React.FC<Props> = ({ onBack }) => {
     const [geoMessage, setGeoMessage] = useState('');
     const [calcStatus, setCalcStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [calcMessage, setCalcMessage] = useState('');
-    const [result, setResult] = useState<FareCalculation | null>(null);
+    const [result, setResult] = useState<FareResult | null>(null);
     const [routeDistance, setRouteDistance] = useState<number>(0);
     const [routeDuration, setRouteDuration] = useState<number>(0);
     const [routeGeometry, setRouteGeometry] = useState<[number, number][]>([]);
@@ -37,14 +41,9 @@ const FreeDestinationCalculator: React.FC<Props> = ({ onBack }) => {
     const [traffic, setTraffic] = useState<TrafficIncident[]>([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
 
-    const currentTariff = useMemo(() => getCurrentTariff(), []);
+    const currentTariff = useMemo(() => FareService.getCurrentTariff(), []);
 
-    const formatPrice = (price: number) => {
-        return price.toLocaleString('es-ES', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    };
+    const formatPrice = (price: number) => FareService.formatPrice(price);
 
     // Get user location
     const handleGetLocation = async () => {
@@ -201,7 +200,7 @@ const FreeDestinationCalculator: React.FC<Props> = ({ onBack }) => {
         setRouteGeometry(routeResult.geometry || []);
 
         // Calculate fare
-        const fare = calculateFare(routeResult.distance, currentTariff.type);
+        const fare = FareService.calculateInterurbanFare(routeResult.distance, currentTariff.type);
         fare.duration = routeResult.duration;
         setResult(fare);
         setCalcStatus('success');
@@ -598,7 +597,7 @@ const FreeDestinationCalculator: React.FC<Props> = ({ onBack }) => {
                                 </div>
                                 <div style={{ padding: '0.85rem', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                                     <div style={{ fontSize: '0.65rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '4px' }}>PRECIO/KM</div>
-                                    <div style={{ fontWeight: '800', fontSize: '1rem' }}>{(INTERURBAN_TARIFFS[currentTariff.type].pricePerKm * 2).toFixed(2)}€</div>
+                                    <div style={{ fontWeight: '800', fontSize: '1rem' }}>{FareService.getInterurbanPricePerKm(currentTariff.type).toFixed(2)}€</div>
                                 </div>
                             </div>
 

@@ -1,16 +1,19 @@
 import React, { useState, useTransition, useEffect, useMemo } from 'react';
-import { useApp } from '../../context/AppContext';
 import { isSameDay } from '../../utils/dateHelpers';
 import { useToast } from '../../hooks/useToast';
 import { Calculator, Save, Gauge, Loader2, Calendar } from 'lucide-react';
+import { useServices } from '../../context/ServiceContext';
+import { useVehicle } from '../../context/VehicleContext';
 
 const DailyTotalForm: React.FC = () => {
     const {
         addService, updateService,
-        addMileageLog, mileageLogs,
         services, expenses,
         addExpense, updateExpense
-    } = useApp();
+    } = useServices();
+    const {
+        addMileageLog, mileageLogs
+    } = useVehicle();
     const toast = useToast();
     const [isPending, startTransition] = useTransition();
     const [serviceDate, setServiceDate] = useState<string>(new Date().toISOString().split('T')[0]);

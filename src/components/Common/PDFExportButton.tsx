@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
 import { FileDown, Share2 } from 'lucide-react';
 import { isSameDay, format, es } from '../../utils/dateHelpers';
 import jsPDF from 'jspdf';
@@ -8,9 +7,12 @@ import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import { useToast } from '../../hooks/useToast';
+import { useServices } from '../../context/ServiceContext';
+import { useAuth } from '../../context/AuthContext';
 
 const PDFExportButton: React.FC = () => {
-    const { services, expenses, user } = useApp();
+    const { services, expenses } = useServices();
+    const { user } = useAuth();
     const toast = useToast();
     const [isGenerating, setIsGenerating] = useState<boolean>(false);
 

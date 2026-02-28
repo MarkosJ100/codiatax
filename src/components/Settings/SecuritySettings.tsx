@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
 import { Preferences } from '@capacitor/preferences';
 import { Shield, Lock, Key, AlertTriangle, Fingerprint } from 'lucide-react';
@@ -7,7 +7,7 @@ import PinSetup from '../Auth/PinSetup';
 import { biometricService } from '../../services/biometric';
 
 const SecuritySettings: React.FC = () => {
-    const { user } = useApp();
+    const { user } = useAuth();
     const toast = useToast();
     const [pinEnabled, setPinEnabled] = useState<boolean>(false);
     const [showPinSetup, setShowPinSetup] = useState<boolean>(false);

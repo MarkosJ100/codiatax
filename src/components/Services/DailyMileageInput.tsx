@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
 import { isSameDay } from '../../utils/dateHelpers';
 import { useToast } from '../../hooks/useToast';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { validators } from '../../utils/validators';
 import { Gauge, Plus } from 'lucide-react';
+import { useVehicle } from '../../context/VehicleContext';
 
 const DailyMileageInput: React.FC = () => {
-    const { addMileageLog, currentOdometer, mileageLogs } = useApp();
+    const { addMileageLog, currentOdometer, mileageLogs } = useVehicle();
     const toast = useToast();
 
     // Detect if there's already a log for today

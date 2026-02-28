@@ -1,5 +1,6 @@
-import { Service, Expense, Vehicle, ShiftStorage } from '../types';
+import { Service, Expense, Vehicle, ShiftStorage, User } from '../types';
 import { DataRepository } from '../services/repositories/DataRepository';
+import { supabase } from '../supabase';
 
 export interface LoaderData {
     services: Service[];
@@ -38,6 +39,38 @@ export function getUserFromStorage(): any | null {
     try {
         const saved = localStorage.getItem('codiatax_user');
         return saved && saved !== 'undefined' ? JSON.parse(saved) : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Fallback: strictly check the live Supabase session and reconstruct a basic user object.
+ * This is used if the memory/localStorage user is missing (e.g. page refresh).
+ */
+export async function loadUserFromSupabaseSession(): Promise<User | null> {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+            const metadata = session.user.user_metadata;
+            const user: User = {
+                name: metadata.name || '',
+                role: metadata.role || 'propietario',
+                licenseNumber: metadata.licenseNumber || '',
+                // Add default properties if needed by the User type
+                isShared: metadata.isShared || false,
+                workMode: metadata.workMode || 'solo',
+                shiftWeek: metadata.shiftWeek || 'Semana A',
+                shiftType: metadata.shiftType || 'mañana',
+                startTime: metadata.startTime || '06:00',
+                endTime: metadata.endTime || '15:00',
+                lastLogin: new Date().toISOString()
+            };
+            // Persist for next time
+            localStorage.setItem('codiatax_user', JSON.stringify(user));
+            return user;
+        }
+        return null;
     } catch {
         return null;
     }

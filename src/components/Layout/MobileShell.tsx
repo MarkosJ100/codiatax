@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Home, PlusCircle, Scroll, Wallet, Wrench, PlaneLanding, LogOut, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import { format, es } from '../../utils/dateHelpers';
 import Toast from '../Common/Toast';
 
@@ -10,7 +10,7 @@ import Toast from '../Common/Toast';
 import logo from '../../assets/logo.jpg';
 
 const MobileShell: React.FC = () => {
-    const { logout, user } = useApp();
+    const { logout, user } = useAuth();
     const location = useLocation();
     const currentDate = format(new Date(), "dd 'de' MMMM, yyyy", { locale: es });
 

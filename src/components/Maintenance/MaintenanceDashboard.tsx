@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
 import { Settings, CheckCircle, Plus, PenTool } from 'lucide-react';
+import { useVehicle } from '../../context/VehicleContext';
 
 const MaintenanceDashboard = () => {
-    const { vehicle, setVehicle, currentOdometer, setInitialOdometer, addMaintenanceItem } = useApp();
+    const { vehicle, setVehicle, currentOdometer, setInitialOdometer, addMaintenanceItem } = useVehicle();
     const [showConfig, setShowConfig] = useState(false);
     const [showAddCustom, setShowAddCustom] = useState(false);
 

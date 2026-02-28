@@ -6,9 +6,10 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
-    getCurrentTariff, getTariffReason, searchDestinations, CATEGORIES,
-    FareDestination, TariffInfo
+    getTariffReason,
+    FareDestination, TariffInfo, CATEGORIES
 } from '../data/taxiFares2026';
+import { FareService } from '../services/FareService';
 import FreeDestinationCalculator from '../components/Calculator/FreeDestinationCalculator';
 
 // Coordinates for origin detection
@@ -17,17 +18,6 @@ const LOCATIONS = {
     city: { lat: 36.6867, lng: -6.1374, name: 'Jerez Centro' }
 };
 
-// Calculate distance between two coordinates (Haversine formula)
-const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
-    const R = 6371; // Earth radius in km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-};
 
 const TaxiCalculator: React.FC = () => {
     const navigate = useNavigate();
@@ -39,22 +29,17 @@ const TaxiCalculator: React.FC = () => {
     const [geoMessage, setGeoMessage] = useState('');
     const [freeMode, setFreeMode] = useState(false);
 
-    const currentTariff = useMemo(() => getCurrentTariff(), []);
+    const currentTariff = useMemo(() => FareService.getCurrentTariff(), []);
 
     const filteredDestinations = useMemo(() => {
         if (!origin) return [];
-        return searchDestinations(searchQuery, origin, selectedCategory);
+        return FareService.searchDestinations(searchQuery, origin, selectedCategory);
     }, [origin, searchQuery, selectedCategory]);
 
-    const formatPrice = (price: number) => {
-        return price.toLocaleString('es-ES', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    };
+    const formatPrice = (price: number) => FareService.formatPrice(price);
 
     const getApplicablePrice = (fare: FareDestination): number => {
-        return currentTariff.type === 'tarifa7' ? fare.tarifa7 : fare.tarifa8;
+        return FareService.getApplicablePrice(fare, currentTariff.type);
     };
 
     // Geolocation handler
@@ -72,8 +57,8 @@ const TaxiCalculator: React.FC = () => {
             (position) => {
                 const { latitude, longitude } = position.coords;
 
-                const distToAirport = calculateDistance(latitude, longitude, LOCATIONS.airport.lat, LOCATIONS.airport.lng);
-                const distToCity = calculateDistance(latitude, longitude, LOCATIONS.city.lat, LOCATIONS.city.lng);
+                const distToAirport = FareService.calculateDistance(latitude, longitude, LOCATIONS.airport.lat, LOCATIONS.airport.lng);
+                const distToCity = FareService.calculateDistance(latitude, longitude, LOCATIONS.city.lat, LOCATIONS.city.lng);
 
                 const closest = distToAirport < distToCity ? 'airport' : 'city';
                 const distanceKm = Math.min(distToAirport, distToCity).toFixed(1);

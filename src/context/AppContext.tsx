@@ -5,6 +5,8 @@ import { VehicleProvider, useVehicle } from './VehicleContext';
 import { ServiceProvider, useServices } from './ServiceContext';
 import { ShiftProvider, useShifts } from './ShiftContext';
 import { DataRepository } from '../services/repositories/DataRepository';
+import { createDefaultUser } from '../utils/userHelpers';
+import { PersistenceService } from '../services/PersistenceService';
 
 // Re-export types if needed, or import them
 import {
@@ -14,21 +16,23 @@ import {
 } from '../types/index';
 
 // Define the COMPLETE monolithic interface
-interface AppContextType {
-  // UI
+// Domain-specific state interfaces
+export interface AppUIState {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   toast: { message: string, type: 'success' | 'error' | 'warning' | 'info' } | null;
   showToast: (message: string, type?: 'success' | 'error' | 'warning' | 'info') => void;
+}
 
-  // Auth
+export interface AppAuthState {
   user: User | null;
   login: (name: string, licenseNumber: string, pin: string) => void;
   logout: () => void;
   setAppPin: (pin: string) => void;
   verifyPin: (pin: string) => boolean;
+}
 
-  // Vehicle
+export interface AppVehicleState {
   vehicle: VehicleData;
   setVehicle: React.Dispatch<React.SetStateAction<VehicleData>>;
   currentOdometer: number;
@@ -37,8 +41,9 @@ interface AppContextType {
   addMileageLog: (log: Omit<MileageLog, 'id'>) => void;
   updateMaintenance: (key: string, lastKm: number) => void;
   addMaintenanceItem: (key: string, item: MaintenanceItem) => void;
+}
 
-  // Services
+export interface AppServiceState {
   services: Service[];
   addService: (service: Omit<Service, 'id'>) => Promise<void>;
   updateService: (id: number, updates: Partial<Service>) => Promise<void>;
@@ -56,8 +61,9 @@ interface AppContextType {
   lastSyncError?: string;
   annualConfig: AnnualConfig;
   updateAnnualConfig: (config: Partial<AnnualConfig>) => void;
+}
 
-  // Shifts
+export interface AppShiftState {
   shiftStorage: ShiftStorage;
   toggleAirportShift: (dateStr: string, type?: string, userName?: string | null) => { success: boolean, action?: string, type?: string, error?: string };
   toggleRestDay: (dateStr: string) => void;
@@ -68,10 +74,12 @@ interface AppContextType {
   clearFutureAirportShifts: (fromDateStr: string) => { success: boolean, error?: string };
   undoLastAction: () => { success: boolean };
   undoBuffer: AirportShift[] | null;
+}
 
-  // Global
-  resetAppData: () => void;
-  restoreAppData: (backup: BackupData) => Promise<{ success: boolean; error?: string }>;
+// Composition of the global context type
+export interface AppContextType extends AppUIState, AppAuthState, AppVehicleState, AppServiceState, AppShiftState {
+  resetAppData: () => Promise<PersistenceResult>;
+  restoreAppData: (backup: BackupData) => Promise<PersistenceResult>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -84,47 +92,16 @@ const AppBridge: React.FC<{ children: ReactNode }> = ({ children }) => {
   const shifts = useShifts();
 
   const resetAppData = async () => {
-    if (window.confirm('¿Seguro que quieres borrar TODO?')) {
-      localStorage.clear();
-      if (auth.user) {
-        try {
-          await DataRepository.resetAllData(auth.user.name);
-        } catch (e) {
-          console.error('Reset failed', e);
-        }
-      }
-      window.location.reload();
-    }
+    return await PersistenceService.resetAppData(auth.user?.name);
   };
 
   const restoreAppData = async (backup: BackupData) => {
-    try {
-      if (backup.services) localStorage.setItem('codiatax_services', JSON.stringify(backup.services));
-      if (backup.expenses) localStorage.setItem('codiatax_expenses', JSON.stringify(backup.expenses));
-      if (backup.vehicle) localStorage.setItem('codiatax_vehicle', JSON.stringify(backup.vehicle));
-
-      setTimeout(() => window.location.reload(), 500);
-      return { success: true };
-    } catch (e) {
-      ui.showToast('Error al restaurar copia', 'error');
-      return { success: false, error: 'Error al restaurar copia' };
-    }
+    return await PersistenceService.restoreAppData(backup);
   };
 
-  const loginAdapter = (name: string, licenseNumber: string, pin: string) => {
-    const mockUser: User = {
-      name,
-      licenseNumber,
-      role: 'propietario',
-      isShared: false,
-      workMode: 'solo',
-      shiftWeek: 'Semana A',
-      shiftType: 'mañana',
-      startTime: '06:00',
-      endTime: '15:00',
-      lastLogin: new Date().toISOString()
-    };
-    auth.login(mockUser, true);
+  const loginAdapter = (name: string, licenseNumber: string, _pin: string) => {
+    const user = createDefaultUser(name, licenseNumber);
+    auth.login(user, true);
   };
 
   // Sync Queue State Monitoring
@@ -190,6 +167,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   );
 };
 
+/**
+ * @deprecated
+ * Este hook agrega TODOS los dominios de la app en un único contexto global.
+ * Evita usarlo en código nuevo y prefiere los hooks de dominio:
+ * `useAuth`, `useUI`, `useVehicle`, `useServices` y `useShifts`.
+ * Se mantiene solo por compatibilidad con código existente.
+ */
 export const useApp = () => {
   const context = useContext(AppContext);
   if (context === undefined) {

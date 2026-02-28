@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
+import { useServices } from '../context/ServiceContext';
+import { useUI } from '../context/UIContext';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, getMonth, getYear, getDate, es } from '../utils/dateHelpers';
 import { Search, FileDown, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -12,7 +14,9 @@ import ExportMenu from '../components/Common/ExportMenu';
 import { Service } from '../types';
 
 const History: React.FC = () => {
-    const { services, expenses, user, addService, updateService, deleteService, showToast, subscribers } = useApp();
+    const { user } = useAuth();
+    const { services, expenses, addService, updateService, deleteService, subscribers } = useServices();
+    const { showToast } = useUI();
     const toast = useToast();
     const [viewDate, setViewDate] = useState<Date>(new Date());
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);

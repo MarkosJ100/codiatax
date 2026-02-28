@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { useApp } from '../../context/AppContext';
+import { useServices } from '../../context/ServiceContext';
 import { format, subDays, isSameDay } from '../../utils/dateHelpers';
 import { TrendingUp } from 'lucide-react';
 
@@ -9,7 +9,7 @@ interface IncomeChartProps {
 }
 
 const IncomeChart: React.FC<IncomeChartProps> = ({ days = 30 }) => {
-    const { services, expenses } = useApp();
+    const { services, expenses } = useServices();
 
     const chartData = useMemo(() => {
         const data = [];

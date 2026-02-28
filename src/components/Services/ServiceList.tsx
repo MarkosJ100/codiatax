@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
 import { format } from '../../utils/dateHelpers';
 import { Edit2, Save, X, Trash2 } from 'lucide-react';
 import { Service } from '../../types';
+import { useServices } from '../../context/ServiceContext';
 
 interface ServiceListProps {
     filterSource?: 'manual' | 'total';
@@ -10,7 +10,7 @@ interface ServiceListProps {
 }
 
 const ServiceList: React.FC<ServiceListProps> = ({ filterSource, typeFilter = 'all' }) => {
-    const { services, updateService, deleteService, subscribers, updateSubscriber } = useApp();
+    const { services, updateService, deleteService, subscribers, updateSubscriber } = useServices();
     const [editingId, setEditingId] = useState<number | null>(null);
 
     const filteredServices = services.filter(s => {

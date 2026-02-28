@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
+import { useServices } from '../context/ServiceContext';
+import { useUI } from '../context/UIContext';
 import { Save, History, Receipt } from 'lucide-react';
 import { format } from '../utils/dateHelpers';
 import { Expense } from '../types';
 
 const Expenses: React.FC = () => {
-    const { addExpense, updateExpense, deleteExpense, expenses, showToast, annualConfig, updateAnnualConfig, user } = useApp();
+    const { user } = useAuth();
+    const { addExpense, updateExpense, deleteExpense, expenses, annualConfig, updateAnnualConfig } = useServices();
+    const { showToast } = useUI();
 
     const [editingId, setEditingId] = useState<number | null>(null);
     const [expenseType, setExpenseType] = useState<string>('vehicle_maintenance');

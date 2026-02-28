@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useApp } from '../context/AppContext';
+import { useVehicle } from '../context/VehicleContext';
 import { useToast } from '../hooks/useToast';
 import { Wrench, Plus, Trash2, FileDown, Save, FileText } from 'lucide-react';
 import { format } from '../utils/dateHelpers';
@@ -8,7 +8,7 @@ import 'jspdf-autotable';
 import { MaintenanceRecord } from '../types';
 
 const Maintenance: React.FC = () => {
-    const { vehicle, currentOdometer, updateMaintenance, addMaintenanceItem } = useApp();
+    const { vehicle, currentOdometer, updateMaintenance, addMaintenanceItem } = useVehicle();
     const toast = useToast();
     const [records, setRecords] = useState<MaintenanceRecord[]>(() => {
         const saved = localStorage.getItem('codiatax_maintenance');

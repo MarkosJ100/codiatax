@@ -5,12 +5,12 @@ import {
 } from 'lucide-react';
 import logo from '../assets/logo.jpg';
 import { supabase } from '../supabase';
-import { useApp } from '../context/AppContext';
+import { useUI } from '../context/UIContext';
 
 type AuthMode = 'login' | 'register' | 'forgot';
 
 const AuthScreen: React.FC = () => {
-    const { showToast } = useApp();
+    const { showToast } = useUI();
 
     // UI State
     const [mode, setMode] = useState<AuthMode>('login');

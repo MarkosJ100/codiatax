@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
+import { useShifts } from '../context/ShiftContext';
+import { useUI } from '../context/UIContext';
 import {
     format, startOfMonth, endOfMonth, eachDayOfInterval,
     addMonths, subMonths, addDays, subDays, parseISO, isValid
@@ -17,11 +19,12 @@ import { normalizeUsername } from '../utils/userHelpers';
 import { useShiftLogic } from '../hooks/useShiftLogic';
 
 const AirportShifts: React.FC = () => {
+    const { user } = useAuth();
     const {
-        user, showToast, shiftStorage, toggleAirportShift,
-        toggleRestDay, getShiftForDate, generateAirportCycle,
-        clearFutureAirportShifts, undoLastAction, undoBuffer
-    } = useApp();
+        shiftStorage, toggleAirportShift, toggleRestDay, getShiftForDate,
+        generateAirportCycle, clearFutureAirportShifts, undoLastAction, undoBuffer
+    } = useShifts();
+    const { showToast } = useUI();
 
     const { userAssignments } = useShiftLogic(shiftStorage, user?.name);
 

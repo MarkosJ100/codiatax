@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
-import { Vehicle, MaintenanceItem, MileageLog } from '../types';
+import { VehicleData, MaintenanceItem, MileageLog } from '../types';
 import { useAuth } from './AuthContext';
-import { useUI } from './UIContext';
 import { VehicleRepository } from '../services/repositories/VehicleRepository';
+import { storage } from '../utils/storage';
+import { syncService } from '../services/SyncService';
 
 interface VehicleContextType {
-    vehicle: Vehicle;
-    setVehicle: React.Dispatch<React.SetStateAction<Vehicle>>;
+    vehicle: VehicleData;
+    setVehicle: React.Dispatch<React.SetStateAction<VehicleData>>;
     currentOdometer: number;
     setInitialOdometer: (km: string | number) => void;
     mileageLogs: MileageLog[];
@@ -19,10 +20,9 @@ const VehicleContext = createContext<VehicleContextType | undefined>(undefined);
 
 export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
-    const { showToast } = useUI();
 
-    const [vehicle, setVehicle] = useState<Vehicle>(() => {
-        const defaultVehicle: Vehicle = {
+    const [vehicle, setVehicle] = useState<VehicleData>(() => {
+        const defaultVehicle: VehicleData = {
             licensePlate: '',
             model: '',
             initialOdometer: 0,
@@ -32,20 +32,13 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children })
                 brakes: { name: 'Frenos', lastKm: 0, interval: 30000 }
             }
         };
-        try {
-            const saved = localStorage.getItem('codiatax_vehicle');
-            const parsed = saved ? JSON.parse(saved) : null;
-            if (parsed && typeof parsed === 'object' && parsed.maintenance) return parsed as Vehicle;
-            return defaultVehicle;
-        } catch { return defaultVehicle; }
+        const saved = storage.getItem<VehicleData>('codiatax_vehicle', defaultVehicle);
+        if (saved && typeof saved === 'object' && saved.maintenance) return saved;
+        return defaultVehicle;
     });
 
-    const [mileageLogs, setMileageLogs] = useState<any[]>(() => {
-        try {
-            const saved = localStorage.getItem('codiatax_mileage');
-            const parsed = saved ? JSON.parse(saved) : null;
-            return Array.isArray(parsed) ? parsed : [];
-        } catch { return []; }
+    const [mileageLogs, setMileageLogs] = useState<MileageLog[]>(() => {
+        return storage.getItem<MileageLog[]>('codiatax_mileage', []);
     });
 
     // Derived state
@@ -55,26 +48,25 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children })
         return baseKm + totalMileage;
     }, [vehicle.initialOdometer, mileageLogs]);
 
-    // Persistence
+    // Persistence & Sync
     useEffect(() => {
         const timeout = setTimeout(async () => {
-            localStorage.setItem('codiatax_vehicle', JSON.stringify(vehicle));
+            storage.setItem('codiatax_vehicle', vehicle);
+
             if (user) {
                 try {
-                    if (navigator.onLine) {
+                    if (storage.isOnline()) {
                         await VehicleRepository.upsert(vehicle, user.name);
                     } else {
                         throw new Error('Offline');
                     }
                 } catch (e) {
-                    import('../services/SyncService').then(({ syncService }) => {
-                        syncService.addToQueue({
-                            entityId: 'current',
-                            entityType: 'VEHICLE',
-                            operation: 'UPSERT',
-                            data: vehicle,
-                            userName: user.name
-                        });
+                    syncService.addToQueue({
+                        entityId: 'current',
+                        entityType: 'VEHICLE',
+                        operation: 'UPSERT',
+                        data: vehicle,
+                        userName: user.name
                     });
                 }
             }
@@ -83,7 +75,7 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, [vehicle, user]);
 
     useEffect(() => {
-        localStorage.setItem('codiatax_mileage', JSON.stringify(mileageLogs));
+        storage.setItem('codiatax_mileage', mileageLogs);
     }, [mileageLogs]);
 
     // Sync Fetch Logic
@@ -95,13 +87,13 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, [user]);
 
-
     const setInitialOdometer = (km: string | number) => {
         setVehicle(prev => ({ ...prev, initialOdometer: parseInt(km.toString()) }));
     };
 
-    const addMileageLog = (log: any) => {
-        setMileageLogs(prev => [...prev, { ...log, id: Date.now() }]);
+    const addMileageLog = (log: Omit<MileageLog, 'id'>) => {
+        const newLog = { ...log, id: Date.now() } as MileageLog;
+        setMileageLogs(prev => [...prev, newLog]);
     };
 
     const updateMaintenance = (key: string, lastKm: number) => {

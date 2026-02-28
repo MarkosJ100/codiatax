@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useApp } from '../context/AppContext';
+import { useShifts } from '../context/ShiftContext';
+import { useUI } from '../context/UIContext';
 import {
     User as UserIcon, ShieldCheck, CreditCard, ChevronLeft,
     CheckCircle2, Save
@@ -9,7 +10,8 @@ import { normalizeUsername } from '../utils/userHelpers';
 import { supabase } from '../supabase';
 
 const ProfileSetup: React.FC = () => {
-    const { shiftStorage, checkShiftCollision, showToast } = useApp();
+    const { checkShiftCollision } = useShifts();
+    const { showToast } = useUI();
 
     // UI State
     const [loading, setLoading] = useState(false);

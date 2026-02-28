@@ -1,6 +1,8 @@
 export type UserRole = 'propietario' | 'asalariado';
 export type WorkMode = 'solo' | 'fixed' | 'rotating';
 export type ShiftType = 'mañana' | 'tarde' | 'libre';
+export type Money = number;
+export type Km = number;
 
 export interface User {
     name: string;
@@ -17,14 +19,14 @@ export interface User {
 
 export interface MaintenanceItem {
     name: string;
-    lastKm: number;
-    interval: number;
+    lastKm: Km;
+    interval: Km;
 }
 
 export interface Vehicle {
     licensePlate: string;
     model: string;
-    initialOdometer: number;
+    initialOdometer: Km;
     maintenance: {
         oil: MaintenanceItem;
         tires: MaintenanceItem;
@@ -37,7 +39,7 @@ export interface Subscriber {
     id: string;
     name: string;
     isCapped: boolean;
-    capAmount: number;
+    capAmount: Money;
     officeNumber?: string;
     createdAt: string;
 }
@@ -45,8 +47,8 @@ export interface Subscriber {
 export interface Service {
     id: number;
     timestamp: string;
-    amount: number; // This should be the final amount to be paid/recorded
-    originalAmount?: number; // Optional: what was on the meter
+    amount: Money; // This should be the final amount to be paid/recorded
+    originalAmount?: Money; // Optional: what was on the meter
     type: 'normal' | 'company' | 'facturado';
     companyName?: string;
     subscriberId?: string; // Link to the new Subscriber model
@@ -58,7 +60,7 @@ export interface Service {
 export interface Expense {
     id: number;
     timestamp: string;
-    amount: number;
+    amount: Money;
     category: string;
     description: string;
     type?: string;
@@ -68,8 +70,8 @@ export interface MaintenanceRecord {
     id: number;
     type: string;
     label: string;
-    currentKm: number;
-    nextKm: number | string;
+    currentKm: Km;
+    nextKm: Km | string;
     date: string;
     notes: string;
 }
@@ -81,9 +83,9 @@ export interface AirportShift {
 }
 
 export interface AnnualConfig {
-    yearStartKm: number;
-    yearEndKm: number;
-    manualGrossIncome: number;
+    yearStartKm: Km;
+    yearEndKm: Km;
+    manualGrossIncome: Money;
 }
 
 export interface UserShiftConfig {
@@ -108,6 +110,8 @@ export interface BackupData {
     vehicle?: Vehicle;
     subscribers?: Subscriber[];
     shiftStorage?: ShiftStorage;
+    mileageLogs?: MileageLog[];
+    annualConfig?: AnnualConfig;
 }
 
 export interface Toast {
@@ -124,7 +128,7 @@ export interface ShiftInfo {
 export interface MileageLog {
     id: number;
     timestamp: string; // Updated from date to timestamp for consistent date parsing
-    amount: number;
+    amount: Km;
     notes?: string;
 }
 

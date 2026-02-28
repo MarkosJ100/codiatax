@@ -1,0 +1,36 @@
+.stats-dashboard {
+    padding: 1.25rem;
+}
+
+.view-tabs {
+    margin-bottom: 1.5rem;
+}
+
+.period-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.period-selector {
+    width: 100%;
+    max-width: 400px;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+@media (min-width: 768px) {
+    .metrics-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.chart-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-light);
+}

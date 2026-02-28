@@ -1,7 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
+import { useVehicle } from '../context/VehicleContext';
+import { useServices } from '../context/ServiceContext';
+import { useShifts } from '../context/ShiftContext';
+import { useUI } from '../context/UIContext';
 import { isSameDay, format, es } from '../utils/dateHelpers';
 import { Service, Expense, MileageLog, Period } from '../types';
 import { calculateTotals } from '../utils/financeHelpers';
@@ -20,12 +24,19 @@ import BillingWidget from '../components/Dashboard/BillingWidget';
 import { normalizeUsername, displayUsername } from '../utils/userHelpers';
 
 const Home: React.FC = () => {
+    const { user } = useAuth();
     const {
-        user, vehicle, services, expenses, currentOdometer,
-        annualConfig, updateAnnualConfig, showToast,
-        shiftStorage, getShiftForDate, mileageLogs,
-        theme, toggleTheme
-    } = useApp();
+        vehicle, currentOdometer, mileageLogs
+    } = useVehicle();
+    const {
+        services, expenses, annualConfig, updateAnnualConfig
+    } = useServices();
+    const {
+        shiftStorage, getShiftForDate
+    } = useShifts();
+    const {
+        theme, toggleTheme, showToast
+    } = useUI();
 
     const [tempKm, setTempKm] = useState<string>('');
     const [period, setPeriod] = useState<Period>('day');

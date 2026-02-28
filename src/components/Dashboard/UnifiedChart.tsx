@@ -2,14 +2,16 @@ import React, { useMemo, useState } from 'react';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import { useApp } from '../../context/AppContext';
+import { useServices } from '../../context/ServiceContext';
+import { useVehicle } from '../../context/VehicleContext';
 import { format, subDays, startOfWeek, startOfMonth, startOfYear, isSameDay } from '../../utils/dateHelpers';
 import { TrendingUp, Gauge, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type ChartMetric = 'net' | 'income' | 'km';
 
 const UnifiedChart: React.FC = () => {
-    const { services, expenses, mileageLogs } = useApp();
+    const { services, expenses } = useServices();
+    const { mileageLogs } = useVehicle();
     const [metric, setMetric] = useState<ChartMetric>('net');
     const [days, setDays] = useState<7 | 14 | 30>(7);
 
@@ -63,7 +65,7 @@ const UnifiedChart: React.FC = () => {
         switch (metric) {
             case 'net': return 'var(--accent-primary)';
             case 'income': return 'var(--success)';
-            case 'km': return '#8b5cf6';
+            case 'km': return 'var(--accent-secondary, #8b5cf6)';
         }
     };
 
@@ -189,12 +191,12 @@ const UnifiedChart: React.FC = () => {
                     {[
                         { label: 'Hoy', value: kmStats.daily, color: 'var(--accent-primary)' },
                         { label: 'Semana', value: kmStats.weekly, color: 'var(--success)' },
-                        { label: 'Mes', value: kmStats.monthly, color: '#3b82f6' },
-                        { label: 'Año', value: kmStats.annual, color: '#8b5cf6' }
+                        { label: 'Mes', value: 'var(--info, #3b82f6)' },
+                        { label: 'Año', value: 'var(--accent-secondary, #8b5cf6)' }
                     ].map(stat => (
                         <div key={stat.label} style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '0.55rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{stat.label}</div>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: stat.color }}>{stat.value.toLocaleString()}</div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: typeof stat.value === 'string' ? stat.value : stat.color }}>{typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.label === 'Mes' ? kmStats.monthly.toLocaleString() : kmStats.annual.toLocaleString()}</div>
                         </div>
                     ))}
                 </div>

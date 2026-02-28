@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
-import { useApp } from '../../context/AppContext';
+import { useServices } from '../../context/ServiceContext';
 import { Link } from 'react-router-dom';
 import { Wallet, ChevronRight } from 'lucide-react';
 import { isSameMonth } from '../../utils/dateHelpers';
 
 const BillingWidget: React.FC = () => {
-    const { services } = useApp();
+    const { services } = useServices();
 
     const { totalPending, totalPaid, currentMonthPending } = useMemo(() => {
         let pending = 0;

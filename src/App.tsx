@@ -1,9 +1,11 @@
 import React, { Suspense, lazy } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate, redirect } from 'react-router-dom';
-import { AppProvider, useApp } from './context/AppContext';
+import { AppProvider } from './context/AppContext';
+import { useAuth } from './context/AuthContext';
 import MobileShell from './components/Layout/MobileShell';
-import { appDataLoader, getUserFromStorage } from './loaders/appLoader';
+import { appDataLoader, getUserFromStorage, loadUserFromSupabaseSession } from './loaders/appLoader';
 import { supabase } from './supabase';
+import { hasCompletedProfile } from './utils/userHelpers';
 import PinGuard from './components/Auth/PinGuard';
 import PageTransition from './components/Layout/PageTransition';
 
@@ -37,14 +39,9 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => (
   </Suspense>
 );
 
-// Check if user has completed profile setup
-const hasCompletedProfile = (user: any): boolean => {
-  return user && user.name && user.licenseNumber;
-};
-
 // Auth route wrapper (only accessible if NOT logged in)
 const AuthRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useApp();
+  const { user } = useAuth();
   if (user) {
     // If logged in, check if profile is complete
     if (hasCompletedProfile(user)) {
@@ -58,7 +55,7 @@ const AuthRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 // Setup route wrapper (only accessible if logged in but profile incomplete)
 const SetupRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useApp();
+  const { user } = useAuth();
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
@@ -70,7 +67,7 @@ const SetupRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 // Protected route wrapper (only accessible if logged in AND profile complete)
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useApp();
+  const { user } = useAuth();
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
@@ -95,22 +92,12 @@ const router = createBrowserRouter([
     element: <ProtectedRoute><PinGuard><MobileShell /></PinGuard></ProtectedRoute>,
     loader: async () => {
       let user = getUserFromStorage();
-      // Fallback: if localStorage is empty (race condition), check the live Supabase session
+
       if (!user) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const metadata = session.user.user_metadata;
-          user = {
-            name: metadata.name || '',
-            role: metadata.role || 'propietario',
-            licenseNumber: metadata.licenseNumber || '',
-          };
-          // Persist for next time
-          localStorage.setItem('codiatax_user', JSON.stringify(user));
-        } else {
-          return redirect('/auth');
-        }
+        user = await loadUserFromSupabaseSession();
+        if (!user) return redirect('/auth');
       }
+
       if (!hasCompletedProfile(user)) return redirect('/setup');
       return appDataLoader(user.name);
     },
