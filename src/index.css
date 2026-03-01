@@ -242,6 +242,21 @@ textarea:focus {
   }
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.page-fade-in {
+  animation: fadeIn 0.12s ease-out both;
+}
+
+
 .animate-spin {
   animation: spin 1s linear infinite;
 }

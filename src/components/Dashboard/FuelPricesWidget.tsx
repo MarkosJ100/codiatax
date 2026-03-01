@@ -195,4 +195,4 @@ const FuelPricesWidget: React.FC = () => {
     );
 };
 
-export default FuelPricesWidget;
+export default React.memo(FuelPricesWidget);

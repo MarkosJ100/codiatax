@@ -6,15 +6,14 @@ import { useVehicle } from '../context/VehicleContext';
 import { useServices } from '../context/ServiceContext';
 import { useShifts } from '../context/ShiftContext';
 import { useUI } from '../context/UIContext';
-import { isSameDay, format, es } from '../utils/dateHelpers';
-import { Service, Expense, MileageLog, Period } from '../types';
+import { format, es } from '../utils/dateHelpers';
 import { calculateTotals } from '../utils/financeHelpers';
 import { useMaintenance } from '../hooks/useMaintenance';
-import { useFinanceData } from '../hooks/useFinanceData';
-import { AlertTriangle, Calculator, PlusCircle, Wallet, History, ArrowRight, Settings, Sun, Moon, ChevronDown } from 'lucide-react';
+import { AlertTriangle, Calculator, ArrowRight, Settings, Sun, Moon, ChevronDown } from 'lucide-react';
 import PDFExportButton from '../components/Common/PDFExportButton';
 
 import UnifiedChart from '../components/Dashboard/UnifiedChart';
+import MonthlySummaryCard from '../components/Dashboard/MonthlySummaryCard';
 import FuelPricesWidget from '../components/Dashboard/FuelPricesWidget';
 import ExportMenu from '../components/Common/ExportMenu';
 import SecuritySettings from '../components/Settings/SecuritySettings';
@@ -39,25 +38,33 @@ const Home: React.FC = () => {
     } = useUI();
 
     const [tempKm, setTempKm] = useState<string>('');
-    const [period, setPeriod] = useState<Period>('day');
+    const [analysisPeriod, setAnalysisPeriod] = useState<'day' | 'week' | 'month' | 'year'>('month');
     const [showSettings, setShowSettings] = useState(false);
 
     // Use Maintenance Hook for alerts
     const { maintenanceStatuses } = useMaintenance(vehicle, currentOdometer);
     const alerts = useMemo(() => {
-        return maintenanceStatuses
+        return (maintenanceStatuses || [])
             .filter(s => s.remaining <= 1000)
             .map(s => ({ name: s.name, remaining: s.remaining }));
     }, [maintenanceStatuses]);
 
+    // Stable today reference — only changes when the day changes
+    const today = useMemo(() => new Date(), []);
+
     // Use Finance Hook for metrics
-    const today = new Date();
+    const stats = useMemo(() => {
+        return calculateTotals(services, expenses, mileageLogs, analysisPeriod);
+    }, [services, expenses, mileageLogs, analysisPeriod]);
+
     const {
         grossIncome,
         totalExpenses,
         netIncome,
-        totalKms
-    } = useFinanceData(services, expenses, mileageLogs, period);
+        totalKms,
+        isKmsEstimated,
+        isExpensesEstimated
+    } = stats;
 
     const isRestingToday = (shiftStorage?.restDays || []).includes(format(today, 'yyyy-MM-dd'));
     const isAirportToday = (shiftStorage?.assignments || []).some(a => a.date === format(today, 'yyyy-MM-dd') && a.userId === normalizeUsername(user?.name || ''));
@@ -90,11 +97,11 @@ const Home: React.FC = () => {
             const todayStr = format(today, 'yyyy-MM-dd');
             const nextWeekDate = new Date(today);
             nextWeekDate.setDate(today.getDate() + 6);
+            const nextWeekStr = format(nextWeekDate, 'yyyy-MM-dd');
 
             return shiftStorage.assignments.some(a => {
                 if (!a || !a.date) return false;
-                const d = new Date(a.date);
-                return a.userId === normalizeUsername(user.name) && a.date >= todayStr && d <= nextWeekDate;
+                return a.userId === normalizeUsername(user.name) && a.date >= todayStr && a.date <= nextWeekStr;
             });
         } catch (err) {
             console.warn("Error calculating airport week alert:", err);
@@ -102,18 +109,15 @@ const Home: React.FC = () => {
         }
     }, [shiftStorage, user, today]);
 
-    // Animation Variants
+    // Lightweight animation - just fade, no stagger
     const containerVariants = {
         hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: { staggerChildren: 0.1 }
-        }
+        visible: { opacity: 1, transition: { duration: 0.15 } }
     };
 
     const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0 }
+        hidden: { opacity: 0 },
+        visible: { opacity: 1 }
     };
 
     if (!user) return null;
@@ -217,31 +221,25 @@ const Home: React.FC = () => {
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '700' }}>
                             Recaudación Limpia
                         </div>
-                        <div style={{
-                            display: 'flex',
-                            background: 'rgba(var(--accent-primary-rgb), 0.08)',
-                            borderRadius: '10px',
-                            padding: '3px',
-                            gap: '2px'
-                        }}>
-                            {(['day', 'week', 'month', 'year'] as Period[]).map(p => (
+                        <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '12px' }}>
+                            {(['day', 'week', 'month', 'year'] as const).map((p) => (
                                 <button
                                     key={p}
-                                    onClick={() => setPeriod(p)}
+                                    onClick={() => setAnalysisPeriod(p)}
+                                    className={`period-btn ${analysisPeriod === p ? 'active' : ''}`}
                                     style={{
-                                        padding: '5px 10px',
-                                        borderRadius: '8px',
-                                        fontSize: '0.65rem',
                                         border: 'none',
+                                        padding: '6px 12px',
+                                        borderRadius: '8px',
+                                        fontSize: '0.75rem',
+                                        fontWeight: '600',
                                         cursor: 'pointer',
-                                        color: period === p ? '#fff' : 'var(--text-muted)',
-                                        background: period === p ? 'var(--accent-primary)' : 'transparent',
-                                        fontWeight: period === p ? '700' : '500',
                                         transition: 'all 0.2s ease',
-                                        letterSpacing: '0.02em'
+                                        backgroundColor: analysisPeriod === p ? 'var(--accent-primary)' : 'transparent',
+                                        color: analysisPeriod === p ? 'white' : 'var(--text-muted)'
                                     }}
                                 >
-                                    {p === 'day' ? 'Hoy' : p === 'week' ? 'Sem' : p === 'month' ? 'Mes' : 'Año'}
+                                    {p === 'day' ? 'Hoy' : p === 'week' ? 'Semana' : p === 'month' ? 'Mes' : 'Año'}
                                 </button>
                             ))}
                         </div>
@@ -267,7 +265,9 @@ const Home: React.FC = () => {
                             <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--success)' }}>+{grossIncome.toFixed(0)}€</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em', marginBottom: '6px' }}>Gastos</div>
+                            <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em', marginBottom: '6px' }}>
+                                Gastos{isExpensesEstimated ? ' (aprox.)' : ''}
+                            </div>
                             <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--danger)' }}>-{totalExpenses.toFixed(0)}€</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
@@ -275,7 +275,9 @@ const Home: React.FC = () => {
                             <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--accent-primary)' }}>{netIncome.toFixed(0)}€</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em', marginBottom: '6px' }}>Dist.</div>
+                            <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em', marginBottom: '6px' }}>
+                                Dist.{isKmsEstimated ? ' (aprox.)' : ''}
+                            </div>
                             <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>{totalKms.toLocaleString()} <span style={{ fontSize: '0.6rem', fontWeight: '400' }}>km</span>
                             </div>
                         </div>
@@ -285,7 +287,7 @@ const Home: React.FC = () => {
                 </div>
             </motion.div>
 
-            {/* Original Shared User Shift Card - Styled Premium */}
+            {/* Original Shared User Shift Card */}
             {
                 user?.isShared && (
                     <motion.div
@@ -411,7 +413,7 @@ const Home: React.FC = () => {
                 </motion.div>
             </motion.div>
 
-            {/* Conditional Alerts (End of Year / Beginning of Year) - Styled Faithful */}
+            {/* Conditional Alerts */}
             {
                 needsEndYearKm && (
                     <motion.div variants={itemVariants} className="card" style={{ marginBottom: '1.5rem', backgroundColor: 'rgba(234, 179, 8, 0.1)', border: '2px solid var(--accent-primary)', borderRadius: '20px' }}>
@@ -431,18 +433,9 @@ const Home: React.FC = () => {
                 )
             }
 
+            {/* Maintenance Alerts */}
             {
-                isBeginningOfYear && annualConfig.yearEndKm > 0 && (
-                    <motion.div variants={itemVariants} className="glass" style={{ marginBottom: '1.5rem', border: '1px solid var(--accent-primary)', padding: '16px', borderRadius: '20px' }}>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>Inicio de Año {today.getFullYear()}</div>
-                        <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)' }}>{annualConfig.yearEndKm.toLocaleString()} <span style={{ fontSize: '0.9rem', fontWeight: 'normal' }}>km</span></div>
-                    </motion.div>
-                )
-            }
-
-            {/* Maintenance Alerts - Styled Premium Notifications */}
-            {
-                alerts.length > 0 && (
+                (alerts || []).length > 0 && (
                     <motion.div variants={itemVariants} style={{ marginBottom: '2rem' }}>
                         <h2 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Alertas de Vehículo</h2>
                         <div style={{ display: 'grid', gap: '10px' }}>
@@ -480,13 +473,13 @@ const Home: React.FC = () => {
                     <UnifiedChart />
                 </section>
 
-
+                <section>
+                    <h2 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cierre del Mes</h2>
+                    <MonthlySummaryCard />
+                </section>
 
                 <FuelPricesWidget />
-
             </motion.div>
-
-
         </motion.div >
     );
 };

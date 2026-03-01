@@ -1,7 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Home, PlusCircle, Scroll, Wallet, Wrench, PlaneLanding, LogOut, FileText } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { format, es } from '../../utils/dateHelpers';
 import Toast from '../Common/Toast';
@@ -24,9 +23,7 @@ const MobileShell: React.FC = () => {
                 borderBottom: '1px solid var(--border-light)'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <motion.img
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
+                    <img
                         src={logo}
                         alt="Logo"
                         style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'contain', border: '1px solid var(--border-light)' }}
@@ -46,20 +43,15 @@ const MobileShell: React.FC = () => {
                 </button>
             </header>
 
-            {/* Content with Page Transitions */}
+            {/* Content — CSS keyframe fade-in (no Framer Motion, cannot get stuck at opacity:0) */}
             <main className="page-content" style={{ marginTop: '72px' }}>
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={location.pathname}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2, ease: "easeOut" }}
-                        style={{ width: '100%' }}
-                    >
-                        <Outlet />
-                    </motion.div>
-                </AnimatePresence>
+                <div
+                    key={location.pathname}
+                    className="page-fade-in"
+                    style={{ width: '100%' }}
+                >
+                    <Outlet />
+                </div>
             </main>
 
             {/* Bottom Navigation */}
@@ -71,7 +63,7 @@ const MobileShell: React.FC = () => {
                 maxWidth: '480px', margin: '0 auto',
                 paddingBottom: 'env(safe-area-inset-bottom, 0.75rem)'
             }}>
-                <NavLink to="/" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+                <NavLink to="/" end className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
                     <Home size={22} />
                     <span>Inicio</span>
                 </NavLink>
@@ -108,4 +100,3 @@ const MobileShell: React.FC = () => {
 };
 
 export default MobileShell;
-

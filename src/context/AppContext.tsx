@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
 import { UIProvider, useUI } from './UIContext';
 import { VehicleProvider, useVehicle } from './VehicleContext';
@@ -91,18 +91,18 @@ const AppBridge: React.FC<{ children: ReactNode }> = ({ children }) => {
   const services = useServices();
   const shifts = useShifts();
 
-  const resetAppData = async () => {
+  const resetAppData = useCallback(async () => {
     return await PersistenceService.resetAppData(auth.user?.name);
-  };
+  }, [auth.user?.name]);
 
-  const restoreAppData = async (backup: BackupData) => {
+  const restoreAppData = useCallback(async (backup: BackupData) => {
     return await PersistenceService.restoreAppData(backup);
-  };
+  }, []);
 
-  const loginAdapter = (name: string, licenseNumber: string, _pin: string) => {
+  const loginAdapter = useCallback((name: string, licenseNumber: string, _pin: string) => {
     const user = createDefaultUser(name, licenseNumber);
     auth.login(user, true);
-  };
+  }, [auth]);
 
   // Sync Queue State Monitoring
   const [syncQueueStatus, setSyncQueueStatus] = React.useState<{ pending: number; isSyncing: boolean; lastError: string | null }>({
@@ -121,20 +121,20 @@ const AppBridge: React.FC<{ children: ReactNode }> = ({ children }) => {
     return () => unsubscribe && unsubscribe();
   }, []);
 
-  const getDerivedSyncStatus = () => {
-    if (syncQueueStatus.isSyncing) return 'syncing';
-    if (syncQueueStatus.lastError) return 'error';
-    if (syncQueueStatus.pending > 0) return 'idle'; // It's idle but has pending items (Inactivo/Pendiente)
+  const derivedSyncStatus = useMemo(() => {
+    if (syncQueueStatus.isSyncing) return 'syncing' as const;
+    if (syncQueueStatus.lastError) return 'error' as const;
+    if (syncQueueStatus.pending > 0) return 'idle' as const;
     return services.syncStatus;
-  };
+  }, [syncQueueStatus.isSyncing, syncQueueStatus.lastError, syncQueueStatus.pending, services.syncStatus]);
 
-  const contextValue: AppContextType = {
+  const contextValue = useMemo<AppContextType>(() => ({
     ...ui,
     ...auth,
     login: loginAdapter,
     ...vehicle,
     ...services,
-    syncStatus: getDerivedSyncStatus(),
+    syncStatus: derivedSyncStatus,
     updateMaintenance: vehicle.updateMaintenance,
     addMaintenanceItem: vehicle.addMaintenanceItem,
     ...shifts,
@@ -142,7 +142,11 @@ const AppBridge: React.FC<{ children: ReactNode }> = ({ children }) => {
     resetAppData,
     restoreAppData,
     lastSyncError: syncQueueStatus.lastError || undefined
-  };
+  }), [
+    ui, auth, loginAdapter, vehicle, services,
+    derivedSyncStatus, shifts, resetAppData, restoreAppData,
+    syncQueueStatus.lastError
+  ]);
 
   return (
     <AppContext.Provider value={contextValue}>

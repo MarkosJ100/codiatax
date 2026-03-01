@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef, useMemo } from 'react';
 import { Service, Expense, Subscriber, AnnualConfig } from '../types';
 import { useAuth } from './AuthContext';
 import { ServiceRepository } from '../services/repositories/ServiceRepository';
@@ -86,230 +86,152 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, [user, fetchCloudData]);
 
     // -- Actions --
-    const addService = async (service: Omit<Service, 'id'>) => {
+    const addService = useCallback(async (service: Omit<Service, 'id'>) => {
         const localId = Date.now();
         const localService = { ...service, id: localId };
-
-        // Optimistic update
         setServices(prev => [localService, ...prev]);
-
         if (user) {
             try {
                 if (storage.isOnline()) {
                     const newService = await ServiceRepository.create(service, user.name);
-                    // Update the local service with the one from the database (real ID)
                     setServices(prev => prev.map(s => s.id === localId ? newService : s));
-                } else {
-                    throw new Error('Offline');
-                }
+                } else { throw new Error('Offline'); }
             } catch (error) {
-                syncService.addToQueue({
-                    entityId: localId,
-                    entityType: 'SERVICE',
-                    operation: 'CREATE',
-                    data: service,
-                    userName: user.name
-                });
+                syncService.addToQueue({ entityId: localId, entityType: 'SERVICE', operation: 'CREATE', data: service, userName: user.name });
             }
         }
-    };
+    }, [user]);
 
-    const deleteService = async (id: number) => {
+    const deleteService = useCallback(async (id: number) => {
         setServices(prev => prev.filter(s => s.id !== id));
         if (user) {
             try {
-                if (storage.isOnline()) {
-                    await ServiceRepository.delete(id);
-                } else {
-                    throw new Error('Offline');
-                }
+                if (storage.isOnline()) { await ServiceRepository.delete(id); }
+                else { throw new Error('Offline'); }
             } catch (e) {
-                syncService.addToQueue({
-                    entityId: id,
-                    entityType: 'SERVICE',
-                    operation: 'DELETE',
-                    data: null,
-                    userName: user.name
-                });
+                syncService.addToQueue({ entityId: id, entityType: 'SERVICE', operation: 'DELETE', data: null, userName: user.name });
             }
         }
-    };
+    }, [user]);
 
-    const updateService = async (id: number, updates: Partial<Service>) => {
+    const updateService = useCallback(async (id: number, updates: Partial<Service>) => {
         setServices(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
         if (user) {
             try {
-                if (storage.isOnline()) {
-                    await ServiceRepository.update(id, updates, user.name);
-                } else {
-                    throw new Error('Offline');
-                }
+                if (storage.isOnline()) { await ServiceRepository.update(id, updates, user.name); }
+                else { throw new Error('Offline'); }
             } catch (e) {
-                syncService.addToQueue({
-                    entityId: id,
-                    entityType: 'SERVICE',
-                    operation: 'UPDATE',
-                    data: updates,
-                    userName: user.name
-                });
+                syncService.addToQueue({ entityId: id, entityType: 'SERVICE', operation: 'UPDATE', data: updates, userName: user.name });
             }
         }
-    };
+    }, [user]);
 
-    const addExpense = async (expense: Omit<Expense, 'id'>) => {
+    const addExpense = useCallback(async (expense: Omit<Expense, 'id'>) => {
         const localId = Date.now();
         setExpenses(prev => [{ ...expense, id: localId }, ...prev]);
-
         if (user) {
             try {
                 if (storage.isOnline()) {
                     const newExpense = await ExpenseRepository.create(expense, user.name);
                     setExpenses(prev => prev.map(e => e.id === localId ? newExpense : e));
-                } else {
-                    throw new Error('Offline');
-                }
+                } else { throw new Error('Offline'); }
             } catch (error) {
-                syncService.addToQueue({
-                    entityId: localId,
-                    entityType: 'EXPENSE',
-                    operation: 'CREATE',
-                    data: expense,
-                    userName: user.name
-                });
+                syncService.addToQueue({ entityId: localId, entityType: 'EXPENSE', operation: 'CREATE', data: expense, userName: user.name });
             }
         }
-    };
+    }, [user]);
 
-    const deleteExpense = async (id: number) => {
+    const deleteExpense = useCallback(async (id: number) => {
         setExpenses(prev => prev.filter(e => e.id !== id));
         if (user) {
             try {
-                if (storage.isOnline()) {
-                    await ExpenseRepository.delete(id);
-                } else {
-                    throw new Error('Offline');
-                }
+                if (storage.isOnline()) { await ExpenseRepository.delete(id); }
+                else { throw new Error('Offline'); }
             } catch (e) {
-                syncService.addToQueue({
-                    entityId: id,
-                    entityType: 'EXPENSE',
-                    operation: 'DELETE',
-                    data: null,
-                    userName: user.name
-                });
+                syncService.addToQueue({ entityId: id, entityType: 'EXPENSE', operation: 'DELETE', data: null, userName: user.name });
             }
         }
-    };
+    }, [user]);
 
-    const updateExpense = async (id: number, updates: Partial<Expense>) => {
+    const updateExpense = useCallback(async (id: number, updates: Partial<Expense>) => {
         setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
         if (user) {
             try {
-                if (storage.isOnline()) {
-                    await ExpenseRepository.update(id, updates);
-                } else {
-                    throw new Error('Offline');
-                }
+                if (storage.isOnline()) { await ExpenseRepository.update(id, updates); }
+                else { throw new Error('Offline'); }
             } catch (e) {
-                syncService.addToQueue({
-                    entityId: id,
-                    entityType: 'EXPENSE',
-                    operation: 'UPDATE',
-                    data: updates,
-                    userName: user.name
-                });
+                syncService.addToQueue({ entityId: id, entityType: 'EXPENSE', operation: 'UPDATE', data: updates, userName: user.name });
             }
         }
-    };
+    }, [user]);
 
-    const addSubscriber = async (data: Omit<Subscriber, 'id' | 'createdAt'>) => {
+    const addSubscriber = useCallback(async (data: Omit<Subscriber, 'id' | 'createdAt'>) => {
         const localId = Date.now().toString();
         setSubscribers(prev => [...prev, { ...data, id: localId, createdAt: new Date().toISOString() }]);
-
         if (user) {
             try {
                 if (storage.isOnline()) {
                     const newSub = await SubscriberRepository.create(data, user.name);
                     setSubscribers(prev => prev.map(s => s.id === localId ? newSub : s));
-                } else {
-                    throw new Error('Offline');
-                }
+                } else { throw new Error('Offline'); }
             } catch (error) {
-                syncService.addToQueue({
-                    entityId: localId,
-                    entityType: 'SUBSCRIBER',
-                    operation: 'CREATE',
-                    data: data,
-                    userName: user.name
-                });
+                syncService.addToQueue({ entityId: localId, entityType: 'SUBSCRIBER', operation: 'CREATE', data: data, userName: user.name });
             }
         }
-    };
+    }, [user]);
 
-    const deleteSubscriber = async (id: string) => {
+    const deleteSubscriber = useCallback(async (id: string) => {
         setSubscribers(prev => prev.filter(s => s.id !== id));
         if (user) {
             try {
-                if (storage.isOnline()) {
-                    await SubscriberRepository.delete(id);
-                } else {
-                    throw new Error('Offline');
-                }
+                if (storage.isOnline()) { await SubscriberRepository.delete(id); }
+                else { throw new Error('Offline'); }
             } catch (e) {
-                syncService.addToQueue({
-                    entityId: id,
-                    entityType: 'SUBSCRIBER',
-                    operation: 'DELETE',
-                    data: null,
-                    userName: user.name
-                });
+                syncService.addToQueue({ entityId: id, entityType: 'SUBSCRIBER', operation: 'DELETE', data: null, userName: user.name });
             }
         }
-    };
+    }, [user]);
 
-    const updateSubscriber = async (id: string, updates: Partial<Subscriber>) => {
+    const updateSubscriber = useCallback(async (id: string, updates: Partial<Subscriber>) => {
         setSubscribers(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
         if (user) {
             try {
-                if (storage.isOnline()) {
-                    await SubscriberRepository.update(id, updates);
-                } else {
-                    throw new Error('Offline');
-                }
+                if (storage.isOnline()) { await SubscriberRepository.update(id, updates); }
+                else { throw new Error('Offline'); }
             } catch (e) {
-                syncService.addToQueue({
-                    entityId: id,
-                    entityType: 'SUBSCRIBER',
-                    operation: 'UPDATE',
-                    data: updates,
-                    userName: user.name
-                });
+                syncService.addToQueue({ entityId: id, entityType: 'SUBSCRIBER', operation: 'UPDATE', data: updates, userName: user.name });
             }
         }
-    };
+    }, [user]);
 
-    const forceManualSync = async () => {
+    const forceManualSync = useCallback(async () => {
         setSyncStatus('syncing');
-        // Gatillo para la cola offline
         const { syncService } = await import('../services/SyncService');
         await syncService.processQueue();
-
         await fetchCloudData();
         setSyncStatus('success');
-    };
+    }, [fetchCloudData]);
 
-    const updateAnnualConfig = (newConfig: Partial<AnnualConfig>) => {
+    const updateAnnualConfig = useCallback((newConfig: Partial<AnnualConfig>) => {
         setAnnualConfig((prev: AnnualConfig) => ({ ...prev, ...newConfig }));
-    };
+    }, []);
+
+    const contextValue = useMemo(() => ({
+        services, addService, updateService, deleteService,
+        expenses, addExpense, updateExpense, deleteExpense,
+        subscribers, addSubscriber, updateSubscriber, deleteSubscriber,
+        syncStatus, forceManualSync,
+        annualConfig, updateAnnualConfig
+    }), [
+        services, expenses, subscribers, syncStatus, annualConfig,
+        addService, updateService, deleteService,
+        addExpense, updateExpense, deleteExpense,
+        addSubscriber, updateSubscriber, deleteSubscriber,
+        forceManualSync, updateAnnualConfig
+    ]);
 
     return (
-        <ServiceContext.Provider value={{
-            services, addService, updateService, deleteService,
-            expenses, addExpense, updateExpense, deleteExpense,
-            subscribers, addSubscriber, updateSubscriber, deleteSubscriber,
-            syncStatus, forceManualSync,
-            annualConfig, updateAnnualConfig
-        }}>
+        <ServiceContext.Provider value={contextValue}>
             {children}
         </ServiceContext.Provider>
     );

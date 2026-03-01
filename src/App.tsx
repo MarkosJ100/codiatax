@@ -33,9 +33,7 @@ const LoadingFallback = () => (
 // Wrapper for Lazy Pages with Transition
 const PageWrapper = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={<LoadingFallback />}>
-    <PageTransition>
-      {children}
-    </PageTransition>
+    {children}
   </Suspense>
 );
 

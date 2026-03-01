@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
 import { VehicleData, MaintenanceItem, MileageLog } from '../types';
 import { useAuth } from './AuthContext';
 import { VehicleRepository } from '../services/repositories/VehicleRepository';
@@ -87,16 +87,16 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, [user]);
 
-    const setInitialOdometer = (km: string | number) => {
+    const setInitialOdometer = useCallback((km: string | number) => {
         setVehicle(prev => ({ ...prev, initialOdometer: parseInt(km.toString()) }));
-    };
+    }, []);
 
-    const addMileageLog = (log: Omit<MileageLog, 'id'>) => {
+    const addMileageLog = useCallback((log: Omit<MileageLog, 'id'>) => {
         const newLog = { ...log, id: Date.now() } as MileageLog;
         setMileageLogs(prev => [...prev, newLog]);
-    };
+    }, []);
 
-    const updateMaintenance = (key: string, lastKm: number) => {
+    const updateMaintenance = useCallback((key: string, lastKm: number) => {
         setVehicle(prev => ({
             ...prev,
             maintenance: {
@@ -104,20 +104,22 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children })
                 [key]: { ...prev.maintenance[key], lastKm }
             }
         }));
-    };
+    }, []);
 
-    const addMaintenanceItem = (key: string, data: MaintenanceItem) => {
+    const addMaintenanceItem = useCallback((key: string, data: MaintenanceItem) => {
         setVehicle(prev => ({
             ...prev,
             maintenance: { ...prev.maintenance, [key]: data }
         }));
-    };
+    }, []);
+
+    const contextValue = useMemo(() => ({
+        vehicle, setVehicle, currentOdometer, setInitialOdometer,
+        mileageLogs, addMileageLog, updateMaintenance, addMaintenanceItem
+    }), [vehicle, currentOdometer, mileageLogs, setInitialOdometer, addMileageLog, updateMaintenance, addMaintenanceItem]);
 
     return (
-        <VehicleContext.Provider value={{
-            vehicle, setVehicle, currentOdometer, setInitialOdometer,
-            mileageLogs, addMileageLog, updateMaintenance, addMaintenanceItem
-        }}>
+        <VehicleContext.Provider value={contextValue}>
             {children}
         </VehicleContext.Provider>
     );

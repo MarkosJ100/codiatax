@@ -13,27 +13,50 @@ const UnifiedChart: React.FC = () => {
     const { services, expenses } = useServices();
     const { mileageLogs } = useVehicle();
     const [metric, setMetric] = useState<ChartMetric>('net');
-    const [days, setDays] = useState<7 | 14 | 30>(7);
+    const [days, setDays] = useState<7 | 14 | 30 | 180>(7);
 
     // Chart data
     const chartData = useMemo(() => {
         const data = [];
         const today = new Date();
 
+        // 1. Group data by day for O(1) lookup
+        const servicesByDay = new Map<string, any[]>();
+        const expensesByDay = new Map<string, any[]>();
+        const mileageByDay = new Map<string, number>();
+
+        services.forEach(s => {
+            const dateKey = format(new Date(s.timestamp), 'yyyy-MM-dd');
+            if (!servicesByDay.has(dateKey)) servicesByDay.set(dateKey, []);
+            servicesByDay.get(dateKey)!.push(s);
+        });
+
+        expenses.forEach(e => {
+            const dateKey = format(new Date(e.timestamp), 'yyyy-MM-dd');
+            if (!expensesByDay.has(dateKey)) expensesByDay.set(dateKey, []);
+            expensesByDay.get(dateKey)!.push(e);
+        });
+
+        mileageLogs.forEach(log => {
+            if (!log.timestamp) return;
+            const dateKey = format(new Date(log.timestamp), 'yyyy-MM-dd');
+            mileageByDay.set(dateKey, (mileageByDay.get(dateKey) || 0) + (Number(log.amount) || 0));
+        });
+
+        // 2. Generate chart points using O(1) lookups
         for (let i = days - 1; i >= 0; i--) {
             const date = subDays(today, i);
+            const dateKey = format(date, 'yyyy-MM-dd');
 
-            const dayServices = services.filter(s => isSameDay(new Date(s.timestamp), date));
-            const dayExpenses = expenses.filter(e => isSameDay(new Date(e.timestamp), date));
-            const dayKm = mileageLogs
-                .filter(log => log.timestamp && isSameDay(new Date(log.timestamp), date))
-                .reduce((sum, log) => sum + (Number(log.amount) || 0), 0);
+            const dayServices = servicesByDay.get(dateKey) || [];
+            const dayExpenses = expensesByDay.get(dateKey) || [];
+            const dayKm = mileageByDay.get(dateKey) || 0;
 
             const income = dayServices.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
             const allExpenses = dayExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
             data.push({
-                date: format(date, days === 7 ? 'EEE' : 'dd/MM'),
+                date: days <= 7 ? format(date, 'EEE') : days <= 30 ? format(date, 'dd/MM') : format(date, 'MMM'),
                 value: metric === 'net' ? income - allExpenses : metric === 'income' ? income : dayKm
             });
         }
@@ -158,7 +181,7 @@ const UnifiedChart: React.FC = () => {
 
             {/* Days selector */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '0.75rem' }}>
-                {([7, 14, 30] as const).map((d) => (
+                {([7, 14, 30, 180] as const).map((d) => (
                     <button
                         key={d}
                         onClick={() => setDays(d)}
@@ -173,7 +196,7 @@ const UnifiedChart: React.FC = () => {
                             fontWeight: days === d ? '600' : '400'
                         }}
                     >
-                        {d}d
+                        {d === 180 ? '6 meses' : `${d}d`}
                     </button>
                 ))}
             </div>
@@ -205,4 +228,4 @@ const UnifiedChart: React.FC = () => {
     );
 };
 
-export default UnifiedChart;
+export default React.memo(UnifiedChart);
