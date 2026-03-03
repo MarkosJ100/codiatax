@@ -19,7 +19,9 @@ CREATE TABLE IF NOT EXISTS gastos (
   category TEXT,
   description TEXT,
   type TEXT,
-  user_id TEXT
+  user_id TEXT,
+  metadata JSONB,
+  is_monthly_summary BOOLEAN DEFAULT false
 );
 
 -- 3. Vehículos y Mantenimiento

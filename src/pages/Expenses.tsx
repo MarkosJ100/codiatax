@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useServices } from '../context/ServiceContext';
 import { useUI } from '../context/UIContext';
-import { Save, History, Receipt } from 'lucide-react';
+import { Save, History, Receipt, FileText, ChevronDown, ChevronUp, Upload } from 'lucide-react';
 import { format } from '../utils/dateHelpers';
 import { Expense } from '../types';
+import { parseFuelPDF } from '../utils/fuelParser';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Expenses: React.FC = () => {
     const { user } = useAuth();
     const { addExpense, updateExpense, deleteExpense, expenses, annualConfig, updateAnnualConfig } = useServices();
     const { showToast } = useUI();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [editingId, setEditingId] = useState<number | null>(null);
     const [expenseType, setExpenseType] = useState<string>('vehicle_maintenance');
@@ -17,6 +20,8 @@ const Expenses: React.FC = () => {
     const [amount, setAmount] = useState<string>('');
     const [agencyFrequency, setAgencyFrequency] = useState<string>('Mensual');
     const [isManual, setIsManual] = useState<boolean>(false);
+    const [expandedExpenseId, setExpandedExpenseId] = useState<number | null>(null);
+    const [isUploading, setIsUploading] = useState<boolean>(false);
 
     const categories = [
         {
@@ -54,7 +59,7 @@ const Expenses: React.FC = () => {
         e.preventDefault();
         if (!amount) return;
 
-        let finalAmount = parseFloat(amount);
+        let finalAmount = parseFloat(amount.replace(',', '.'));
         let finalDesc = description;
         let finalCategory = expenseType;
 
@@ -75,11 +80,15 @@ const Expenses: React.FC = () => {
             }
         }
 
+        const existingExpense = editingId ? expenses.find(e => e.id === editingId) : undefined;
+        const { id, ...restExisting } = existingExpense || {};
+
         const expenseData: Omit<Expense, 'id'> = {
+            ...restExisting,
             category: finalCategory,
             description: finalDesc,
             amount: finalAmount,
-            timestamp: editingId ? expenses.find(e => e.id === editingId)?.timestamp || new Date().toISOString() : new Date().toISOString(),
+            timestamp: existingExpense ? existingExpense.timestamp : new Date().toISOString(),
             type: user?.role === 'asalariado' ? 'labor' : 'expense'
         };
 
@@ -96,6 +105,40 @@ const Expenses: React.FC = () => {
         setDescription('');
         if (expenseType === 'manual') setExpenseType('vehicle_maintenance');
         setIsManual(false);
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        try {
+            const result = await parseFuelPDF(file);
+
+            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            const monthLabel = monthNames[parseInt(result.month) - 1];
+
+            const expenseData: Omit<Expense, 'id'> = {
+                category: 'gasoil',
+                description: `Combustible - ${monthLabel} ${result.year}`,
+                amount: result.totalAmount,
+                timestamp: result.lastDayOfMonth,
+                type: user?.role === 'asalariado' ? 'labor' : 'expense',
+                is_monthly_summary: true,
+                metadata: {
+                    tickets: result.tickets
+                }
+            };
+
+            await addExpense(expenseData);
+            showToast(`Factura de ${monthLabel} procesada correctamente`);
+        } catch (error) {
+            console.error('Error processing PDF:', error);
+            showToast('Error al procesar el PDF', 'error');
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
     };
 
     const handleEdit = (expense: Expense) => {
@@ -117,6 +160,7 @@ const Expenses: React.FC = () => {
     };
 
     const handleDelete = (id: number) => {
+        console.log('Solicitando borrar gasto ID:', id);
         if (confirm('¿Estas seguro de borrar este gasto?')) {
             deleteExpense(id);
         }
@@ -136,10 +180,32 @@ const Expenses: React.FC = () => {
         setDescription('');
     };
 
+    const toggleExpand = (id: number) => {
+        setExpandedExpenseId(expandedExpenseId === id ? null : id);
+    };
+
     return (
         <div style={{ paddingBottom: '80px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h2 style={{ fontSize: '1.5rem', color: 'var(--accent-primary)', margin: 0 }}>Registro Gastos del Taxi</h2>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <input
+                        type="file"
+                        accept=".pdf"
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                        style={{ display: 'none' }}
+                    />
+                    <button
+                        className="btn btn-secondary"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '0.6rem 1rem' }}
+                    >
+                        {isUploading ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>⏳</motion.div> : <Upload size={18} />}
+                        Subir Factura PDF
+                    </button>
+                </div>
             </div>
 
             <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
@@ -267,38 +333,97 @@ const Expenses: React.FC = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {expenses.slice(0, 15).map(expense => (
-                    <div key={expense.id} className="card" style={{ padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
-                            <div style={{ padding: '8px', borderRadius: '50%', backgroundColor: 'var(--bg-secondary)' }}>
-                                <Receipt size={18} color="var(--text-secondary)" />
+                    <div key={expense.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                        <div
+                            className="card"
+                            style={{
+                                padding: '0.75rem 1rem',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: 0,
+                                cursor: expense.is_monthly_summary ? 'pointer' : 'default',
+                                borderLeft: expense.is_monthly_summary ? '4px solid var(--accent-primary)' : 'none'
+                            }}
+                            onClick={() => expense.is_monthly_summary && toggleExpand(expense.id)}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                                <div style={{ padding: '8px', borderRadius: '50%', backgroundColor: 'var(--bg-secondary)' }}>
+                                    {expense.is_monthly_summary ? <FileText size={18} color="var(--accent-primary)" /> : <Receipt size={18} color="var(--text-secondary)" />}
+                                </div>
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <p style={{ fontWeight: '500', margin: 0 }}>{expense.description}</p>
+                                        {expense.is_monthly_summary && (
+                                            expandedExpenseId === expense.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />
+                                        )}
+                                    </div>
+                                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>{format(new Date(expense.timestamp), 'dd/MM/yyyy HH:mm')}</p>
+                                </div>
                             </div>
-                            <div>
-                                <p style={{ fontWeight: '500', margin: 0 }}>{expense.description}</p>
-                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>{format(new Date(expense.timestamp), 'dd/MM/yyyy HH:mm')}</p>
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ fontWeight: 'bold', color: 'var(--danger)', fontSize: '1rem' }}>
-                                -{expense.amount.toFixed(2)} €
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span style={{ fontWeight: 'bold', color: 'var(--danger)', fontSize: '1rem' }}>
+                                    -{expense.amount.toFixed(2)} €
+                                </span>
 
-                            <div style={{ display: 'flex', gap: '4px' }}>
-                                <button
-                                    onClick={() => handleEdit(expense)}
-                                    style={{ padding: '4px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-primary)' }}
-                                    title="Editar"
-                                >
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(expense.id)}
-                                    style={{ padding: '4px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
-                                    title="Borrar"
-                                >
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                </button>
+                                <div style={{ display: 'flex', gap: '4px' }}>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleEdit(expense); }}
+                                        style={{ padding: '4px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-primary)' }}
+                                        title="Editar"
+                                    >
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleDelete(expense.id); }}
+                                        style={{ padding: '4px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+                                        title="Borrar"
+                                    >
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
+
+                        <AnimatePresence>
+                            {expandedExpenseId === expense.id && expense.metadata?.tickets && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    style={{ overflow: 'hidden' }}
+                                >
+                                    <div style={{
+                                        backgroundColor: 'rgba(255,255,255,0.03)',
+                                        margin: '0 10px',
+                                        padding: '10px',
+                                        borderBottomLeftRadius: 'var(--radius-md)',
+                                        borderBottomRightRadius: 'var(--radius-md)',
+                                        border: '1px solid rgba(255,255,255,0.05)',
+                                        borderTop: 'none'
+                                    }}>
+                                        <table style={{ width: '100%', fontSize: '0.85rem', borderCollapse: 'collapse' }}>
+                                            <thead>
+                                                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)' }}>
+                                                    <th style={{ textAlign: 'left', padding: '5px' }}>Fecha</th>
+                                                    <th style={{ textAlign: 'right', padding: '5px' }}>Litros</th>
+                                                    <th style={{ textAlign: 'right', padding: '5px' }}>Importe</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {expense.metadata.tickets.map((ticket, idx) => (
+                                                    <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                        <td style={{ padding: '5px' }}>{format(new Date(ticket.date), 'dd/MM/yyyy')}</td>
+                                                        <td style={{ textAlign: 'right', padding: '5px' }}>{ticket.liters.toFixed(2)} L</td>
+                                                        <td style={{ textAlign: 'right', padding: '5px', fontWeight: '500' }}>{ticket.amount.toFixed(2)} €</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 ))}
             </div>

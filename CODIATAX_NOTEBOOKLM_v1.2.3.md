@@ -37,10 +37,21 @@ Introducción de **Vitest** como motor de pruebas:
 - Validación de reactividad en hooks (`useFinanceData`, `useShiftLogic`).
 - Mocks robustos para almacenamiento local y red.
 
+### 🚀 Módulo Inteligente de Facturas de Combustible (GOP)
+- **Extracción de PDF Mejorada**: Integración de `pdfjs-dist` (via CDN jsdelivr) para procesar iterativamente páginas de facturas de "Global Oil Petroleum".
+- **Regex Basado en Coordenadas**: Ordenación espacial (X,Y) de los fragmentos de texto del PDF para lograr lecturas secuenciales perfectas de fechas (formatos YYYY-MM-DD y DD/MM/YYYY), litros e importes totales.
+- **Auto-clasificación Inteligente**: Agrupación automática de tickets individuales y generación de un gasto agregado mensual (`is_monthly_summary`).
+
+### 🛠️ Corrección de Sincronización (PGRST204)
+- **Supabase Schema Match**: Homologación del naming contract (`is_monthly_summary`) entre el cliente React y la base de datos PostgreSQL de Supabase.
+- **SyncQueue Migration**: Implementada lógica "auto-healing" en `SyncService.ts` para migrar campos viejos (`isMonthlySummary`) y purgar tareas atascadas.
+- **Modificación de Gastos**: El método `update` en `Expenses.tsx` preserva exitosamente la propiedad `metadata` (JSONB con los tickets internos).
+
 ### 🎨 Refinamiento UI y Estandarización
 - **Componentes Reutilizables**: Implementación de `MetricCard` (estadísticas) y `TabSelector` (filtros).
 - **Adiós a Estilos Inline**: Migración masiva a clases CSS externas en `Services.css` y `Dashboard.css`.
 - **ServiceForm v2**: Formulario optimizado con selectores de abonados mejorados y visualización de impuestos clara.
+- **Fallbacks React Router v6**: Añadido `<LoadingFallback />` al Root para resolver advertencias de hidratación en consola.
 
 ## Arquitectura Técnica
 

@@ -16,7 +16,42 @@ export class SyncService {
     }
 
     private loadQueue() {
-        this.queue = storage.getItem<SyncItem[]>('codiatax_sync_queue', []);
+        const savedQueue = storage.getItem<SyncItem[]>('codiatax_sync_queue', []);
+
+        // Recursive function to migrate data objects
+        const migrateObject = (obj: any): any => {
+            if (!obj || typeof obj !== 'object') return obj;
+            if (Array.isArray(obj)) return obj.map(migrateObject);
+
+            const newObj: any = {};
+            for (const key in obj) {
+                if (key === 'isMonthlySummary') {
+                    newObj['is_monthly_summary'] = obj[key];
+                } else {
+                    newObj[key] = migrateObject(obj[key]);
+                }
+            }
+            return newObj;
+        };
+
+        // Data Migration: Rename isMonthlySummary to is_monthly_summary in queue items
+        const migratedQueue = savedQueue.map(item => {
+            if (item.entityType === 'EXPENSE' && (item.operation === 'CREATE' || item.operation === 'UPDATE')) {
+                const migratedData = migrateObject(item.data);
+                if (JSON.stringify(item.data) !== JSON.stringify(migratedData)) {
+                    return { ...item, data: migratedData } as SyncItem;
+                }
+            }
+            return item;
+        });
+
+        this.queue = migratedQueue;
+
+        // If anything changed, save the migrated queue
+        if (JSON.stringify(savedQueue) !== JSON.stringify(migratedQueue)) {
+            console.log('[SyncService] Migrated sync queue: isMonthlySummary -> is_monthly_summary');
+            this.saveQueue();
+        }
     }
 
     private saveQueue() {
@@ -91,6 +126,14 @@ export class SyncService {
                     break;
                 }
             } catch (error: any) {
+                // Special handling for schema errors (PGRST204) - drop the item as it will always fail
+                if (error.code === 'PGRST204' || (error.message && error.message.includes('isMonthlySummary'))) {
+                    console.error(`[SyncService] Error de esquema crítico detectado en item ${item.id}. Eliminando de la cola.`, error);
+                    this.queue.shift();
+                    this.saveQueue();
+                    continue; // Continue with next item
+                }
+
                 this.handleError(error);
                 break;
             }

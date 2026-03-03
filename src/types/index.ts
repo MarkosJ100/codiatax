@@ -57,6 +57,12 @@ export interface Service {
     source?: 'manual' | 'total';
 }
 
+export interface FuelTicket {
+    date: string;
+    liters: number;
+    amount: number;
+}
+
 export interface Expense {
     id: number;
     timestamp: string;
@@ -64,6 +70,11 @@ export interface Expense {
     category: string;
     description: string;
     type?: string;
+    metadata?: {
+        tickets?: FuelTicket[];
+        [key: string]: any;
+    };
+    is_monthly_summary?: boolean;
 }
 
 export interface MaintenanceRecord {
