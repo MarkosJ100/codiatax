@@ -77,12 +77,50 @@ const ExportMenu: React.FC = () => {
                     return;
                 }
 
-                console.log(`Importando ${newServices.length} servicios...`);
+                // Filtrar duplicados contra los servicios existentes y contra los propios del archivo
+                const processedKeys = new Set<string>();
+                let importCount = 0;
+                let skipCount = 0;
+
+                // Añadir los servicios existentes al set de "ya procesados"
+                services.forEach(s => {
+                    const timeMs = new Date(s.timestamp).getTime();
+                    // Normalizar el importe y la observación para la clave
+                    const normObs = String(s.observation || '').trim();
+                    const key = `${timeMs}_${normObs}`;
+                    processedKeys.add(key);
+                });
+
                 for (const service of newServices) {
+                    const timeMs = new Date(service.timestamp).getTime();
+
+                    // Usamos solo el tiempo y la observación como clave de deduplicación.
+                    // Esto evita que si un importe se parseó mal una vez (ej: 6.42 vs 642)
+                    // se considere un servicio distinto.
+                    const normObs = String(service.observation || '').trim();
+                    const key = `${timeMs}_${normObs}`;
+
+                    if (processedKeys.has(key)) {
+                        console.log(`[Deduplicación] Saltando duplicatado: ${key}`);
+                        skipCount++;
+                        continue;
+                    }
+
+                    processedKeys.add(key);
                     await addService(service);
+                    importCount++;
                 }
 
-                toast.success(`${newServices.length} servicios importados correctamente`);
+                if (skipCount > 0) {
+                    if (importCount > 0) {
+                        toast.success(`${importCount} importados, ${skipCount} duplicados ignorados`);
+                    } else {
+                        toast.warning(`Todos los ${skipCount} servicios ya existían (ignorados)`);
+                    }
+                } else {
+                    toast.success(`${importCount} servicios importados correctamente`);
+                }
+
                 setIsOpen(false);
             } catch (error) {
                 console.error('Error importing file:', error);

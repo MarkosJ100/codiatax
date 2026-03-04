@@ -15,27 +15,66 @@ function fixEncoding(str: string): string {
     }
 }
 
+function detectAbonado(orig: string, dest: string): { type: 'normal' | 'company', companyName?: string } {
+    const keywords = ['CONCESIONARIO', 'CONCES.', 'BMW', 'FIAT', 'AUDI', 'VOLKSWAGEN', 'HYUNDAI', 'FORD', 'MERCEDES', 'OPEL', 'RENAULT', 'PEUGEOT', 'CITROEN', 'TOYOTA'];
+    const text = (orig + ' ' + dest).toUpperCase();
+
+    for (const kw of keywords) {
+        if (text.includes(kw)) {
+            // Intentar extraer el nombre del concesionario
+            // Si el texto tiene "CONCESIONARIO XXX", pillar XXX
+            const match = text.match(/CONCESIONARIO\s+([A-ZÁÉÍÓÚÑ]+)/i);
+            if (match) return { type: 'company', companyName: `CONCESIONARIO ${match[1]}` };
+
+            const match2 = text.match(/([A-ZÁÉÍÓÚÑ]+\s+MOTOR)/i);
+            if (match2) return { type: 'company', companyName: match2[1] };
+
+            return { type: 'company', companyName: kw === 'CONCES.' || kw === 'CONCESIONARIO' ? 'CONCESIONARIO' : `CONCESIONARIO ${kw}` };
+        }
+    }
+    return { type: 'normal' };
+}
+
 function parseSpanishDate(dateStr: string): string | null {
     if (!dateStr || dateStr.trim() === '' || dateStr.toLowerCase() === 'undefined' || dateStr.toLowerCase() === 'null') {
         return null;
     }
     try {
-        const cleanStr = dateStr.replace(/[^\x20-\x7E\s/:]/g, '').trim();
+        // Limpiar caracteres no imprimibles pero mantener / y :
+        const cleanStr = dateStr.replace(/[^\d\s/:]/g, '').trim();
         if (cleanStr.length < 5) return null;
+
+        // Intentar parseo explícito de formato DD/MM/YY HH:mm o similar
+        // Dividir por cualquier separador común
         const parts = cleanStr.split(/[\s/:]/);
-        if (parts.length >= 5) {
-            const day = parts[0].padStart(2, '0');
-            const month = parts[1].padStart(2, '0');
-            let year = parts[2];
-            if (year.length === 2) year = `20${year}`;
-            const hour = parts[3].padStart(2, '0');
-            const minute = parts[4].padStart(2, '0');
-            const iso = `${year}-${month}-${day}T${hour}:${minute}:00`;
-            const d = new Date(iso);
-            return isNaN(d.getTime()) ? null : iso;
+
+        if (parts.length >= 3) {
+            const day = parseInt(parts[0]);
+            const month = parseInt(parts[1]);
+            let year = parseInt(parts[2]);
+
+            // Validar que son números razonables para día/mes
+            if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                if (year < 100) year += 2000;
+
+                // Horas y minutos (opcional)
+                const hour = parts.length >= 4 ? parseInt(parts[3]) : 0;
+                const minute = parts.length >= 5 ? parseInt(parts[4]) : 0;
+
+                // Crear fecha asumiendo formato español DD/MM/YYYY
+                // Usamos Date.UTC para evitar drifts por la zona horaria local o DST
+                const d = new Date(Date.UTC(year, month - 1, day, isNaN(hour) ? 0 : hour, isNaN(minute) ? 0 : minute));
+
+                if (!isNaN(d.getTime())) {
+                    return d.toISOString();
+                }
+            }
         }
+
+        // Fallback a parser nativo solo si lo anterior falla
         const d = new Date(cleanStr);
-        return isNaN(d.getTime()) ? null : d.toISOString();
+        if (isNaN(d.getTime())) return null;
+        return d.toISOString();
     } catch (e) {
         return null;
     }
@@ -44,9 +83,54 @@ function parseSpanishDate(dateStr: string): string | null {
 function parseSpanishNumber(val: any): number {
     if (typeof val === 'number') return val;
     if (!val) return 0;
+
     try {
-        const numStr = String(val).replace(/[^\d,.-]/g, '');
-        return parseFloat(numStr.replace(',', '.'));
+        let str = String(val).trim();
+
+        // Soporte para múltiples tipos de separadores decimales raros (ej: 9'12, 9`12, 9´12)
+        str = str.replace(/['`´]/g, '.');
+
+        // Si hay un espacio seguido de exactamente 2 números al final, es probable que sea el decimal
+        // Ej: "20 00" -> "20.00"
+        if (/\s\d{2}$/.test(str)) {
+            str = str.replace(/\s(\d{2})$/, '.$1');
+        }
+
+        // Limpiar caracteres no numéricos excepto separadores estándar
+        str = str.replace(/[^\d,.-]/g, '');
+        if (!str) return 0;
+
+        const isNegative = str.startsWith('-');
+        if (isNegative) str = str.substring(1);
+
+        const commas = (str.match(/,/g) || []).length;
+        const dots = (str.match(/\./g) || []).length;
+
+        if (commas === 0 && dots <= 1) {
+            // Normal JS float (e.g. 10.50)
+        } else if (dots === 0 && commas === 1) {
+            // Spanish decimal (e.g. 10,50)
+            str = str.replace(',', '.');
+        } else if (commas > 0 && dots > 0) {
+            const lastComma = str.lastIndexOf(',');
+            const lastDot = str.lastIndexOf('.');
+            if (lastComma > lastDot) {
+                // Spanish format (e.g. 1.050,55)
+                str = str.replace(/\./g, '');
+                str = str.replace(',', '.');
+            } else {
+                // English format (e.g. 1,050.55)
+                str = str.replace(/,/g, '');
+            }
+        } else if (commas > 1 && dots === 0) {
+            str = str.replace(/,/g, '');
+        } else if (dots > 1 && commas === 0) {
+            str = str.replace(/\./g, '');
+        }
+
+        let num = parseFloat(str);
+        if (isNegative) num = -num;
+        return isNaN(num) ? 0 : num;
     } catch (e) {
         return 0;
     }
@@ -234,10 +318,13 @@ export function parseServicesExcel(buffer: ArrayBuffer): Omit<Service, 'id'>[] {
             const orig = colMap.origin !== -1 ? fixEncoding(String(row[colMap.origin] || '')) : '';
             const dest = colMap.destination !== -1 ? fixEncoding(String(row[colMap.destination] || '')) : '';
 
+            const srvType = detectAbonado(orig, dest);
+
             services.push({
                 timestamp,
                 amount,
-                type: 'normal',
+                type: srvType.type,
+                companyName: srvType.companyName,
                 observation: `Ticket #${ticket} - ${typeSrv}. Orig: ${orig} Dest: ${dest}`.trim(),
                 source: 'manual'
             });
@@ -294,10 +381,13 @@ function parseCsvLines(lines: string[]): Omit<Service, 'id'>[] {
                 console.log(`  Fila ${i} OK: ticket=${ticket}, fecha=${timestamp}, importe=${amount}€`);
             }
 
+            const srvType = detectAbonado(orig, dest);
+
             services.push({
                 timestamp,
                 amount,
-                type: 'normal',
+                type: srvType.type,
+                companyName: srvType.companyName,
                 observation: `Ticket #${ticket} - ${typeSrv}. Orig: ${orig} Dest: ${dest}`.trim(),
                 source: 'manual'
             });

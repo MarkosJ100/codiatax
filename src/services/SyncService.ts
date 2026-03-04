@@ -35,7 +35,8 @@ export class SyncService {
         };
 
         // Data Migration: Rename isMonthlySummary to is_monthly_summary in queue items
-        const migratedQueue = savedQueue.map(item => {
+        const rawQueue = Array.isArray(savedQueue) ? savedQueue : [];
+        const migratedQueue = rawQueue.map(item => {
             if (item.entityType === 'EXPENSE' && (item.operation === 'CREATE' || item.operation === 'UPDATE')) {
                 const migratedData = migrateObject(item.data);
                 if (JSON.stringify(item.data) !== JSON.stringify(migratedData)) {
