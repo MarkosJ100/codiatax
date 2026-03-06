@@ -10,7 +10,7 @@ import TabSelector from '../Common/TabSelector';
 import './Services.css';
 
 const ServiceForm: React.FC = () => {
-    const { addService, services, subscribers, addSubscriber, deleteSubscriber } = useServices();
+    const { addService, services, subscribers, addSubscriber, deleteSubscriber, updateSubscriber } = useServices();
     const toast = useToast();
     const [activeTab, setActiveTab] = useState<'taxi' | 'subscriber'>('taxi');
     const [amount, setAmount] = useState<string>('');
@@ -24,6 +24,7 @@ const ServiceForm: React.FC = () => {
     // Subscriber management state
     const [showNewSubscriberModal, setShowNewSubscriberModal] = useState(false);
     const [showManageSubscribersModal, setShowManageSubscribersModal] = useState(false);
+    const [editingSubscriberId, setEditingSubscriberId] = useState<string | null>(null);
     const [newSubName, setNewSubName] = useState('');
     const [newSubOfficeNumber, setNewSubOfficeNumber] = useState('');
     const [isSubCapped, setIsSubCapped] = useState(false);
@@ -123,16 +124,35 @@ const ServiceForm: React.FC = () => {
             return;
         }
 
-        addSubscriber({
+        const subData = {
             name: newSubName.trim().toUpperCase(),
             isCapped: isSubCapped,
             capAmount: parseFloat(subCapAmount) || 0,
             officeNumber: newSubOfficeNumber || undefined
-        });
+        };
+
+        if (editingSubscriberId) {
+            updateSubscriber(editingSubscriberId, subData);
+            toast.success('Abonado actualizado');
+        } else {
+            addSubscriber(subData);
+            toast.success('Abonado creado');
+        }
+
         setNewSubName('');
         setNewSubOfficeNumber('');
+        setEditingSubscriberId(null);
         setShowNewSubscriberModal(false);
-        toast.success('Abonado creado');
+    };
+
+    const handleEditSubscriber = (sub: any) => {
+        setEditingSubscriberId(sub.id);
+        setNewSubName(sub.name);
+        setNewSubOfficeNumber(sub.officeNumber || '');
+        setIsSubCapped(sub.isCapped);
+        setSubCapAmount(sub.capAmount?.toString() || '7');
+        setShowManageSubscribersModal(false);
+        setShowNewSubscriberModal(true);
     };
 
     const selectedSubscriber = subscribers.find(s => s.id === selectedSubscriberId);
@@ -296,8 +316,8 @@ const ServiceForm: React.FC = () => {
                 <div className="modal-overlay">
                     <div className="modal-content animate-fade-in">
                         <div className="modal-header">
-                            <h3>Nuevo Abonado</h3>
-                            <button onClick={() => setShowNewSubscriberModal(false)} style={{ background: 'none', border: 'none' }}><XCircle /></button>
+                            <h3>{editingSubscriberId ? 'Editar Abonado' : 'Nuevo Abonado'}</h3>
+                            <button onClick={() => { setShowNewSubscriberModal(false); setEditingSubscriberId(null); }} style={{ background: 'none', border: 'none' }}><XCircle /></button>
                         </div>
                         <div className="modal-body">
                             <div className="form-group" style={{ marginBottom: '1rem' }}>
@@ -346,7 +366,12 @@ const ServiceForm: React.FC = () => {
                                                 <span className="subscriber-item-name">{sub.name}</span>
                                                 <span className="subscriber-item-meta">{sub.officeNumber || 'Sin despacho'}</span>
                                             </div>
-                                            <button className="btn-delete-rounded" onClick={() => deleteSubscriber(sub.id)}><Trash2 size={16} /></button>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button className="btn-ghost-primary" style={{ padding: '8px' }} onClick={() => handleEditSubscriber(sub)}>
+                                                    <Save size={16} />
+                                                </button>
+                                                <button className="btn-delete-rounded" onClick={() => deleteSubscriber(sub.id)}><Trash2 size={16} /></button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

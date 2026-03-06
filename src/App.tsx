@@ -87,7 +87,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/",
-    element: <ProtectedRoute><PinGuard><MobileShell /></PinGuard></ProtectedRoute>,
+    element: <ProtectedRoute><MobileShell /></ProtectedRoute>,
     HydrateFallback: LoadingFallback,
     loader: async () => {
       let user = getUserFromStorage();

@@ -6,7 +6,7 @@ import { useVehicle } from '../context/VehicleContext';
 import { useServices } from '../context/ServiceContext';
 import { useShifts } from '../context/ShiftContext';
 import { useUI } from '../context/UIContext';
-import { format, es } from '../utils/dateHelpers';
+import { format, es, endOfWeek } from '../utils/dateHelpers';
 import { calculateTotals } from '../utils/financeHelpers';
 import { useMaintenance } from '../hooks/useMaintenance';
 import { AlertTriangle, Calculator, ArrowRight, Settings, Sun, Moon, ChevronDown } from 'lucide-react';
@@ -95,13 +95,12 @@ const Home: React.FC = () => {
             if (!user || !shiftStorage?.assignments || !Array.isArray(shiftStorage.assignments)) return false;
 
             const todayStr = format(today, 'yyyy-MM-dd');
-            const nextWeekDate = new Date(today);
-            nextWeekDate.setDate(today.getDate() + 6);
-            const nextWeekStr = format(nextWeekDate, 'yyyy-MM-dd');
+            const endOfWeekDate = endOfWeek(today, { locale: es });
+            const endOfWeekStr = format(endOfWeekDate, 'yyyy-MM-dd');
 
             return shiftStorage.assignments.some(a => {
                 if (!a || !a.date) return false;
-                return a.userId === normalizeUsername(user.name) && a.date >= todayStr && a.date <= nextWeekStr;
+                return a.userId === normalizeUsername(user.name) && a.date >= todayStr && a.date <= endOfWeekStr;
             });
         } catch (err) {
             console.warn("Error calculating airport week alert:", err);
