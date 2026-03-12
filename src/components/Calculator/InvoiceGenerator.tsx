@@ -629,23 +629,23 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ initialData, onClos
                                     <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)' }}>Nº Factura</label>
                                     <input type="text" readOnly style={{ background: 'transparent', border: 'none', padding: '4px 0', fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }} value={`${formData.series || ''}${formData.number || ''}`} />
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                                    <div style={{ minWidth: 0 }}>
                                         <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)' }}>F. Emisión</label>
                                         <input
                                             type="date"
                                             value={formData.dateEmission}
                                             onChange={e => setFormData({ ...formData, dateEmission: e.target.value })}
-                                            style={{ width: '100%' }}
+                                            style={{ width: '100%', boxSizing: 'border-box' }}
                                         />
                                     </div>
-                                    <div>
+                                    <div style={{ minWidth: 0 }}>
                                         <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)' }}>F. Operación</label>
                                         <input
                                             type="date"
                                             value={formData.dateService}
                                             onChange={e => setFormData({ ...formData, dateService: e.target.value })}
-                                            style={{ width: '100%' }}
+                                            style={{ width: '100%', boxSizing: 'border-box' }}
                                         />
                                     </div>
                                 </div>
@@ -674,18 +674,18 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ initialData, onClos
                                         />
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-                                    <div style={{ flex: '1 1 120px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(85px, 1fr))', gap: '0.75rem' }}>
+                                    <div style={{ minWidth: 0 }}>
                                         <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>H. Inicio</label>
-                                        <input type="time" value={formData.timeStart || ''} onChange={e => setFormData({ ...formData, timeStart: e.target.value })} style={{ width: '100%' }} />
+                                        <input type="time" value={formData.timeStart || ''} onChange={e => setFormData({ ...formData, timeStart: e.target.value })} style={{ width: '100%', boxSizing: 'border-box' }} />
                                     </div>
-                                    <div style={{ flex: '1 1 120px' }}>
+                                    <div style={{ minWidth: 0 }}>
                                         <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>H. Fin</label>
-                                        <input type="time" value={formData.timeEnd || ''} onChange={e => setFormData({ ...formData, timeEnd: e.target.value })} style={{ width: '100%' }} />
+                                        <input type="time" value={formData.timeEnd || ''} onChange={e => setFormData({ ...formData, timeEnd: e.target.value })} style={{ width: '100%', boxSizing: 'border-box' }} />
                                     </div>
-                                    <div style={{ flex: '1 1 100px' }}>
+                                    <div style={{ minWidth: 0 }}>
                                         <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Km</label>
-                                        <input type="number" step="0.1" value={formData.km || ''} onChange={e => setFormData({ ...formData, km: Number(e.target.value) })} style={{ width: '100%' }} />
+                                        <input type="number" step="0.1" value={formData.km || ''} onChange={e => setFormData({ ...formData, km: Number(e.target.value) })} style={{ width: '100%', boxSizing: 'border-box' }} />
                                     </div>
                                 </div>
                             </div>
@@ -694,7 +694,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ initialData, onClos
                             <div className="card" style={{ background: 'rgba(var(--accent-primary-rgb), 0.05)', border: '1px solid rgba(var(--accent-primary-rgb), 0.2)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <h4 style={{ fontSize: '1rem', fontWeight: '700', borderBottom: '1px solid rgba(var(--accent-primary-rgb), 0.2)', paddingBottom: '0.5rem', color: 'var(--accent-primary)' }}>Importes y Pago</h4>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-                                    <div style={{ flex: '1 1 200px' }}>
+                                    <div style={{ flex: '1 1 140px', minWidth: 0 }}>
                                         <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', marginBottom: '4px', color: 'var(--text-muted)' }}>Importe Total (€) *</label>
                                         <input
                                             type="number" step="0.01" required
@@ -703,7 +703,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ initialData, onClos
                                             onChange={e => setFormData({ ...formData, totalAmount: Number(e.target.value) })}
                                         />
                                     </div>
-                                    <div style={{ flex: '1 1 150px' }}>
+                                    <div style={{ flex: '1 1 100px', minWidth: 0 }}>
                                         <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '4px', color: 'var(--text-muted)' }}>IVA ({formData.ivaRate}%)</label>
                                         <div style={{ padding: '0.875rem 1rem', fontSize: '1.25rem', fontWeight: '600', color: 'var(--accent-secondary)' }}>{formData.ivaAmount?.toFixed(2)}€</div>
                                     </div>

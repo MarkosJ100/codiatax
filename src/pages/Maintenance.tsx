@@ -145,14 +145,14 @@ const Maintenance: React.FC = () => {
                         </div>
                     )}
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                        <div style={{ minWidth: 0 }}>
                             <label style={{ fontWeight: '500', marginBottom: '4px', display: 'block', color: 'var(--warning)' }}>Fecha</label>
-                            <input type="date" value={date} onChange={e => setDate(e.target.value)} required style={{ ...inputStyle, borderLeft: '4px solid var(--warning)', backgroundColor: 'var(--bg-secondary)' }} />
+                            <input type="date" value={date} onChange={e => setDate(e.target.value)} required style={{ ...inputStyle, borderLeft: '4px solid var(--warning)', backgroundColor: 'var(--bg-secondary)', width: '100%', boxSizing: 'border-box' }} />
                         </div>
-                        <div>
+                        <div style={{ minWidth: 0 }}>
                             <label style={{ fontWeight: '500', marginBottom: '4px', display: 'block', color: 'var(--success)' }}>Km Actuales</label>
-                            <input type="number" value={currentKm} onChange={e => setCurrentKm(e.target.value)} placeholder="Ej: 150000" required style={{ ...inputStyle, fontWeight: 'bold', borderLeft: '4px solid var(--success)', backgroundColor: 'var(--bg-secondary)' }} />
+                            <input type="number" value={currentKm} onChange={e => setCurrentKm(e.target.value)} placeholder="Ej: 150000" required style={{ ...inputStyle, fontWeight: 'bold', borderLeft: '4px solid var(--success)', backgroundColor: 'var(--bg-secondary)', width: '100%', boxSizing: 'border-box' }} />
                         </div>
                     </div>
 
@@ -179,25 +179,30 @@ const Maintenance: React.FC = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {records.map(rec => (
-                    <div key={rec.id} className="card" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: 0, position: 'relative' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{rec.label}</span>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{format(new Date(rec.date), 'dd/MM/yyyy')}</span>
+                    <div key={rec.id} className="card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: 0 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: '1 1 200px', minWidth: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '5px' }}>
+                                <span style={{ fontWeight: 'bold', fontSize: '1.1rem', wordBreak: 'break-word' }}>{rec.label}</span>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{format(new Date(rec.date), 'dd/MM/yyyy')}</span>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem', flexWrap: 'wrap' }}>
+                                <span>Km: <strong>{rec.currentKm.toLocaleString()}</strong></span>
+                                {rec.nextKm && <span style={{ color: 'var(--accent-primary)' }}>Próximo: <strong>{rec.nextKm.toLocaleString()}</strong></span>}
+                            </div>
+
+                            {rec.notes && <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', margin: 0, wordBreak: 'break-word' }}>Nota: {rec.notes}</p>}
                         </div>
 
-                        <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem' }}>
-                            <span>Km: <strong>{rec.currentKm.toLocaleString()}</strong></span>
-                            {rec.nextKm && <span style={{ color: 'var(--accent-primary)' }}>Próximo: <strong>{rec.nextKm.toLocaleString()}</strong></span>}
+                        <div style={{ display: 'flex', alignItems: 'center', alignSelf: 'center' }}>
+                            <button
+                                onClick={() => handleDelete(rec.id)}
+                                style={{ padding: '8px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '50%', border: 'none', color: 'var(--danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                title="Borrar"
+                            >
+                                <Trash2 size={18} />
+                            </button>
                         </div>
-
-                        {rec.notes && <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', margin: 0 }}>Nota: {rec.notes}</p>}
-
-                        <button
-                            onClick={() => handleDelete(rec.id)}
-                            style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}
-                        >
-                            <Trash2 size={18} />
-                        </button>
                     </div>
                 ))}
             </div>

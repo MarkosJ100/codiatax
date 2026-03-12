@@ -348,13 +348,15 @@ const Expenses: React.FC = () => {
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
+                                flexWrap: 'wrap',
+                                gap: '10px',
                                 marginBottom: 0,
                                 cursor: expense.is_monthly_summary ? 'pointer' : 'default',
                                 borderLeft: expense.is_monthly_summary ? '4px solid var(--accent-primary)' : 'none'
                             }}
                             onClick={() => expense.is_monthly_summary && toggleExpand(expense.id)}
                         >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 200px', minWidth: 0 }}>
                                 <div style={{ padding: '8px', borderRadius: '50%', backgroundColor: 'var(--bg-secondary)' }}>
                                     {expense.is_monthly_summary ? <FileText size={18} color="var(--accent-primary)" /> : <Receipt size={18} color="var(--text-secondary)" />}
                                 </div>

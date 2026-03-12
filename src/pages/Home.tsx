@@ -216,7 +216,7 @@ const Home: React.FC = () => {
 
                 <div style={{ position: 'relative', zIndex: 1 }}>
                     {/* Period selector */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '700' }}>
                             Recaudación Limpia
                         </div>
@@ -252,7 +252,7 @@ const Home: React.FC = () => {
                     {/* 4-stat grid */}
                     <div style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(4, 1fr)',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(65px, 1fr))',
                         gap: '8px',
                         padding: '16px',
                         background: 'rgba(var(--accent-primary-rgb), 0.04)',
@@ -265,7 +265,7 @@ const Home: React.FC = () => {
                         </div>
                         <div style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em', marginBottom: '6px' }}>
-                                Gastos{isExpensesEstimated ? ' (aprox.)' : ''}
+                                Gastos{isExpensesEstimated ? <><br/><span style={{fontSize: '0.5rem'}}>(aprox.)</span></> : ''}
                             </div>
                             <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--danger)' }}>-{totalExpenses.toFixed(0)}€</div>
                         </div>
@@ -275,7 +275,7 @@ const Home: React.FC = () => {
                         </div>
                         <div style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em', marginBottom: '6px' }}>
-                                Dist.{isKmsEstimated ? ' (aprox.)' : ''}
+                                Dist.{isKmsEstimated ? <><br/><span style={{fontSize: '0.5rem'}}>(aprox.)</span></> : ''}
                             </div>
                             <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>{totalKms.toLocaleString()} <span style={{ fontSize: '0.6rem', fontWeight: '400' }}>km</span>
                             </div>
