@@ -103,23 +103,34 @@ const Maintenance: React.FC = () => {
         doc.save(`mantenimiento_taxi_${format(new Date(), 'yyyyMMdd')}.pdf`);
     };
 
+    const inputStyle = {
+        width: '100%',
+        padding: '0.85rem',
+        borderRadius: 'var(--radius-sm)',
+        backgroundColor: 'var(--bg-input)',
+        color: 'var(--text-primary)',
+        border: '1px solid var(--border-light)',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        transition: 'all 0.2s'
+    };
+
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h2 style={{ fontSize: '1.5rem', color: 'var(--accent-primary)', margin: 0 }}>Mantenimiento Taller Taxi</h2>
-                <button onClick={exportPDF} className="btn-ghost" style={{ fontSize: '0.8rem', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '4px 8px', cursor: 'pointer' }}>
+                <button onClick={exportPDF} className="btn-ghost" style={{ fontSize: '0.8rem', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '4px 8px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
                     <FileText size={16} style={{ marginRight: '4px' }} /> PDF
                 </button>
             </div>
 
-            <div className="card">
+            <div className="card" style={{ boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div>
-                        <label>Elemento a Mantener</label>
+                        <label style={{ fontWeight: '500', marginBottom: '4px', display: 'block', color: 'var(--accent-primary)' }}>Elemento a Mantener</label>
                         <select
                             value={item}
                             onChange={e => setItem(e.target.value)}
-                            style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
+                            style={{ ...inputStyle, borderLeft: '4px solid var(--accent-primary)', backgroundColor: 'var(--bg-secondary)' }}
                         >
                             {Object.entries(maintenanceItems).map(([key, value]) => (
                                 <option key={key} value={key} style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>{value.label}</option>
@@ -129,19 +140,19 @@ const Maintenance: React.FC = () => {
 
                     {item === 'custom' && (
                         <div>
-                            <label>Nombre del Elemento</label>
-                            <input type="text" value={customItem} onChange={e => setCustomItem(e.target.value)} placeholder="Ej: Batería, Limpiaparabrisas..." required />
+                            <label style={{ fontWeight: '500', marginBottom: '4px', display: 'block' }}>Nombre del Elemento</label>
+                            <input type="text" value={customItem} onChange={e => setCustomItem(e.target.value)} placeholder="Ej: Batería, Limpiaparabrisas..." required style={inputStyle} />
                         </div>
                     )}
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                         <div>
-                            <label>Fecha</label>
-                            <input type="date" value={date} onChange={e => setDate(e.target.value)} required />
+                            <label style={{ fontWeight: '500', marginBottom: '4px', display: 'block', color: 'var(--warning)' }}>Fecha</label>
+                            <input type="date" value={date} onChange={e => setDate(e.target.value)} required style={{ ...inputStyle, borderLeft: '4px solid var(--warning)', backgroundColor: 'var(--bg-secondary)' }} />
                         </div>
                         <div>
-                            <label>Km Actuales</label>
-                            <input type="number" value={currentKm} onChange={e => setCurrentKm(e.target.value)} placeholder="Ej: 150000" required style={{ fontWeight: 'bold' }} />
+                            <label style={{ fontWeight: '500', marginBottom: '4px', display: 'block', color: 'var(--success)' }}>Km Actuales</label>
+                            <input type="number" value={currentKm} onChange={e => setCurrentKm(e.target.value)} placeholder="Ej: 150000" required style={{ ...inputStyle, fontWeight: 'bold', borderLeft: '4px solid var(--success)', backgroundColor: 'var(--bg-secondary)' }} />
                         </div>
                     </div>
 
@@ -152,8 +163,8 @@ const Maintenance: React.FC = () => {
                     )}
 
                     <div>
-                        <label>Notas (Opcional)</label>
-                        <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Marca, modelo, precio..." />
+                        <label style={{ fontWeight: '500', marginBottom: '4px', display: 'block', color: 'var(--info)' }}>Notas (Opcional)</label>
+                        <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Marca, modelo, precio..." style={{ ...inputStyle, borderLeft: '4px solid var(--info)', backgroundColor: 'var(--bg-secondary)' }} />
                     </div>
 
                     <button type="submit" className="btn btn-primary">

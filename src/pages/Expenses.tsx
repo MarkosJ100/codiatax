@@ -184,6 +184,17 @@ const Expenses: React.FC = () => {
         setExpandedExpenseId(expandedExpenseId === id ? null : id);
     };
 
+    const inputStyle = {
+        width: '100%',
+        padding: '0.85rem',
+        borderRadius: 'var(--radius-sm)',
+        backgroundColor: 'var(--bg-input)',
+        color: 'var(--text-primary)',
+        border: '1px solid var(--border-light)',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        transition: 'all 0.2s'
+    };
+
     return (
         <div style={{ paddingBottom: '80px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -200,7 +211,7 @@ const Expenses: React.FC = () => {
                         className="btn btn-secondary"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
-                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '0.6rem 1rem' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '0.6rem 1rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
                     >
                         {isUploading ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>⏳</motion.div> : <Upload size={18} />}
                         Subir Factura PDF
@@ -208,47 +219,45 @@ const Expenses: React.FC = () => {
                 </div>
             </div>
 
-            <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+            <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(59, 130, 246, 0.3)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
                 <h3 style={{ fontSize: '1rem', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
                     Kilómetros Anuales
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div>
-                        <label style={{ fontSize: '0.8rem' }}>Inicio de Año</label>
+                        <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Inicio de Año</label>
                         <input
                             type="number"
                             value={annualConfig.yearStartKm}
                             onChange={e => updateAnnualConfig({ yearStartKm: parseInt(e.target.value) || 0 })}
                             placeholder="Km iniciales"
+                            style={{...inputStyle, padding: '0.5rem'}}
                         />
                     </div>
                     <div>
-                        <label style={{ fontSize: '0.8rem' }}>Fin de Año</label>
+                        <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Fin de Año</label>
                         <input
                             type="number"
                             value={annualConfig.yearEndKm}
                             readOnly
                             placeholder="Al cerrar año"
-                            style={{ opacity: 0.7 }}
+                            style={{ ...inputStyle, padding: '0.5rem', opacity: 0.7 }}
                         />
                     </div>
                 </div>
             </div>
 
-            <div className="card">
+            <div className="card" style={{ boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div>
-                        <label>Tipo de Gasto</label>
+                        <label style={{ fontWeight: '500', marginBottom: '4px', display: 'block', color: 'var(--accent-primary)' }}>Tipo de Gasto</label>
                         <select
                             value={expenseType}
                             onChange={handleTypeChange}
                             style={{
-                                width: '100%',
-                                padding: '0.75rem',
-                                borderRadius: 'var(--radius-sm)',
-                                border: '1px solid var(--border-color)',
-                                backgroundColor: 'var(--bg-input)',
-                                color: 'var(--text-primary)',
+                                ...inputStyle,
+                                borderLeft: '4px solid var(--accent-primary)',
+                                backgroundColor: 'var(--bg-secondary)',
                                 fontSize: '1rem'
                             }}
                         >
@@ -266,17 +275,14 @@ const Expenses: React.FC = () => {
 
                     {expenseType === 'agency_fees' && (
                         <div>
-                            <label>Frecuencia de Pago</label>
+                            <label style={{ fontWeight: '500', marginBottom: '4px', display: 'block', color: 'var(--warning)' }}>Frecuencia de Pago</label>
                             <select
                                 value={agencyFrequency}
                                 onChange={e => setAgencyFrequency(e.target.value)}
                                 style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    borderRadius: 'var(--radius-sm)',
-                                    border: '1px solid var(--border-color)',
-                                    backgroundColor: 'var(--bg-input)',
-                                    color: 'var(--text-primary)'
+                                    ...inputStyle,
+                                    borderLeft: '4px solid var(--warning)',
+                                    backgroundColor: 'var(--bg-secondary)',
                                 }}
                             >
                                 <option value="Mensual">Mensual</option>
@@ -289,19 +295,20 @@ const Expenses: React.FC = () => {
 
                     {(isManual || expenseType.includes('misc') || expenseType === 'vehicle_maintenance' || expenseType === 'vehicle_cleaning') && (
                         <div>
-                            <label>Concepto / Detalle {isManual && '(Requerido)'}</label>
+                            <label style={{ fontWeight: '500', marginBottom: '4px', display: 'block', color: 'var(--info)' }}>Concepto / Detalle {isManual && '(Requerido)'}</label>
                             <input
                                 type="text"
                                 placeholder={isManual ? "Escribe el nombre del gasto..." : "Opcional: Detalle adicional"}
                                 value={description}
                                 onChange={e => setDescription(e.target.value)}
                                 required={isManual}
+                                style={{ ...inputStyle, borderLeft: '4px solid var(--info)', backgroundColor: 'var(--bg-secondary)' }}
                             />
                         </div>
                     )}
 
                     <div>
-                        <label>Importe (€)</label>
+                        <label style={{ fontWeight: '500', marginBottom: '4px', display: 'block', color: 'var(--success)' }}>Importe (€)</label>
                         <input
                             type="number"
                             inputMode="decimal"
@@ -309,7 +316,7 @@ const Expenses: React.FC = () => {
                             placeholder="0.00"
                             value={amount}
                             onChange={e => setAmount(e.target.value)}
-                            style={{ fontWeight: 'bold', fontSize: '1.2rem' }}
+                            style={{ ...inputStyle, fontWeight: 'bold', fontSize: '1.2rem', borderLeft: '4px solid var(--success)', backgroundColor: 'var(--bg-secondary)' }}
                             required
                         />
                     </div>

@@ -126,6 +126,20 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, [user]);
 
+    // Data Migration: Normalize airport names in existing records
+    useEffect(() => {
+        if (!user || services.length === 0) return;
+        
+        const toFix = services.filter(s => s.observation && /Jerez de la Frontera Carretera N-IV km\. 628\.5/i.test(s.observation));
+        if (toFix.length > 0) {
+            toFix.forEach(s => {
+                updateService(s.id, { 
+                    observation: s.observation!.replace(/Jerez de la Frontera Carretera N-IV km\. 628\.5/gi, 'AEROPUERTO DE JEREZ') 
+                });
+            });
+        }
+    }, [services, user, updateService]);
+
     const addExpense = useCallback(async (expense: Omit<Expense, 'id'>) => {
         const localId = Date.now();
         setExpenses(prev => [{ ...expense, id: localId }, ...prev]);

@@ -15,6 +15,11 @@ function fixEncoding(str: string): string {
     }
 }
 
+export function normalizeAirportString(str: string): string {
+    if (!str) return str;
+    return str.replace(/Jerez de la Frontera Carretera N-IV km\. 628\.5/gi, 'AEROPUERTO DE JEREZ');
+}
+
 function detectAbonado(orig: string, dest: string): { type: 'normal' | 'company', companyName?: string } {
     const keywords = ['CONCESIONARIO', 'CONCES.', 'BMW', 'FIAT', 'AUDI', 'VOLKSWAGEN', 'HYUNDAI', 'FORD', 'MERCEDES', 'OPEL', 'RENAULT', 'PEUGEOT', 'CITROEN', 'TOYOTA'];
     const text = (orig + ' ' + dest).toUpperCase();
@@ -315,8 +320,8 @@ export function parseServicesExcel(buffer: ArrayBuffer): Omit<Service, 'id'>[] {
             const amount = colMap.amount !== -1 ? parseSpanishNumber(row[colMap.amount]) : 0;
             const ticket = colMap.ticket !== -1 ? String(row[colMap.ticket]) : 'N/A';
             const typeSrv = colMap.type !== -1 ? fixEncoding(String(row[colMap.type] || '')) : '';
-            const orig = colMap.origin !== -1 ? fixEncoding(String(row[colMap.origin] || '')) : '';
-            const dest = colMap.destination !== -1 ? fixEncoding(String(row[colMap.destination] || '')) : '';
+            const orig = normalizeAirportString(colMap.origin !== -1 ? fixEncoding(String(row[colMap.origin] || '')) : '');
+            const dest = normalizeAirportString(colMap.destination !== -1 ? fixEncoding(String(row[colMap.destination] || '')) : '');
 
             const srvType = detectAbonado(orig, dest);
 
@@ -374,8 +379,8 @@ function parseCsvLines(lines: string[]): Omit<Service, 'id'>[] {
             const amount = colMap.amount !== -1 ? parseSpanishNumber(row[colMap.amount]) : 0;
             const ticket = colMap.ticket !== -1 ? row[colMap.ticket] : 'N/A';
             const typeSrv = colMap.type !== -1 ? fixEncoding(row[colMap.type] || '') : '';
-            const orig = colMap.origin !== -1 ? fixEncoding(row[colMap.origin] || '') : '';
-            const dest = colMap.destination !== -1 ? fixEncoding(row[colMap.destination] || '') : '';
+            const orig = normalizeAirportString(colMap.origin !== -1 ? fixEncoding(row[colMap.origin] || '') : '');
+            const dest = normalizeAirportString(colMap.destination !== -1 ? fixEncoding(row[colMap.destination] || '') : '');
 
             if (i <= 3) {
                 console.log(`  Fila ${i} OK: ticket=${ticket}, fecha=${timestamp}, importe=${amount}€`);

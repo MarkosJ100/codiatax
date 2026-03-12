@@ -624,28 +624,30 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ initialData, onClos
                             )}
 
                             {/* Numeración y Fechas */}
-                            <div className="card" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <div>
                                     <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)' }}>Nº Factura</label>
                                     <input type="text" readOnly style={{ background: 'transparent', border: 'none', padding: '4px 0', fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }} value={`${formData.series || ''}${formData.number || ''}`} />
                                 </div>
-                                <div /> {/* Spacer */}
-
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)' }}>F. Emisión</label>
-                                    <input
-                                        type="date"
-                                        value={formData.dateEmission}
-                                        onChange={e => setFormData({ ...formData, dateEmission: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)' }}>F. Operación</label>
-                                    <input
-                                        type="date"
-                                        value={formData.dateService}
-                                        onChange={e => setFormData({ ...formData, dateService: e.target.value })}
-                                    />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)' }}>F. Emisión</label>
+                                        <input
+                                            type="date"
+                                            value={formData.dateEmission}
+                                            onChange={e => setFormData({ ...formData, dateEmission: e.target.value })}
+                                            style={{ width: '100%' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-muted)' }}>F. Operación</label>
+                                        <input
+                                            type="date"
+                                            value={formData.dateService}
+                                            onChange={e => setFormData({ ...formData, dateService: e.target.value })}
+                                            style={{ width: '100%' }}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -672,18 +674,18 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ initialData, onClos
                                         />
                                     </div>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
-                                    <div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                    <div style={{ flex: '1 1 120px' }}>
                                         <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>H. Inicio</label>
-                                        <input type="time" value={formData.timeStart || ''} onChange={e => setFormData({ ...formData, timeStart: e.target.value })} />
+                                        <input type="time" value={formData.timeStart || ''} onChange={e => setFormData({ ...formData, timeStart: e.target.value })} style={{ width: '100%' }} />
                                     </div>
-                                    <div>
+                                    <div style={{ flex: '1 1 120px' }}>
                                         <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>H. Fin</label>
-                                        <input type="time" value={formData.timeEnd || ''} onChange={e => setFormData({ ...formData, timeEnd: e.target.value })} />
+                                        <input type="time" value={formData.timeEnd || ''} onChange={e => setFormData({ ...formData, timeEnd: e.target.value })} style={{ width: '100%' }} />
                                     </div>
-                                    <div>
+                                    <div style={{ flex: '1 1 100px' }}>
                                         <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Km</label>
-                                        <input type="number" step="0.1" value={formData.km || ''} onChange={e => setFormData({ ...formData, km: Number(e.target.value) })} />
+                                        <input type="number" step="0.1" value={formData.km || ''} onChange={e => setFormData({ ...formData, km: Number(e.target.value) })} style={{ width: '100%' }} />
                                     </div>
                                 </div>
                             </div>
@@ -691,17 +693,17 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ initialData, onClos
                             {/* Importes */}
                             <div className="card" style={{ background: 'rgba(var(--accent-primary-rgb), 0.05)', border: '1px solid rgba(var(--accent-primary-rgb), 0.2)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <h4 style={{ fontSize: '1rem', fontWeight: '700', borderBottom: '1px solid rgba(var(--accent-primary-rgb), 0.2)', paddingBottom: '0.5rem', color: 'var(--accent-primary)' }}>Importes y Pago</h4>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                                    <div style={{ flex: '1 1 200px' }}>
                                         <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', marginBottom: '4px', color: 'var(--text-muted)' }}>Importe Total (€) *</label>
                                         <input
                                             type="number" step="0.01" required
-                                            style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', textAlign: 'center' }}
+                                            style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', textAlign: 'center', width: '100%' }}
                                             value={formData.totalAmount || ''}
                                             onChange={e => setFormData({ ...formData, totalAmount: Number(e.target.value) })}
                                         />
                                     </div>
-                                    <div>
+                                    <div style={{ flex: '1 1 150px' }}>
                                         <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '4px', color: 'var(--text-muted)' }}>IVA ({formData.ivaRate}%)</label>
                                         <div style={{ padding: '0.875rem 1rem', fontSize: '1.25rem', fontWeight: '600', color: 'var(--accent-secondary)' }}>{formData.ivaAmount?.toFixed(2)}€</div>
                                     </div>
@@ -737,18 +739,18 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ initialData, onClos
                                     onChange={e => setFormData({ ...formData, clientName: capitalize(e.target.value) })}
                                     style={{ background: 'var(--bg-secondary)' }}
                                 />
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
                                     <input
                                         type="text" required placeholder="NIF/CIF"
                                         value={formData.clientNif || ''}
                                         onChange={e => setFormData({ ...formData, clientNif: toUpper(e.target.value) })}
-                                        style={{ background: 'var(--bg-secondary)' }}
+                                        style={{ background: 'var(--bg-secondary)', flex: '1 1 150px' }}
                                     />
                                     <input
                                         type="email" placeholder="Email (opcional)"
                                         value={formData.clientEmail || ''}
                                         onChange={e => setFormData({ ...formData, clientEmail: e.target.value })}
-                                        style={{ background: 'var(--bg-secondary)' }}
+                                        style={{ background: 'var(--bg-secondary)', flex: '1 1 150px' }}
                                     />
                                 </div>
                                 <input
