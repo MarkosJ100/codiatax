@@ -1,20 +1,20 @@
 # CodiaTax - Changelog
 
-## [1.3.0] - 2026-02-28
+## [1.3.0] - 2026-03-12
 ### Added
-- **Capa de Servicios de Dominio**: Nueva arquitectura que separa la lógica de negocio de React (`src/services/`).
-  - `FinanceService`: Balances y topes de abonado.
-  - `FareService`: Cálculos Haversine y tarifas 2026.
-  - `SyncService`: Cola de sincronización resiliente.
-  - `ShiftService`: Gestión de colas de aeropuerto.
-  - `PersistenceService`: Backup y reset nuclear.
-- **Suite de Tests**: Implementación de 27 tests unitarios con **Vitest** (Servicios + Hooks).
-- **Componentes UI Pro**: `MetricCard` y `TabSelector` para una interfaz más consistente.
+- **Overhaul de Responsividad UI (Móvil)**: Rediseño completo para dispositivos de cualquier tamaño.
+  - Grid adaptativo en Dashboard (`auto-fit`).
+  - Apilamiento vertical de campos de fecha/hora en Facturas y Mantenimiento.
+  - Layouts flexibles (`flex-wrap`) en listas para evitar desbordamientos de iconos.
+- **Capa de Servicios de Dominio**: Nueva arquitectura que separa la lógica de negocio de React (`src/services/`). (Heredado de beta 1.2.6)
+  - `FinanceService`, `FareService`, `SyncService`, `ShiftService`, `PersistenceService`.
+- **Suite de Tests**: Implementación de 27 tests unitarios con **Vitest**.
+- **Guía de Usuario**: Nueva guía visual integrada en formato HTML/PDF.
 
 ### Changed
-- Refactorización masiva de `StatsDashboard.tsx` y `ServiceForm.tsx`.
-- Eliminación de estilos inline en favor de `Services.css` y `Dashboard.css`.
-- Mejora en la precisión del cálculo de abonados y visualización de impuestos.
+- Normalización de destinos: "AEROPUERTO DE JEREZ".
+- Refactorización de `StatsDashboard.tsx` y `ServiceForm.tsx` con componentes modulares.
+- Solucionados advertencias de hidratación en React Router.
 
 
 ## [1.2.3] - 2026-02-12

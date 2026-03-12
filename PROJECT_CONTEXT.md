@@ -1,11 +1,16 @@
-# CodiaTax - Documentación de Contexto del Proyecto (v1.2.3)
+# CodiaTax - Documentación de Contexto del Proyecto (v1.3.0)
 
 Este documento centraliza el estado actual de la aplicación CodiaTax para su uso en herramientas de IA como NotebookLM.
 
 ## 📌 Visión General
 CodiaTax es un gestor de facturación y servicios para taxistas, desarrollado con **React 19**, **Vite**, **Supabase** y **Capacitor**.
 
-## 🚀 Novedades v1.2.3 (Última Versión)
+## 🚀 Novedades v1.3.0 (Última Versión - 12 Marzo 2026)
+
+### 📱 Overhaul de Responsividad UI (Móvil)
+- **Dashboard Adaptativo**: Los indicadores de recaudación y gastos ahora se reorganizan automáticamente para aprovechar el espacio en cualquier móvil.
+- **Facturación y Listas**: Campos de fecha y botones de acción ahora son 100% responsivos, evitando solapamientos y desbordamientos.
+- **Limpieza de Estilos**: Migración completa a layouts modernos (Flexbox/Grid) eliminando posiciones fijas que daban problemas en pantallas pequeñas.
 
 ### 1. Sistema Diferenciado: Taxi vs Abonados
 - **Identidad Visual**: Pestañas de registro y visualización diferenciadas por colores.
