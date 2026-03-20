@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { Settings, CheckCircle, Plus, PenTool } from 'lucide-react';
 import { useVehicle } from '../../context/VehicleContext';
+import { getModelsByBrand, maintenanceBrands } from '../../data/maintenanceTemplates';
 
 const MaintenanceDashboard = () => {
     const { vehicle, setVehicle, currentOdometer, setInitialOdometer, addMaintenanceItem } = useVehicle();
     const [showConfig, setShowConfig] = useState(false);
     const [showAddCustom, setShowAddCustom] = useState(false);
+    const [selectedBrand, setSelectedBrand] = useState('Hyundai');
+    const [selectedTemplateId, setSelectedTemplateId] = useState('hyundai-ioniq-hybrid-2020');
 
     // Custom Maintenance Form State
     const [customName, setCustomName] = useState('');
@@ -66,6 +69,29 @@ const MaintenanceDashboard = () => {
         setShowAddCustom(false);
     };
 
+    const availableModels = getModelsByBrand(selectedBrand);
+    const selectedTemplate = availableModels.find((template) => template.id === selectedTemplateId) || availableModels[0];
+
+    const applyTemplate = () => {
+        if (!selectedTemplate) return;
+
+        const nextMaintenance = Object.fromEntries(
+            Object.entries(selectedTemplate.items).map(([key, item]) => [
+                key,
+                {
+                    ...item,
+                    lastKm: vehicle.maintenance[key]?.lastKm || currentOdometer
+                }
+            ])
+        );
+
+        setVehicle((prev: any) => ({
+            ...prev,
+            model: selectedTemplate.displayName,
+            maintenance: nextMaintenance
+        }));
+    };
+
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -102,6 +128,59 @@ const MaintenanceDashboard = () => {
                             ✎ Editar
                         </button>
                     </div>
+                </div>
+            </div>
+
+            <div className="card" style={{ marginBottom: '1.5rem', backgroundColor: 'var(--bg-secondary)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>Plantilla por marca y modelo</p>
+                        <h4 style={{ margin: 0 }}>Mantenimiento recomendado</h4>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '10px' }}>
+                        <select
+                            value={selectedBrand}
+                            onChange={(e) => {
+                                const brand = e.target.value;
+                                const models = getModelsByBrand(brand);
+                                setSelectedBrand(brand);
+                                setSelectedTemplateId(models[0]?.id || '');
+                            }}
+                            style={{ padding: '0.8rem', borderRadius: '12px', background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
+                        >
+                            {maintenanceBrands.map((brand) => (
+                                <option key={brand} value={brand}>{brand}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            value={selectedTemplateId}
+                            onChange={(e) => setSelectedTemplateId(e.target.value)}
+                            style={{ padding: '0.8rem', borderRadius: '12px', background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
+                        >
+                            {availableModels.map((template) => (
+                                <option key={template.id} value={template.id}>
+                                    {template.displayName} · {template.fuelType}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {selectedTemplate && (
+                        <div style={{ padding: '0.85rem 1rem', borderRadius: '14px', background: 'rgba(var(--accent-primary-rgb), 0.08)', border: '1px solid rgba(var(--accent-primary-rgb), 0.14)' }}>
+                            <div style={{ fontSize: '0.82rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                                {selectedTemplate.displayName}
+                            </div>
+                            <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                Aplicara el plan base al coche actual y tomara el kilometraje actual como referencia inicial.
+                            </div>
+                        </div>
+                    )}
+
+                    <button type="button" onClick={applyTemplate} className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>
+                        Aplicar plantilla
+                    </button>
                 </div>
             </div>
 

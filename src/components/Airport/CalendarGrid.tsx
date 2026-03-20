@@ -1,7 +1,8 @@
 import React from 'react';
 import { format, getDate, es } from '../../utils/dateHelpers';
-import { ChevronLeft, ChevronRight, Bell } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bell, Calendar as CalendarIcon, Info } from 'lucide-react';
 import { User, ShiftStorage } from '../../types';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface CalendarGridProps {
     viewDate: Date;
@@ -21,7 +22,6 @@ interface CalendarGridProps {
 const CalendarGrid: React.FC<CalendarGridProps> = ({
     viewDate,
     daysInMonth,
-    predictedDays,
     selectedDate,
     shiftStorage,
     getShiftForDate,
@@ -31,25 +31,61 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
     isShiftDay
 }) => {
 
-    const isPredictedDay = (date: Date) => {
-        return predictedDays.includes(format(date, 'yyyy-MM-dd'));
-    };
-
     const isRest = (dateStr: string) => shiftStorage?.restDays?.includes(dateStr);
 
+    const weekdays = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
+
     return (
-        <div className="card" style={{ padding: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <button onClick={prevMonth} className="btn-ghost" style={{ border: 'none', background: 'none', cursor: 'pointer' }}><ChevronLeft /></button>
-                <span style={{ fontWeight: 'bold', textTransform: 'capitalize', fontSize: '1.1rem' }}>
-                    {format(viewDate, 'MMMM yyyy', { locale: es })}
-                </span>
-                <button onClick={nextMonth} className="btn-ghost" style={{ border: 'none', background: 'none', cursor: 'pointer' }}><ChevronRight /></button>
+        <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            style={{ 
+                background: 'var(--bg-card)', 
+                borderRadius: '32px', 
+                padding: '1.25rem',
+                boxShadow: 'var(--shadow-premium)',
+                border: '1px solid var(--border-light)',
+                marginBottom: '1.5rem'
+            }}
+        >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <button 
+                    onClick={prevMonth} 
+                    style={{ 
+                        background: 'var(--bg-secondary)', 
+                        border: 'none', 
+                        borderRadius: '12px', 
+                        padding: '8px', 
+                        color: 'var(--text-primary)',
+                        cursor: 'pointer'
+                    }}
+                >
+                    <ChevronLeft size={20} />
+                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <CalendarIcon size={18} style={{ color: 'var(--accent-primary)' }} />
+                    <span style={{ fontWeight: '950', textTransform: 'capitalize', fontSize: '1.1rem', letterSpacing: '-0.02em' }}>
+                        {format(viewDate, 'MMMM yyyy', { locale: es })}
+                    </span>
+                </div>
+                <button 
+                    onClick={nextMonth} 
+                    style={{ 
+                        background: 'var(--bg-secondary)', 
+                        border: 'none', 
+                        borderRadius: '12px', 
+                        padding: '8px', 
+                        color: 'var(--text-primary)',
+                        cursor: 'pointer'
+                    }}
+                >
+                    <ChevronRight size={20} />
+                </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center' }}>
-                {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => (
-                    <div key={d} style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 'bold' }}>{d}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', textAlign: 'center', marginBottom: '8px' }}>
+                {weekdays.map(d => (
+                    <div key={d} style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '900', textTransform: 'uppercase', paddingBottom: '8px' }}>{d}</div>
                 ))}
 
                 {daysInMonth.length > 0 && Array.from({ length: (daysInMonth[0].getDay() + 6) % 7 }).map((_, i) => (
@@ -60,7 +96,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                     const dateStr = format(day, 'yyyy-MM-dd');
                     const isSelected = isShiftDay(day);
                     const isTakenByOther = !isSelected && shiftStorage?.assignments?.some(a => a.date === dateStr);
-                    const isDateSelected = selectedDate === dateStr;
+                    const isFocus = selectedDate === dateStr;
                     const isDayRest = isRest(dateStr);
 
                     const shiftInfo = getShiftForDate(day);
@@ -69,8 +105,9 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                     const isFree = shiftInfo?.type === 'libre' || (!isMorning && !isAfternoon);
 
                     return (
-                        <button
+                        <motion.button
                             key={day.toString()}
+                            whileTap={{ scale: 0.9 }}
                             onClick={() => handleDayClick(day)}
                             style={{
                                 aspectRatio: '1',
@@ -78,74 +115,98 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                                 flexDirection: 'column',
                                 justifyContent: 'center',
                                 alignItems: 'center',
-                                borderRadius: '8px',
-                                border: isDateSelected ? '3px solid var(--text-primary)' : '1px solid transparent',
+                                borderRadius: '14px',
+                                border: isFocus ? '2px solid var(--accent-primary)' : '1px solid transparent',
                                 backgroundColor: (() => {
-                                    if (isDayRest) return '#52525b';
-                                    if (isTakenByOther) return '#ef4444';
-                                    if (isMorning) return isSelected ? '#16a34a' : 'rgba(22, 163, 74, 0.2)';
-                                    if (isAfternoon) return isSelected ? '#2563eb' : 'rgba(37, 99, 235, 0.2)';
+                                    if (isDayRest) return 'var(--text-muted)';
+                                    if (isTakenByOther) return 'rgba(239, 68, 68, 0.15)';
+                                    if (isSelected) return 'var(--accent-primary)';
+                                    if (isMorning) return 'rgba(16, 185, 129, 0.1)';
+                                    if (isAfternoon) return 'rgba(59, 130, 246, 0.1)';
                                     return 'var(--bg-secondary)';
                                 })(),
-                                color: (isSelected || isDayRest) ? '#fff' : 'var(--text-primary)',
-                                fontWeight: 'bold',
+                                color: isSelected ? '#000' : isDayRest ? '#fff' : 'var(--text-primary)',
+                                fontWeight: '900',
                                 cursor: 'pointer',
                                 position: 'relative',
-                                opacity: isDayRest ? 0.8 : 1
+                                transition: 'all 0.2s',
+                                padding: 0
                             }}
                         >
-                            <span style={{ fontSize: '0.9rem' }}>{getDate(day)}</span>
+                            <span style={{ fontSize: '0.95rem' }}>{getDate(day)}</span>
 
                             {!isDayRest && !isFree && (
                                 <span style={{
                                     position: 'absolute',
-                                    bottom: '2px',
-                                    fontSize: '0.6rem',
-                                    opacity: isSelected ? 1 : 0.6,
-                                    fontWeight: 'normal',
+                                    bottom: '4px',
+                                    fontSize: '0.55rem',
+                                    opacity: isSelected ? 0.8 : 0.5,
+                                    fontWeight: '900',
                                     textTransform: 'uppercase'
                                 }}>
                                     {isMorning ? 'MAÑ' : 'TAR'}
                                 </span>
                             )}
 
-                            {isSelected && !isDayRest && (
-                                <div style={{ position: 'absolute', top: 2, right: 2, backgroundColor: 'var(--bg-card)', borderRadius: '50%', padding: '2px' }}>
-                                    <Bell size={10} fill={isMorning ? '#16a34a' : '#2563eb'} color="transparent" />
-                                </div>
+                            {isSelected && (
+                                <div style={{ 
+                                    position: 'absolute', 
+                                    top: 4, 
+                                    right: 4, 
+                                    width: '6px', 
+                                    height: '6px', 
+                                    borderRadius: '50%', 
+                                    background: '#000' 
+                                }} />
                             )}
-                        </button>
+                        </motion.button>
                     );
                 })}
             </div>
 
-            <div style={{ marginTop: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <div style={{ width: 10, height: 10, backgroundColor: '#10b981', borderRadius: '4px' }}></div>
+            {/* Leyenda refinada */}
+            <div style={{ 
+                marginTop: '1.25rem', 
+                padding: '1rem', 
+                background: 'var(--bg-secondary)', 
+                borderRadius: '18px',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '8px'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', fontWeight: '800' }}>
+                    <div style={{ width: 12, height: 12, backgroundColor: 'var(--accent-primary)', borderRadius: '4px' }}></div>
                     <span>Confirmado</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <div style={{ width: 10, height: 10, backgroundColor: '#eab308', borderRadius: '4px' }}></div>
-                    <span>Previsto (+11 d)</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', fontWeight: '800' }}>
+                    <div style={{ width: 12, height: 12, border: '2px solid var(--accent-primary)', borderRadius: '4px' }}></div>
+                    <span>Seleccionado</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <div style={{ width: 10, height: 10, backgroundColor: '#ef4444', borderRadius: '4px' }}></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', fontWeight: '800' }}>
+                    <div style={{ width: 12, height: 12, backgroundColor: 'rgba(239, 68, 68, 0.3)', borderRadius: '4px' }}></div>
                     <span>Ocupado</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <div style={{ width: 10, height: 10, backgroundColor: '#52525b', borderRadius: '4px' }}></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', fontWeight: '800' }}>
+                    <div style={{ width: 12, height: 12, backgroundColor: 'var(--text-muted)', borderRadius: '4px' }}></div>
                     <span>Descanso</span>
                 </div>
             </div>
 
-            <div style={{ marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
-                <p>Calendario de Turnos: Toca un día para marcarlo/desmarcarlo.</p>
-                <p style={{ marginTop: '4px', fontSize: '0.75rem', opacity: 0.8 }}>
-                    <Bell size={12} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
-                    Se programarán alertas automáticamente (Día anterior 20:00 y Mismo día 08:00).
+            <div style={{ 
+                marginTop: '1.25rem', 
+                padding: '0.75rem', 
+                borderRadius: '16px', 
+                border: '1px solid var(--border-light)',
+                display: 'flex',
+                gap: '10px',
+                alignItems: 'flex-start'
+            }}>
+                <Info size={16} style={{ color: 'var(--accent-primary)', marginTop: '2px' }} />
+                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', margin: 0, lineHeight: '1.4' }}>
+                    Las alertas se programan automáticamente para el día anterior (20:00) y el mismo día (08:00).
                 </p>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

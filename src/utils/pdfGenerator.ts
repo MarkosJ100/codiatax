@@ -1,4 +1,4 @@
-import { jsPDF } from 'jspdf';
+import type { jsPDF } from 'jspdf';
 import { Invoice, DriverProfile } from '../types';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
@@ -24,6 +24,7 @@ export const generateQRCodeDataUrl = async (text: string): Promise<string> => {
 };
 
 export const generateInvoicePDF = async (invoice: Invoice, profile: DriverProfile): Promise<jsPDF> => {
+    const { jsPDF } = await import('jspdf');
     const doc = new jsPDF() as any;
 
     // Colors

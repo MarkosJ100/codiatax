@@ -19,32 +19,55 @@ const MobileShell: React.FC = () => {
             <header className="glass" style={{
                 position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
                 maxWidth: '480px', margin: '0 auto',
-                padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                borderBottom: '1px solid var(--border-light)'
+                padding: '0.9rem 1.25rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderBottom: '1px solid var(--border-light)',
+                background: 'var(--bg-nav)',
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                     <img
                         src={logo}
                         alt="Logo"
-                        style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'contain', border: '1px solid var(--border-light)' }}
+                        style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '16px',
+                            objectFit: 'contain',
+                            border: '1px solid var(--border-light)',
+                            background: 'white',
+                            boxShadow: 'var(--shadow-premium)'
+                        }}
                     />
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: '1rem', color: 'var(--text-primary)', fontWeight: '700', letterSpacing: '-0.01em' }}>
-                            Hola, {user?.name || 'Conductor'}
+                        <span style={{ fontSize: '1.05rem', color: 'var(--text-primary)', fontWeight: '800', letterSpacing: '-0.025em', lineHeight: 1.1 }}>
+                            {user?.name || 'Conductor'}
                         </span>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '500' }}>
+                        <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: '600', marginTop: '2px' }}>
                             {currentDate}
                         </span>
                     </div>
                 </div>
-                <button onClick={logout} className="btn-ghost" style={{ padding: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>Salir</span>
+                <button
+                    onClick={logout}
+                    style={{
+                        padding: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '12px',
+                        background: 'rgba(0,0,0,0.04)',
+                        border: '1px solid var(--border-light)',
+                        color: 'var(--text-secondary)'
+                    }}
+                >
                     <LogOut size={18} />
                 </button>
             </header>
 
-            {/* Content — CSS keyframe fade-in (no Framer Motion, cannot get stuck at opacity:0) */}
-            <main className="page-content" style={{ marginTop: '72px' }}>
+            {/* Content — CSS keyframe fade-in */}
+            <main className="page-content" style={{ paddingTop: '82px', paddingBottom: '90px' }}>
                 <div
                     key={location.pathname}
                     className="page-fade-in"
@@ -58,10 +81,13 @@ const MobileShell: React.FC = () => {
             <nav className="glass" style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
                 display: 'flex', justifyContent: 'space-around', alignItems: 'center',
-                padding: '0.5rem 0.25rem',
+                padding: '0.6rem 0.4rem',
                 borderTop: '1px solid var(--border-light)',
                 maxWidth: '480px', margin: '0 auto',
-                paddingBottom: 'env(safe-area-inset-bottom, 0.75rem)'
+                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.6rem)',
+                background: 'var(--bg-nav)',
+                boxShadow: 'var(--shadow-floating)',
+                backdropFilter: 'blur(12px)'
             }}>
                 <NavLink to="/" end className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
                     <Home size={22} />

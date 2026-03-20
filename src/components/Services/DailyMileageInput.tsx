@@ -3,7 +3,7 @@ import { isSameDay } from '../../utils/dateHelpers';
 import { useToast } from '../../hooks/useToast';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { validators } from '../../utils/validators';
-import { Gauge, Plus } from 'lucide-react';
+import { Gauge, Plus, Zap } from 'lucide-react';
 import { useVehicle } from '../../context/VehicleContext';
 
 const DailyMileageInput: React.FC = () => {
@@ -43,43 +43,73 @@ const DailyMileageInput: React.FC = () => {
     };
 
     return (
-        <div className="card">
-            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center' }}>
-                <Gauge size={20} style={{ marginRight: '8px', color: 'var(--accent-primary)' }} />
-                {todayLog ? 'Editar Kilometraje de Hoy' : 'Registrar Kilometraje Manual'}
-            </h3>
+        <div className="card" style={{ padding: '1.25rem 1.5rem', boxShadow: 'var(--shadow-premium)', borderRadius: '24px', border: todayLog ? '1px solid var(--accent-primary)' : '1px solid var(--border-light)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ padding: '8px', background: todayLog ? 'rgba(var(--accent-primary-rgb), 0.1)' : 'var(--bg-body)', borderRadius: '12px' }}>
+                        <Gauge size={20} color={todayLog ? 'var(--accent-primary)' : 'var(--text-muted)'} />
+                    </div>
+                    <div>
+                        <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '850', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+                            {todayLog ? 'Kilometraje de Hoy' : 'Kilometraje Manual'}
+                        </h3>
+                        {todayLog && <span style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: '800' }}>REGISTRADO</span>}
+                    </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Odometer</span>
+                    <div style={{ fontWeight: '900', fontSize: '1rem', color: 'var(--text-primary)' }}>{currentOdometer.toLocaleString()} <span style={{ fontSize: '0.75rem', fontWeight: '800' }}>km</span></div>
+                </div>
+            </div>
 
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                Km totales acumulados: <strong>{currentOdometer.toLocaleString()} km</strong>
-            </p>
-
-            <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
-                <input
-                    type="number"
-                    placeholder="Recorrido hoy (km)"
-                    value={km}
-                    onChange={(e) => setKm(e.target.value)}
-                    onBlur={() => handleBlur('km')}
-                    style={{
-                        flex: 1,
-                        padding: '0.75rem',
-                        borderRadius: 'var(--radius-sm)',
-                        borderColor: hasError('km') ? 'var(--danger)' : undefined
+            <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
+                <div style={{ flex: 1, position: 'relative' }}>
+                    <input
+                        type="number"
+                        placeholder="Km recorridos..."
+                        value={km}
+                        onChange={(e) => setKm(e.target.value)}
+                        onBlur={() => handleBlur('km')}
+                        style={{
+                            width: '100%',
+                            height: '48px',
+                            padding: '0 1rem',
+                            borderRadius: '14px',
+                            background: 'var(--bg-body)',
+                            border: `1px solid ${hasError('km') ? 'var(--danger)' : 'var(--border-light)'}`,
+                            fontWeight: '700',
+                            fontSize: '1rem',
+                            color: 'var(--text-primary)'
+                        }}
+                    />
+                    {hasError('km') && (
+                        <span style={{
+                            position: 'absolute',
+                            left: '8px',
+                            bottom: '-18px',
+                            color: 'var(--danger)',
+                            fontSize: '0.65rem',
+                            fontWeight: '700'
+                        }}>
+                            {getError('km')}
+                        </span>
+                    )}
+                </div>
+                <button 
+                    type="submit" 
+                    className="btn btn-primary" 
+                    style={{ 
+                        width: 'auto', 
+                        padding: '0 1.5rem', 
+                        borderRadius: '14px', 
+                        height: '48px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: todayLog ? 'none' : '0 4px 12px rgba(var(--accent-primary-rgb), 0.2)'
                     }}
-                />
-                {hasError('km') && (
-                    <span style={{
-                        position: 'absolute',
-                        bottom: '-20px',
-                        left: 0,
-                        color: 'var(--danger)',
-                        fontSize: '0.75rem'
-                    }}>
-                        {getError('km')}
-                    </span>
-                )}
-                <button type="submit" className="btn btn-primary" style={{ width: 'auto', padding: '0 1.25rem', borderRadius: 'var(--radius-sm)', flexShrink: 0 }}>
-                    {todayLog ? 'Actualizar' : <Plus size={20} />}
+                >
+                    {todayLog ? <Zap size={18} /> : <Plus size={20} />}
                 </button>
             </form>
         </div>

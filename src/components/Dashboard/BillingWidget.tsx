@@ -32,35 +32,58 @@ const BillingWidget: React.FC = () => {
     if (totalPending === 0 && totalPaid === 0) return null;
 
     return (
-        <div className="card" style={{ padding: '1rem', marginBottom: '1rem', border: '1px solid var(--accent-primary)', background: 'linear-gradient(to right, rgba(59,130,246,0.05), transparent)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <h3 style={{ fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Wallet size={18} className="text-accent-primary" />
-                    Estado Facturación
+        <div 
+            className="glass" 
+            style={{ 
+                padding: '1.25rem', 
+                borderRadius: '20px', 
+                border: '1px solid var(--border-light)',
+                background: 'var(--bg-secondary)',
+                marginTop: '1.5rem'
+            }}
+        >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <h3 style={{ fontSize: '0.85rem', fontWeight: '850', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <div style={{ padding: '6px', borderRadius: '8px', background: 'var(--accent-soft)', display: 'flex' }}>
+                        <Wallet size={16} color="var(--accent-strong)" />
+                    </div>
+                    Estado de facturación
                 </h3>
-                <Link to="/billing" className="btn btn-ghost" style={{ padding: '4px 8px', fontSize: '0.8rem' }}>
-                    Ver Todo <ChevronRight size={14} />
+                <Link 
+                    to="/billing" 
+                    style={{ 
+                        fontSize: '0.78rem', 
+                        fontWeight: '700', 
+                        color: 'var(--accent-strong)', 
+                        textDecoration: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                    }}
+                >
+                    Detalles <ChevronRight size={14} />
                 </Link>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div style={{ background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Pendiente Total</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--danger)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ background: 'var(--bg-elevated)', padding: '1rem', borderRadius: '14px', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-premium)' }}>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.04em', marginBottom: '8px' }}>Pendiente</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: '950', color: 'var(--danger)', letterSpacing: '-0.02em' }}>
                         {totalPending.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 })}
                     </div>
                     {currentMonthPending > 0 && (
-                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                            ({currentMonthPending.toFixed(0)}€ este mes)
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '600', marginTop: '4px' }}>
+                            {currentMonthPending.toFixed(0)} EUR este mes
                         </div>
                     )}
                 </div>
 
-                <div style={{ background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '8px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Cobrado Total</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--success)' }}>
+                <div style={{ background: 'var(--bg-elevated)', padding: '1rem', borderRadius: '14px', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-premium)' }}>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.04em', marginBottom: '8px' }}>Cobrado</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: '950', color: 'var(--success)', letterSpacing: '-0.02em' }}>
                         {totalPaid.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 })}
                     </div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0, marginTop: '4px' }}>-</div>
                 </div>
             </div>
         </div>

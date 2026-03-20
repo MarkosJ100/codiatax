@@ -2,8 +2,6 @@ import React, { useRef, useState } from 'react';
 import { useServices } from '../../context/ServiceContext';
 import { useToast } from '../../hooks/useToast';
 import { FileDown, FileUp, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react';
-import { exportToExcel, exportServicesToCSV, exportExpensesToCSV } from '../../utils/exportData';
-import { parseServicesCsv, parseServicesExcel } from '../../utils/importData';
 
 const ExportMenu: React.FC = () => {
     const { services, expenses, addService } = useServices();
@@ -11,8 +9,9 @@ const ExportMenu: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleExportExcel = () => {
+    const handleExportExcel = async () => {
         try {
+            const { exportToExcel } = await import('../../utils/exportData');
             exportToExcel(services, expenses, `codiatax_completo_${new Date().toISOString().split('T')[0]}.xlsx`);
             toast.success('Exportado a Excel correctamente');
             setIsOpen(false);
@@ -22,8 +21,9 @@ const ExportMenu: React.FC = () => {
         }
     };
 
-    const handleExportServicesCSV = () => {
+    const handleExportServicesCSV = async () => {
         try {
+            const { exportServicesToCSV } = await import('../../utils/exportData');
             exportServicesToCSV(services);
             toast.success('Servicios exportados a CSV');
             setIsOpen(false);
@@ -33,8 +33,9 @@ const ExportMenu: React.FC = () => {
         }
     };
 
-    const handleExportExpensesCSV = () => {
+    const handleExportExpensesCSV = async () => {
         try {
+            const { exportExpensesToCSV } = await import('../../utils/exportData');
             exportExpensesToCSV(expenses);
             toast.success('Gastos exportados a CSV');
             setIsOpen(false);
@@ -57,6 +58,9 @@ const ExportMenu: React.FC = () => {
         const reader = new FileReader();
         reader.onload = async (e) => {
             try {
+                const [{ parseServicesCsv, parseServicesExcel }] = await Promise.all([
+                    import('../../utils/importData')
+                ]);
                 const buffer = e.target?.result as ArrayBuffer;
                 let newServices: any[] = [];
 

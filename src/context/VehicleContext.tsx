@@ -3,7 +3,14 @@ import { VehicleData, MaintenanceItem, MileageLog } from '../types';
 import { useAuth } from './AuthContext';
 import { VehicleRepository } from '../services/repositories/VehicleRepository';
 import { storage } from '../utils/storage';
-import { syncService } from '../services/SyncService';
+
+let syncServicePromise: Promise<typeof import('../services/SyncService')> | null = null;
+const getSyncService = async () => {
+    if (!syncServicePromise) {
+        syncServicePromise = import('../services/SyncService');
+    }
+    return (await syncServicePromise).syncService;
+};
 
 interface VehicleContextType {
     vehicle: VehicleData;
@@ -61,6 +68,7 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children })
                         throw new Error('Offline');
                     }
                 } catch (e) {
+                    const syncService = await getSyncService();
                     syncService.addToQueue({
                         entityId: 'current',
                         entityType: 'VEHICLE',

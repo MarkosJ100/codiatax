@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { FileDown, Share2 } from 'lucide-react';
 import { isSameDay, format, es } from '../../utils/dateHelpers';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
@@ -20,6 +18,10 @@ const PDFExportButton: React.FC = () => {
         if (!user) return;
         setIsGenerating(true);
         try {
+            const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+                import('jspdf'),
+                import('jspdf-autotable')
+            ]);
             const doc = new jsPDF();
             const today = new Date();
             const dateStr = format(today, "d 'de' MMMM 'de' yyyy", { locale: es });

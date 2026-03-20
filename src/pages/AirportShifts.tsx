@@ -6,7 +6,7 @@ import {
     format, startOfMonth, endOfMonth, eachDayOfInterval,
     addMonths, subMonths, addDays, subDays, parseISO, isValid
 } from '../utils/dateHelpers';
-import { Plane } from 'lucide-react';
+import { Plane, RotateCcw, Download, Info } from 'lucide-react';
 import { Browser } from '@capacitor/browser';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
@@ -17,6 +17,7 @@ import ShiftActionPanel from '../components/Airport/ShiftActionPanel';
 import ErrorBoundary from '../components/Common/ErrorBoundary';
 import { normalizeUsername } from '../utils/userHelpers';
 import { useShiftLogic } from '../hooks/useShiftLogic';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const AirportShifts: React.FC = () => {
     const { user } = useAuth();
@@ -113,7 +114,7 @@ const AirportShifts: React.FC = () => {
             return true;
         } catch (e) {
             console.error("Error scheduling notifications", e);
-            showToast("No se pudieron programar las alertas. Verifica los permisos.", "error");
+            showToast("No se pudieron programar las alertas.", "error");
             return false;
         }
     };
@@ -126,9 +127,9 @@ const AirportShifts: React.FC = () => {
     };
 
     const links = [
-        { name: 'Aena (Info Vuelos)', url: 'https://www.aena.es/es/infovuelos.html', icon: Plane },
-        { name: 'Skyscanner (Llegadas/Salidas)', url: 'https://www.skyscanner.es/vuelos/llegadas-salidas/xry/jerez-de-la-frontera-llegadas-salidas', icon: Plane },
-        { name: 'FlightAware (En vivo)', url: 'https://es.flightaware.com/live/airport/LEJR', icon: Plane },
+        { name: 'Aena Infovuelos', url: 'https://www.aena.es/es/infovuelos.html', icon: Plane },
+        { name: 'FlightAware XRY', url: 'https://es.flightaware.com/live/airport/LEJR', icon: Plane },
+        { name: 'Skyscanner XRY', url: 'https://www.skyscanner.es/vuelos/llegadas-salidas/xry/jerez-de-la-frontera-llegadas-salidas', icon: Plane },
     ];
 
     const handleDayClick = (day: Date) => {
@@ -147,14 +148,14 @@ const AirportShifts: React.FC = () => {
         const result = generateAirportCycle(selectedDate, type);
         if (result.success) {
             await scheduleShiftNotifications(selectedDate);
-            showToast(`Ciclo generado: ${result.count} turnos (3 meses).`);
+            showToast(`Ciclo generado: ${result.count} turnos (3 meses).`, "success");
             setShowTypeSelection(false);
         }
     };
 
     const handleModifyCycle = () => {
         clearFutureAirportShifts(selectedDate);
-        showToast("Turnos futuros eliminados. Selecciona el nuevo día correcto.");
+        showToast("Turnos futuros eliminados. Selecciona el nuevo inicio.", "info");
         setShowModifyConfirmation(false);
         setShowTypeSelection(false);
     };
@@ -205,18 +206,29 @@ const AirportShifts: React.FC = () => {
     if (!user) return null;
 
     return (
-        <div style={{ paddingBottom: '80px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.5rem' }}>
-                <div style={{ padding: '10px', borderRadius: '12px', backgroundColor: 'var(--accent-primary)', color: 'white' }}>
-                    <Plane size={24} />
+        <div style={{ paddingBottom: '100px', maxWidth: '600px', margin: '0 auto' }}>
+            <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '2rem' }}
+            >
+                <div style={{ 
+                    padding: '14px', 
+                    borderRadius: '20px', 
+                    backgroundColor: 'var(--accent-primary)', 
+                    color: '#000',
+                    boxShadow: '0 8px 16px -4px rgba(250, 204, 21, 0.3)'
+                }}>
+                    <Plane size={28} />
                 </div>
                 <div>
-                    <h2 style={{ fontSize: '1.5rem', margin: 0, color: 'var(--accent-primary)' }}>Turnos del Aeropuerto</h2>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0 }}>Gestión compartida y vuelos</p>
+                    <h2 style={{ fontSize: '1.75rem', fontWeight: '950', letterSpacing: '-0.04em', margin: 0, color: 'var(--text-primary)' }}>Aeropuerto</h2>
+                    <p style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-muted)', margin: 0 }}>Gestión de turnos y vuelos</p>
                 </div>
-            </div>
+            </motion.div>
 
             <ShiftSummaryCard user={user} currentShift={currentShift} shiftDays={shiftDays} viewDate={viewDate} />
+            
             <QuickLinksCard links={links} openFlightInfo={openFlightInfo} downloadCalendar={downloadCalendar} />
 
             <CalendarGrid
@@ -233,36 +245,42 @@ const AirportShifts: React.FC = () => {
                 handleModifyCycle={handleModifyCycle} isShiftDay={isShiftDay}
             />
 
-            {undoBuffer && (
-                <div style={{ marginTop: '1.5rem' }}>
-                    <button
-                        className="btn"
-                        style={{
-                            width: '100%',
-                            backgroundColor: 'var(--accent-primary)',
-                            color: 'white',
-                            padding: '14px',
-                            fontSize: '1rem',
-                            fontWeight: 'bold',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '10px',
-                            border: '2px solid var(--accent-primary)',
-                            borderRadius: 'var(--radius-md)',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-                        }}
-                        onClick={() => {
-                            const res = undoLastAction();
-                            if (res.success) showToast("Cambios deshechos exitosamente.");
-                        }}
+            <AnimatePresence>
+                {undoBuffer && (
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        style={{ marginTop: '1.5rem' }}
                     >
-                        <span>↩</span>
-                        <span>Deshacer último cambio</span>
-                    </button>
-                </div>
-            )}
-
+                        <button
+                            style={{
+                                width: '100%',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                color: '#3b82f6',
+                                padding: '1.15rem',
+                                fontSize: '0.95rem',
+                                fontWeight: '900',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '10px',
+                                border: '1px solid rgba(59, 130, 246, 0.3)',
+                                borderRadius: '24px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                            onClick={() => {
+                                const res = undoLastAction();
+                                if (res.success) showToast("Cambios deshechos correctamente.", "success");
+                            }}
+                        >
+                            <RotateCcw size={20} />
+                            Deshacer último cambio
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div >
     );
 };

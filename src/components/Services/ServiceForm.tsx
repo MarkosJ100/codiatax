@@ -2,11 +2,10 @@ import React, { useState, useOptimistic, useTransition, useEffect } from 'react'
 import { useToast } from '../../hooks/useToast';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { validators } from '../../utils/validators';
-import { Save, Building2, CarTaxiFront, Loader2, Calendar, UserPlus, XCircle, Trash2, MapPin } from 'lucide-react';
+import { Save, Building2, CarTaxiFront, Loader2, Calendar, XCircle, Trash2, MapPin } from 'lucide-react';
 import { Service } from '../../types';
 import { useServices } from '../../context/ServiceContext';
 import { FinanceService } from '../../services/FinanceService';
-import TabSelector from '../Common/TabSelector';
 import './Services.css';
 
 const ServiceForm: React.FC = () => {
@@ -21,7 +20,6 @@ const ServiceForm: React.FC = () => {
     const [serviceDate, setServiceDate] = useState<string>(new Date().toISOString().split('T')[0]);
     const [isPending, startTransition] = useTransition();
 
-    // Subscriber management state
     const [showNewSubscriberModal, setShowNewSubscriberModal] = useState(false);
     const [showManageSubscribersModal, setShowManageSubscribersModal] = useState(false);
     const [editingSubscriberId, setEditingSubscriberId] = useState<string | null>(null);
@@ -30,7 +28,6 @@ const ServiceForm: React.FC = () => {
     const [isSubCapped, setIsSubCapped] = useState(false);
     const [subCapAmount, setSubCapAmount] = useState('7');
 
-    // Reset form when switching tabs
     useEffect(() => {
         setAmount('');
         setSelectedSubscriberId('');
@@ -40,7 +37,6 @@ const ServiceForm: React.FC = () => {
         resetValidation();
     }, [activeTab]);
 
-    // Optimistic UI
     const [, addOptimisticService] = useOptimistic(
         services,
         (currentServices: Service[], newService: Omit<Service, 'id'>) => [
@@ -49,10 +45,10 @@ const ServiceForm: React.FC = () => {
         ]
     );
 
-    const { errors, touched, validate, validateAll, handleBlur, resetValidation, hasError, getError } = useFormValidation({
+    const { validateAll, resetValidation, hasError, getError } = useFormValidation({
         amount: [
             { validator: (v) => validators.isNotEmpty(v), message: 'El importe es obligatorio' },
-            { validator: (v) => validators.isValidAmount(v), message: 'Importe inválido' }
+            { validator: (v) => validators.isValidAmount(v), message: 'Importe invalido' }
         ],
         selectedSubscriberId: [
             { validator: (v) => activeTab === 'subscriber' ? validators.isNotEmpty(v) : true, message: 'Debes seleccionar un abonado' }
@@ -78,7 +74,7 @@ const ServiceForm: React.FC = () => {
         let companyName: string | undefined;
 
         if (activeTab === 'subscriber') {
-            const sub = subscribers.find(s => s.id === selectedSubscriberId);
+            const sub = subscribers.find((item) => item.id === selectedSubscriberId);
             if (sub) {
                 companyName = sub.name;
                 finalAmount = FinanceService.applySubscriberCap(meterAmount, sub);
@@ -93,7 +89,7 @@ const ServiceForm: React.FC = () => {
             subscriberId: activeTab === 'subscriber' ? selectedSubscriberId : undefined,
             observation: observation || destination || undefined,
             timestamp: dateObj.toISOString(),
-            source: 'manual' as const
+            source: 'manual'
         };
 
         startTransition(() => {
@@ -111,7 +107,7 @@ const ServiceForm: React.FC = () => {
         if (meterAmount !== finalAmount) {
             toast.info(`Importe ajustado al tope del abonado: ${FinanceService.formatCurrency(finalAmount)}`);
         } else {
-            toast.success('Servicio añadido correctamente');
+            toast.success('Servicio anadido correctamente');
         }
     };
 
@@ -155,81 +151,73 @@ const ServiceForm: React.FC = () => {
         setShowNewSubscriberModal(true);
     };
 
-    const selectedSubscriber = subscribers.find(s => s.id === selectedSubscriberId);
+    const selectedSubscriber = subscribers.find((item) => item.id === selectedSubscriberId);
 
     return (
-        <div className="card" style={{ overflow: 'hidden', padding: 0 }}>
-            <div className="service-form-header">
-                <h3>Nuevo Registro Diario</h3>
+        <div className="card" style={{ overflow: 'hidden', padding: 0, boxShadow: 'var(--shadow-premium)' }}>
+            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '14px', background: 'var(--accent-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <CarTaxiFront size={20} color="var(--accent-strong)" />
+                </div>
+                <div>
+                    <div className="section-label" style={{ marginBottom: '0.2rem' }}>Nuevo registro</div>
+                    <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '850', letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
+                        Alta diaria de servicio
+                    </h3>
+                </div>
             </div>
 
-            <TabSelector
-                options={[
-                    { id: 'taxi', label: 'Taxi', icon: <CarTaxiFront size={18} /> },
-                    { id: 'subscriber', label: 'Abonados', icon: <Building2 size={18} /> }
-                ]}
-                activeId={activeTab}
-                onChange={(id) => setActiveTab(id as any)}
-                style={{ borderRadius: 'var(--radius-md) var(--radius-md) 0 0', border: 'none', borderBottom: '1px solid var(--border-color)' }}
-            />
+            <div style={{ padding: '1rem 1rem 0' }}>
+                <div className="segmented-control">
+                    <button type="button" className={activeTab === 'taxi' ? 'active' : ''} onClick={() => setActiveTab('taxi')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <CarTaxiFront size={16} />
+                        <span>Taxi</span>
+                    </button>
+                    <button type="button" className={activeTab === 'subscriber' ? 'active' : ''} onClick={() => setActiveTab('subscriber')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <Building2 size={16} />
+                        <span>Abonados</span>
+                    </button>
+                </div>
+            </div>
 
-            <div className="form-content">
-                <form onSubmit={handleSubmit}>
-
-                    {/* Date Field */}
+            <div style={{ padding: '1.5rem' }}>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                     <div className="form-group">
-                        <label className="form-label">Fecha del Servicio</label>
-                        <div className="input-with-icon">
-                            <Calendar size={18} />
-                            <input
-                                type="date"
-                                value={serviceDate}
-                                onChange={(e) => setServiceDate(e.target.value)}
-                            />
+                        <label className="form-label">Fecha del servicio</label>
+                        <div className="input-with-icon" style={{ background: 'var(--bg-elevated)', borderRadius: '14px', border: '1px solid var(--border-light)' }}>
+                            <Calendar size={18} color="var(--accent-primary)" />
+                            <input type="date" value={serviceDate} onChange={(e) => setServiceDate(e.target.value)} style={{ background: 'transparent', border: 'none', fontWeight: '600' }} />
                         </div>
                     </div>
 
-                    {/* Taxi Tab Specific */}
                     {activeTab === 'taxi' && (
-                        <div className="animate-fade-in">
-                            <div className="form-group">
-                                <label className="form-label">Concepto / Destino</label>
-                                <div className="input-with-icon">
-                                    <MapPin size={18} />
-                                    <input
-                                        type="text"
-                                        placeholder="Ej: Centro Ciudad, Aeropuerto..."
-                                        value={destination}
-                                        onChange={(e) => setDestination(e.target.value)}
-                                    />
-                                </div>
+                        <div className="form-group animate-fade-in">
+                            <label className="form-label">Concepto o destino</label>
+                            <div className="input-with-icon" style={{ background: 'var(--bg-elevated)', borderRadius: '14px', border: '1px solid var(--border-light)' }}>
+                                <MapPin size={18} color="var(--accent-primary)" />
+                                <input type="text" placeholder="Ej: Aeropuerto, centro, estacion..." value={destination} onChange={(e) => setDestination(e.target.value)} style={{ background: 'transparent', border: 'none', fontWeight: '600' }} />
                             </div>
                         </div>
                     )}
 
-                    {/* Subscriber Tab Specific */}
                     {activeTab === 'subscriber' && (
-                        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                             <div>
-                                <div className="subscriber-actions">
-                                    <label className="form-label">Abonado / Empresa</label>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                    <label className="form-label" style={{ marginBottom: 0 }}>Abonado o empresa</label>
                                     <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button type="button" onClick={() => setShowNewSubscriberModal(true)} className="btn-ghost-primary">
-                                            <span>+</span> Nuevo
-                                        </button>
-                                        <button type="button" onClick={() => setShowManageSubscribersModal(true)} className="btn-ghost-secondary">
-                                            <Save size={14} /> Gestionar
-                                        </button>
+                                        <button type="button" onClick={() => setShowNewSubscriberModal(true)} className="btn-ghost" style={{ padding: '6px 10px', fontSize: '0.75rem', color: 'var(--accent-primary)' }}>Nuevo</button>
+                                        <button type="button" onClick={() => setShowManageSubscribersModal(true)} className="btn-ghost" style={{ padding: '6px 10px', fontSize: '0.75rem' }}>Gestionar</button>
                                     </div>
                                 </div>
-                                <div className="input-with-icon" style={{ display: 'block' }}>
+                                <div style={{ background: 'var(--bg-elevated)', borderRadius: '14px', border: `1px solid ${hasError('selectedSubscriberId') ? 'var(--danger)' : 'var(--border-light)'}`, padding: '0 8px' }}>
                                     <select
                                         value={selectedSubscriberId}
                                         onChange={(e) => {
                                             const id = e.target.value;
                                             setSelectedSubscriberId(id);
                                             if (id) {
-                                                const sub = subscribers.find(s => s.id === id);
+                                                const sub = subscribers.find((item) => item.id === id);
                                                 if (sub) {
                                                     if (sub.isCapped && sub.capAmount) setAmount(sub.capAmount.toString());
                                                     if (sub.officeNumber) setOfficeNumberSearchTerm(sub.officeNumber);
@@ -239,105 +227,111 @@ const ServiceForm: React.FC = () => {
                                                 setOfficeNumberSearchTerm('');
                                             }
                                         }}
-                                        className={hasError('selectedSubscriberId') ? 'error' : ''}
-                                        style={{ paddingLeft: '12px' }}
+                                        style={{ width: '100%', height: '48px', background: 'transparent', border: 'none', fontWeight: '600', outline: 'none' }}
                                     >
-                                        <option value="">-- Seleccionar de la lista --</option>
-                                        {subscribers.map(sub => (
+                                        <option value="">Selecciona un abonado</option>
+                                        {subscribers.map((sub) => (
                                             <option key={sub.id} value={sub.id}>{sub.name}</option>
                                         ))}
                                     </select>
-                                    {hasError('selectedSubscriberId') && <span className="error-text">{getError('selectedSubscriberId')}</span>}
                                 </div>
+                                {hasError('selectedSubscriberId') && <span className="error-text">{getError('selectedSubscriberId')}</span>}
                             </div>
 
                             <div className="form-group">
-                                <label className="form-label">Número de Despacho</label>
-                                <div className="input-with-icon">
-                                    <Building2 size={18} />
+                                <label className="form-label">Numero de despacho</label>
+                                <div className="input-with-icon" style={{ background: 'var(--bg-elevated)', borderRadius: '14px', border: '1px solid var(--border-light)' }}>
+                                    <Building2 size={18} color="var(--accent-primary)" />
                                     <input
                                         type="text"
-                                        placeholder="Ej: 123.456"
+                                        placeholder="123.456"
                                         value={officeNumberSearchTerm}
                                         onChange={(e) => {
-                                            let raw = e.target.value.replace(/\D/g, '');
-                                            let formatted = raw.length > 3 ? raw.slice(0, 3) + '.' + raw.slice(3, 6) : raw;
+                                            const raw = e.target.value.replace(/\D/g, '');
+                                            const formatted = raw.length > 3 ? raw.slice(0, 3) + '.' + raw.slice(3, 6) : raw;
                                             setOfficeNumberSearchTerm(formatted);
-                                            const found = subscribers.find(s => s.officeNumber === formatted);
+                                            const found = subscribers.find((item) => item.officeNumber === formatted);
                                             if (found) {
                                                 setSelectedSubscriberId(found.id);
                                                 if (found.isCapped) setAmount(found.capAmount.toString());
                                             }
                                         }}
+                                        style={{ background: 'transparent', border: 'none', fontWeight: '600' }}
                                     />
                                 </div>
                             </div>
 
                             {selectedSubscriber && (
-                                <div className="subscriber-info-card animate-fade-in">
-                                    <div className="subscriber-info-details">
-                                        <span className="subscriber-info-name">{selectedSubscriber.name}</span>
-                                        {selectedSubscriber.isCapped && <span className="subscriber-info-cap">Tope: {selectedSubscriber.capAmount}€</span>}
+                                <div style={{ padding: '12px 16px', background: 'rgba(var(--accent-primary-rgb), 0.06)', borderRadius: '16px', border: '1px solid rgba(var(--accent-primary-rgb), 0.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <div style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--text-primary)' }}>{selectedSubscriber.name}</div>
+                                        {selectedSubscriber.isCapped && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Tope aplicado: {selectedSubscriber.capAmount} EUR</div>}
                                     </div>
-                                    <button type="button" onClick={() => { setSelectedSubscriberId(''); setAmount(''); setOfficeNumberSearchTerm(''); }} style={{ background: 'none', border: 'none' }}>
-                                        <XCircle size={18} color="var(--text-tertiary)" />
+                                    <button type="button" onClick={() => { setSelectedSubscriberId(''); setAmount(''); setOfficeNumberSearchTerm(''); }} style={{ background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: '999px', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                        <XCircle size={16} color="var(--text-muted)" />
                                     </button>
                                 </div>
                             )}
                         </div>
                     )}
 
-                    {/* Common Amount Field */}
-                    <div className="form-group" style={{ marginTop: activeTab === 'taxi' ? '0' : '1.25rem' }}>
-                        <div className="form-label-row">
-                            <label className="form-label">Importe (€)</label>
+                    <div className="form-group">
+                        <label className="form-label">Importe del servicio</label>
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type="number"
+                                step="0.01"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                placeholder="0.00"
+                                style={{ fontSize: '2.4rem', fontWeight: '900', padding: '1.1rem 4rem 1.1rem 1.2rem', width: '100%', background: 'var(--bg-elevated)', border: `2px solid ${hasError('amount') ? 'var(--danger)' : 'var(--border-light)'}`, borderRadius: '20px', letterSpacing: '-0.03em', textAlign: 'right' }}
+                            />
+                            <span style={{ position: 'absolute', top: '50%', right: '1.2rem', transform: 'translateY(-50%)', fontSize: '1.35rem', fontWeight: '900', color: 'var(--accent-primary)' }}>EUR</span>
                         </div>
-                        <input
-                            type="number"
-                            step="0.01"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            placeholder="0.00"
-                            className={`amount-input ${hasError('amount') ? 'error' : ''}`}
-                            style={{ fontSize: '1.5rem', fontWeight: 700, padding: '1rem' }}
-                        />
                         {hasError('amount') && <span className="error-text">{getError('amount')}</span>}
                     </div>
 
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem', height: '3.5rem' }} disabled={isPending}>
-                        {isPending ? <Loader2 className="animate-spin" /> : <Save />}
-                        <span style={{ marginLeft: '8px' }}>{isPending ? 'Guardando...' : 'Registrar Servicio'}</span>
+                    <div className="form-group">
+                        <label className="form-label">Notas opcionales</label>
+                        <div className="input-with-icon" style={{ background: 'var(--bg-elevated)', borderRadius: '14px', border: '1px solid var(--border-light)' }}>
+                            <MapPin size={18} color="var(--text-muted)" />
+                            <input type="text" placeholder="Referencia, observacion o detalle..." value={observation} onChange={(e) => setObservation(e.target.value)} style={{ background: 'transparent', border: 'none' }} />
+                        </div>
+                    </div>
+
+                    <button type="submit" className="btn btn-primary" style={{ height: '56px', borderRadius: '16px', fontWeight: '850', fontSize: '1rem', marginTop: '0.25rem' }} disabled={isPending}>
+                        {isPending ? <Loader2 className="animate-spin" /> : <Save size={20} />}
+                        <span>{isPending ? 'Guardando...' : 'Registrar servicio'}</span>
                     </button>
                 </form>
             </div>
 
-            {/* Modals */}
             {showNewSubscriberModal && (
                 <div className="modal-overlay">
-                    <div className="modal-content animate-fade-in">
+                    <div className="modal-content animate-fade-in" style={{ borderRadius: '28px', border: '1px solid var(--border-light)' }}>
                         <div className="modal-header">
-                            <h3>{editingSubscriberId ? 'Editar Abonado' : 'Nuevo Abonado'}</h3>
-                            <button onClick={() => { setShowNewSubscriberModal(false); setEditingSubscriberId(null); }} style={{ background: 'none', border: 'none' }}><XCircle /></button>
+                            <h3>{editingSubscriberId ? 'Editar abonado' : 'Nuevo abonado'}</h3>
+                            <button onClick={() => { setShowNewSubscriberModal(false); setEditingSubscriberId(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><XCircle /></button>
                         </div>
-                        <div className="modal-body">
-                            <div className="form-group" style={{ marginBottom: '1rem' }}>
+                        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <div className="form-group">
                                 <label className="form-label">Nombre</label>
-                                <input type="text" value={newSubName} onChange={(e) => setNewSubName(e.target.value)} placeholder="Nombre Empresa" />
+                                <input type="text" value={newSubName} onChange={(e) => setNewSubName(e.target.value)} placeholder="Nombre empresa" />
                             </div>
-                            <div className="form-group" style={{ marginBottom: '1rem' }}>
-                                <label className="form-label">Despacho (xxx.xxx)</label>
+                            <div className="form-group">
+                                <label className="form-label">Despacho</label>
                                 <input type="text" value={newSubOfficeNumber} onChange={(e) => {
-                                    let raw = e.target.value.replace(/\D/g, '');
+                                    const raw = e.target.value.replace(/\D/g, '');
                                     setNewSubOfficeNumber(raw.length > 3 ? raw.slice(0, 3) + '.' + raw.slice(3, 6) : raw);
                                 }} placeholder="123.456" />
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <input type="checkbox" checked={isSubCapped} onChange={(e) => setIsSubCapped(e.target.checked)} />
-                                <label>¿Tiene tope?</label>
+                                <input type="checkbox" checked={isSubCapped} onChange={(e) => setIsSubCapped(e.target.checked)} style={{ width: 'auto' }} />
+                                <label>Tiene tope?</label>
                             </div>
                             {isSubCapped && (
-                                <div className="form-group" style={{ marginTop: '1rem' }}>
-                                    <label className="form-label">Tope (€)</label>
+                                <div className="form-group">
+                                    <label className="form-label">Tope en EUR</label>
                                     <input type="number" value={subCapAmount} onChange={(e) => setSubCapAmount(e.target.value)} />
                                 </div>
                             )}
@@ -352,15 +346,17 @@ const ServiceForm: React.FC = () => {
 
             {showManageSubscribersModal && (
                 <div className="modal-overlay">
-                    <div className="modal-content animate-fade-in">
+                    <div className="modal-content animate-fade-in" style={{ borderRadius: '28px', border: '1px solid var(--border-light)', maxHeight: '80vh' }}>
                         <div className="modal-header">
-                            <h3>Gestionar Abonados</h3>
-                            <button onClick={() => setShowManageSubscribersModal(false)} style={{ background: 'none', border: 'none' }}><XCircle /></button>
+                            <h3>Gestionar abonados</h3>
+                            <button onClick={() => setShowManageSubscribersModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><XCircle /></button>
                         </div>
                         <div className="modal-body">
-                            {subscribers.length === 0 ? <p className="empty-state">No hay abonados.</p> : (
+                            {subscribers.length === 0 ? (
+                                <p className="empty-state">No hay abonados.</p>
+                            ) : (
                                 <div className="subscriber-list">
-                                    {subscribers.map(sub => (
+                                    {subscribers.map((sub) => (
                                         <div key={sub.id} className="subscriber-list-item">
                                             <div className="subscriber-item-info">
                                                 <span className="subscriber-item-name">{sub.name}</span>
@@ -379,7 +375,7 @@ const ServiceForm: React.FC = () => {
                         </div>
                         <div className="modal-footer">
                             <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => { setShowManageSubscribersModal(false); setShowNewSubscriberModal(true); }}>
-                                + Añadir Nuevo
+                                Anadir nuevo
                             </button>
                         </div>
                     </div>

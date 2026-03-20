@@ -4,10 +4,7 @@ import { AppProvider } from './context/AppContext';
 import { useAuth } from './context/AuthContext';
 import MobileShell from './components/Layout/MobileShell';
 import { appDataLoader, getUserFromStorage, loadUserFromSupabaseSession } from './loaders/appLoader';
-import { supabase } from './supabase';
 import { hasCompletedProfile } from './utils/userHelpers';
-import PinGuard from './components/Auth/PinGuard';
-import PageTransition from './components/Layout/PageTransition';
 
 // Lazy Loaded Pages
 const AuthScreen = lazy(() => import('./pages/AuthScreen'));

@@ -4,8 +4,15 @@ import { calculateAirportCycle, filterFutureAssignments } from '../utils/airport
 import { useAuth } from './AuthContext';
 import { ShiftRepository } from '../services/repositories/ShiftRepository';
 import { storage } from '../utils/storage';
-import { syncService } from '../services/SyncService';
 import { ShiftService } from '../services/ShiftService';
+
+let syncServicePromise: Promise<typeof import('../services/SyncService')> | null = null;
+const getSyncService = async () => {
+    if (!syncServicePromise) {
+        syncServicePromise = import('../services/SyncService');
+    }
+    return (await syncServicePromise).syncService;
+};
 
 interface ShiftContextType {
     shiftStorage: ShiftStorage;
@@ -43,6 +50,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                         throw new Error('Offline');
                     }
                 } catch (e) {
+                    const syncService = await getSyncService();
                     syncService.addToQueue({
                         entityId: 'current',
                         entityType: 'SHIFT',
