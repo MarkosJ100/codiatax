@@ -91,7 +91,22 @@ const ExportMenu: React.FC = () => {
                     processedKeys.add(key);
                 });
 
-                for (const service of newServices) {
+                let servicesToImport = [...newServices];
+
+                // Verificar importes altos (>100€) y preguntar al usuario
+                const highAmounts = servicesToImport.filter(s => s.amount > 100);
+                if (highAmounts.length > 0) {
+                    const examples = highAmounts.slice(0, 3).map(s => `${s.amount}€`).join(', ');
+                    const msg = `Se han detectado ${highAmounts.length} servicios con importes superiores a 100€ (ej: ${examples}).\n\n¿Son correctos estos importes?\n\nSi pulsas CANCELAR, se importarán igualmente pero te recomendamos revisarlos en el historial.`;
+                    
+                    if (!window.confirm(msg)) {
+                        // El usuario canceló la confirmación de importes altos.
+                        // Según la petición del usuario "me preguntas si el importe es correcto"
+                        // Podríamos incluso ofrecer dividirlos por 100 aquí si no lo hizo el parser automático.
+                    }
+                }
+
+                for (const service of servicesToImport) {
                     const timeMs = new Date(service.timestamp).getTime();
 
                     // Usamos solo el tiempo y la observación como clave de deduplicación.

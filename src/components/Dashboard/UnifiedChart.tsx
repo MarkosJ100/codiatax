@@ -7,7 +7,7 @@ import { useVehicle } from '../../context/VehicleContext';
 import { format, subDays, startOfWeek, startOfMonth, startOfYear, isSameDay } from '../../utils/dateHelpers';
 import { TrendingUp, Gauge, ChevronLeft, ChevronRight } from 'lucide-react';
 
-type ChartMetric = 'net' | 'income' | 'km';
+type ChartMetric = 'net' | 'income' | 'km' | 'finance';
 
 const UnifiedChart: React.FC = () => {
     const { services, expenses } = useServices();
@@ -57,7 +57,10 @@ const UnifiedChart: React.FC = () => {
 
             data.push({
                 date: days <= 7 ? format(date, 'EEE') : days <= 30 ? format(date, 'dd/MM') : format(date, 'MMM'),
-                value: metric === 'net' ? income - allExpenses : metric === 'income' ? income : dayKm
+                value: metric === 'net' ? income - allExpenses : metric === 'income' ? income : metric === 'finance' ? income - allExpenses : dayKm,
+                income,
+                expenses: allExpenses,
+                net: income - allExpenses
             });
         }
 
@@ -84,11 +87,13 @@ const UnifiedChart: React.FC = () => {
         };
     }, [mileageLogs]);
 
-    const getColor = () => {
-        switch (metric) {
+    const getColor = (m: ChartMetric = metric) => {
+        switch (m) {
             case 'net': return 'var(--accent-primary)';
             case 'income': return 'var(--success)';
             case 'km': return 'var(--accent-secondary, #8b5cf6)';
+            case 'finance': return 'var(--accent-primary)';
+            default: return 'var(--accent-primary)';
         }
     };
 
@@ -97,6 +102,7 @@ const UnifiedChart: React.FC = () => {
             case 'net': return 'Beneficio Neto';
             case 'income': return 'Ingresos';
             case 'km': return 'Kilómetros';
+            case 'finance': return 'Finanzas Globales';
         }
     };
 
@@ -118,7 +124,7 @@ const UnifiedChart: React.FC = () => {
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: '4px' }}>
-                    {(['net', 'income', 'km'] as ChartMetric[]).map((m) => (
+                    {(['finance', 'net', 'income', 'km'] as ChartMetric[]).map((m) => (
                         <button
                             key={m}
                             onClick={() => setMetric(m)}
@@ -128,25 +134,37 @@ const UnifiedChart: React.FC = () => {
                                 borderRadius: '999px',
                                 border: 'none',
                                 cursor: 'pointer',
-                                backgroundColor: metric === m ? getColor() : 'var(--bg-secondary)',
+                                backgroundColor: metric === m ? getColor(m) : 'var(--bg-secondary)',
                                 color: metric === m ? 'var(--bg-card)' : 'var(--text-muted)',
                                 fontWeight: metric === m ? '600' : '400',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
                             }}
                         >
-                            {m === 'net' ? '💰' : m === 'income' ? '📈' : '🚗'}
+                            <span>{m === 'finance' ? '📊' : m === 'net' ? '💰' : m === 'income' ? '📈' : '🚗'}</span>
+                            {metric === m && <span style={{ fontSize: '0.6rem' }}>{m === 'finance' ? 'Todo' : ''}</span>}
                         </button>
                     ))}
                 </div>
             </div>
 
             {/* Area Chart */}
-            <ResponsiveContainer width="100%" height={150}>
+            <ResponsiveContainer width="100%" height={180}>
                 <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                     <defs>
-                        <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={getColor()} stopOpacity={0.4} />
-                            <stop offset="95%" stopColor={getColor()} stopOpacity={0} />
+                        <linearGradient id="colorNet" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="var(--accent-primary)" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="var(--accent-primary)" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="var(--success)" stopOpacity={0.2} />
+                            <stop offset="95%" stopColor="var(--success)" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="var(--danger)" stopOpacity={0.2} />
+                            <stop offset="95%" stopColor="var(--danger)" stopOpacity={0} />
                         </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" vertical={false} />
@@ -166,16 +184,51 @@ const UnifiedChart: React.FC = () => {
                             borderRadius: '8px',
                             fontSize: '0.8rem'
                         }}
-                        formatter={(value: number | undefined) => [formatValue(value ?? 0), getLabel()]}
+                        formatter={(value: number | undefined, name: string | undefined) => {
+                            const val = value ?? 0;
+                            const nm = name ?? '';
+                            const formatted = val.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 });
+                            const label = nm === 'net' ? 'Beneficio' : nm === 'income' ? 'Bruto' : nm === 'expenses' ? 'Gastos' : getLabel();
+                            return [formatted, label];
+                        }}
                         labelStyle={{ color: 'var(--text-primary)' }}
                     />
-                    <Area
-                        type="monotone"
-                        dataKey="value"
-                        stroke={getColor()}
-                        strokeWidth={2}
-                        fill="url(#colorGradient)"
-                    />
+                    {metric === 'finance' ? (
+                        <>
+                            <Area
+                                type="monotone"
+                                dataKey="income"
+                                stroke="var(--success)"
+                                strokeWidth={2}
+                                fill="url(#colorIncome)"
+                                name="income"
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="expenses"
+                                stroke="var(--danger)"
+                                strokeWidth={2}
+                                fill="url(#colorExpenses)"
+                                name="expenses"
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="net"
+                                stroke="var(--accent-primary)"
+                                strokeWidth={3}
+                                fill="url(#colorNet)"
+                                name="net"
+                            />
+                        </>
+                    ) : (
+                        <Area
+                            type="monotone"
+                            dataKey="value"
+                            stroke={getColor()}
+                            strokeWidth={2}
+                            fill="url(#colorNet)"
+                        />
+                    )}
                 </AreaChart>
             </ResponsiveContainer>
 

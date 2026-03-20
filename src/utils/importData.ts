@@ -95,6 +95,9 @@ function parseSpanishNumber(val: any): number {
         // Soporte para múltiples tipos de separadores decimales raros (ej: 9'12, 9`12, 9´12)
         str = str.replace(/['`´]/g, '.');
 
+        // Si el valor termina en " €", lo quitamos antes de limpiar
+        str = str.replace(/\s*€\s*$/, '');
+
         // Si hay un espacio seguido de exactamente 2 números al final, es probable que sea el decimal
         // Ej: "20 00" -> "20.00"
         if (/\s\d{2}$/.test(str)) {
@@ -102,6 +105,7 @@ function parseSpanishNumber(val: any): number {
         }
 
         // Limpiar caracteres no numéricos excepto separadores estándar
+        // Mantenemos COMAS, PUNTOS y GUIÓN NEGATIVO
         str = str.replace(/[^\d,.-]/g, '');
         if (!str) return 0;
 
@@ -128,13 +132,23 @@ function parseSpanishNumber(val: any): number {
                 str = str.replace(/,/g, '');
             }
         } else if (commas > 1 && dots === 0) {
+            // Miles con coma (1,050,000)
             str = str.replace(/,/g, '');
         } else if (dots > 1 && commas === 0) {
+            // Miles con punto (1.050.000)
             str = str.replace(/\./g, '');
         }
 
         let num = parseFloat(str);
         if (isNegative) num = -num;
+
+        // Heurística de Seguridad: Importes de tickets de despacho > 100€ suelen estar en céntimos
+        // Si el número es entero y muy grande, es probable que le falte la coma decimal.
+        if (num > 100 && Number.isInteger(num)) {
+            console.warn(`[Import] Importe detectado como sospechosamente alto (${num}). Aplicando divisor /100...`);
+            num = num / 100;
+        }
+
         return isNaN(num) ? 0 : num;
     } catch (e) {
         return 0;
@@ -349,12 +363,16 @@ function parseCsvLines(lines: string[]): Omit<Service, 'id'>[] {
     console.log('--- parseCsvLines ---');
     if (lines.length < 2) return [];
 
-    // Detectar delimitador: contar comas vs puntoycomas fuera de comillas
+    // Detectar delimitador: contar comas vs puntoycomas vs tabs
     const firstLine = lines[0];
-    // Para la detección, hacer un split rápido
     const commas = (firstLine.match(/,/g) || []).length;
     const semis = (firstLine.match(/;/g) || []).length;
-    const delim = commas >= semis ? ',' : ';';
+    const tabs = (firstLine.match(/\t/g) || []).length;
+    
+    let delim = ',';
+    if (semis >= commas && semis >= tabs) delim = ';';
+    else if (tabs >= commas && tabs >= semis) delim = '\t';
+    else delim = ',';
 
     // Parsear cabeceras con split que respeta comillas
     const headers = csvSplitLine(firstLine, delim);

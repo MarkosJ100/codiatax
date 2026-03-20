@@ -12,12 +12,12 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 async function finalFix() {
     console.log('🛠️ Iniciando reparación FINAL y AGRESIVA de importes...');
 
-    // 1. Buscar servicios con importes astronómicos (> 300€) que contengan "Ticket #"
-    // En Jerez/Puerto, servicios urbanos de >300€ son errores de 100x o 1000x casi seguro.
+    // 1. Buscar servicios con importes sospechosos (> 100€) que contengan "Ticket #"
+    // En Jerez/Puerto, servicios urbanos de >100€ suelen errores de 100x casi seguro.
     const { data: records, error } = await supabase
         .from('servicios')
         .select('*')
-        .gt('amount', 200); // Bajamos el umbral a 200€ para estar seguros
+        .gt('amount', 100); 
 
     if (error) {
         console.error('Error:', error.message);

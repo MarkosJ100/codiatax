@@ -51,6 +51,8 @@ Introducción de **Vitest** como motor de pruebas:
 - **Componentes Reutilizables**: Implementación de `MetricCard` (estadísticas) y `TabSelector` (filtros).
 - **Adiós a Estilos Inline**: Migración masiva a clases CSS externas en `Services.css` y `Dashboard.css`.
 - **ServiceForm v2**: Formulario optimizado con selectores de abonados mejorados y visualización de impuestos clara.
+- **Historial Mejorado**: Auto-scroll hacia el editor superior al modificar un servicio.
+- **Normalización de Destinos**: Limpieza automática y migración del string del Aeropuerto de Jerez.
 - **Fallbacks React Router v6**: Añadido `<LoadingFallback />` al Root para resolver advertencias de hidratación en consola.
 
 ## Arquitectura Técnica
