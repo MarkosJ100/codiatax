@@ -3,7 +3,12 @@ import { useServices } from '../../context/ServiceContext';
 import { useToast } from '../../hooks/useToast';
 import { FileDown, FileUp, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react';
 
-const ExportMenu: React.FC = () => {
+interface ExportMenuProps {
+    direction?: 'up' | 'down';
+    onOpenChange?: (isOpen: boolean) => void;
+}
+
+const ExportMenu: React.FC<ExportMenuProps> = ({ direction = 'down', onOpenChange }) => {
     const { services, expenses, addService } = useServices();
     const toast = useToast();
     const [isOpen, setIsOpen] = useState(false);
@@ -47,6 +52,19 @@ const ExportMenu: React.FC = () => {
 
     const handleImportCSVClick = () => {
         fileInputRef.current?.click();
+    };
+
+    const toggleMenu = () => {
+        setIsOpen((prev) => {
+            const next = !prev;
+            onOpenChange?.(next);
+            return next;
+        });
+    };
+
+    const closeMenu = () => {
+        setIsOpen(false);
+        onOpenChange?.(false);
     };
 
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,7 +182,7 @@ const ExportMenu: React.FC = () => {
                 onChange={handleFileChange}
             />
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={toggleMenu}
                 className="btn"
                 style={{
                     backgroundColor: 'var(--bg-card)',
@@ -184,9 +202,11 @@ const ExportMenu: React.FC = () => {
             {isOpen && (
                 <div style={{
                     position: 'absolute',
-                    top: '100%',
+                    top: direction === 'down' ? '100%' : undefined,
+                    bottom: direction === 'up' ? '100%' : undefined,
                     right: 0,
-                    marginTop: '8px',
+                    marginTop: direction === 'down' ? '8px' : undefined,
+                    marginBottom: direction === 'up' ? '8px' : undefined,
                     backgroundColor: 'var(--bg-card)',
                     border: '1px solid var(--border-color)',
                     borderRadius: 'var(--radius-md)',
@@ -308,7 +328,7 @@ const ExportMenu: React.FC = () => {
 
             {isOpen && (
                 <div
-                    onClick={() => setIsOpen(false)}
+                    onClick={closeMenu}
                     style={{
                         position: 'fixed',
                         top: 0,

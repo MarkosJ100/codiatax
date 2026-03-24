@@ -3,11 +3,13 @@ import ServiceForm from '../components/Services/ServiceForm';
 import ServiceList from '../components/Services/ServiceList';
 import DailyMileageInput from '../components/Services/DailyMileageInput';
 import DailyTotalForm from '../components/Services/DailyTotalForm';
+import ExportMenu from '../components/Common/ExportMenu';
 import { PenTool, Calculator, ChevronRight } from 'lucide-react';
 
 export const Services: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'manual' | 'total'>('total');
     const [historyTypeFilter, setHistoryTypeFilter] = useState<'all' | 'taxi' | 'company'>('all');
+    const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
 
     return (
         <div style={{ paddingBottom: '4rem' }}>
@@ -42,7 +44,10 @@ export const Services: React.FC = () => {
             <div style={{ position: 'sticky', top: '0', zIndex: 10, background: 'rgba(var(--bg-primary-rgb), 0.8)', backdropFilter: 'blur(10px)', padding: '0.5rem 0', marginBottom: '1.5rem' }}>
                 <div className="segmented-control" style={{ padding: '6px', borderRadius: '18px', background: 'var(--bg-body)', boxShadow: 'var(--shadow-premium)', border: '1px solid var(--border-light)' }}>
                     <button
-                        onClick={() => setActiveTab('total')}
+                        onClick={() => {
+                            setIsImportMenuOpen(false);
+                            setActiveTab('total');
+                        }}
                         className={activeTab === 'total' ? 'active' : ''}
                         style={{ 
                             display: 'flex', 
@@ -57,7 +62,10 @@ export const Services: React.FC = () => {
                         <span>Resumen diario</span>
                     </button>
                     <button
-                        onClick={() => setActiveTab('manual')}
+                        onClick={() => {
+                            setIsImportMenuOpen(false);
+                            setActiveTab('manual');
+                        }}
                         className={activeTab === 'manual' ? 'active' : ''}
                         style={{ 
                             display: 'flex', 
@@ -78,6 +86,31 @@ export const Services: React.FC = () => {
             <div className="animate-fade-in" key={activeTab}>
                 {activeTab === 'manual' ? (
                     <div style={{ display: 'grid', gap: '1.5rem' }}>
+                        <div
+                            className="card"
+                            style={{
+                                margin: 0,
+                                border: '1px solid var(--border-light)',
+                                background: 'var(--bg-card)',
+                                marginBottom: isImportMenuOpen ? '24rem' : 0,
+                                transition: 'margin-bottom 0.2s ease'
+                            }}
+                        >
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                <div style={{ fontSize: '0.78rem', fontWeight: '850', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                                    Importación directa
+                                </div>
+                                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '850', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+                                    Reporte App Taxi (SmartD / Taxitronic)
+                                </h3>
+                                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                                    En esta pestaña puedes importar directamente los servicios diarios exportados desde la app SmartD de Taxitronic (CSV o Excel).
+                                </p>
+                                <div style={{ alignSelf: 'flex-start' }}>
+                                    <ExportMenu direction="down" onOpenChange={setIsImportMenuOpen} />
+                                </div>
+                            </div>
+                        </div>
                         <DailyMileageInput />
                         <ServiceForm />
                     </div>

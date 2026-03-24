@@ -41,6 +41,9 @@
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(255, 255, 255, 0.4);
 
+  --shadow-sm:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 1px 2px rgba(0, 0, 0, 0.02);
   --shadow-premium:
     0 4px 12px -2px rgba(0, 0, 0, 0.05),
     0 2px 4px -1px rgba(0, 0, 0, 0.02);
@@ -71,6 +74,9 @@
   --glass-bg: rgba(15, 23, 42, 0.72);
   --glass-border: rgba(255, 255, 255, 0.08);
 
+  --shadow-sm:
+    0 1px 4px rgba(0, 0, 0, 0.18),
+    0 1px 2px rgba(0, 0, 0, 0.10);
   --shadow-premium: 0 14px 32px -18px rgba(0, 0, 0, 0.45);
   --shadow-hover: 0 24px 48px -22px rgba(0, 0, 0, 0.52);
   --shadow-floating: 0 28px 72px -34px rgba(0, 0, 0, 0.6);
@@ -123,12 +129,24 @@ textarea:focus {
   box-shadow: 0 0 0 4px var(--accent-glow);
 }
 
-/* Glassmorphism Helper */
+/* Glassmorphism Helper — solid fallback for Android WebView where backdrop-filter is unsupported */
 .glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--bg-elevated);
   border: 1px solid var(--glass-border);
+}
+@supports (backdrop-filter: blur(1px)) {
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+
+/* Android WebView compositing-safe mode */
+[data-platform='native'] .glass {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: var(--bg-elevated) !important;
 }
 
 /* Utilities */
@@ -155,15 +173,25 @@ textarea:focus {
 }
 
 .card {
-  background-color: var(--bg-card);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background-color: var(--bg-elevated);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   margin-bottom: 1.25rem;
   border: 1px solid var(--border-color);
   transition: var(--transition-smooth);
   box-shadow: var(--shadow-premium);
+}
+@supports (backdrop-filter: blur(1px)) {
+  .card {
+    background-color: var(--bg-card);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+}
+
+[data-platform='native'] .card {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .card:hover {
@@ -261,6 +289,44 @@ textarea:focus {
 
 .page-fade-in {
   animation: fadeIn 0.18s ease-out both;
+}
+
+[data-platform='native'] .page-fade-in {
+  animation: none;
+}
+
+/* Android WebView safe render mode */
+[data-platform='native'] body {
+  background: var(--bg-primary) !important;
+}
+
+[data-platform='native'] .page-content,
+[data-platform='native'] .page-container,
+[data-platform='native'] .glass,
+[data-platform='native'] .card {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+[data-platform='native'] .card,
+[data-platform='native'] .glass,
+[data-platform='native'] .btn,
+[data-platform='native'] .nav-item {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+[data-platform='native'] .card:hover,
+[data-platform='native'] .btn:hover,
+[data-platform='native'] .nav-item:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+[data-platform='native'] .container > header.glass,
+[data-platform='native'] .container > nav.glass {
+  box-shadow: none !important;
 }
 
 
@@ -407,4 +473,18 @@ textarea:focus {
 
 .nav-item.active span {
   opacity: 1;
+}
+
+.bottom-nav {
+  overscroll-behavior-x: contain;
+}
+
+.bottom-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.bottom-nav .nav-item {
+  flex: 0 0 auto;
+  min-width: 62px;
+  padding: 6px 6px;
 }

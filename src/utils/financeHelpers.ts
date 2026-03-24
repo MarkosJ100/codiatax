@@ -100,6 +100,8 @@ export const calculateTotals = (services: Service[], expenses: Expense[], mileag
     let totalTaxiIncome = 0;
     let totalSubscriberIncome = 0;
     let totalExpenses = 0;
+    let totalRealExpenses = 0;
+    let totalEstimatedExpenses = 0;
     let totalKms = 0;
     let pendingSubscriberBalance = 0;
     let isKmsEstimated = false;
@@ -143,6 +145,7 @@ export const calculateTotals = (services: Service[], expenses: Expense[], mileag
 
         // Daily Expenses
         let dayExp = dayExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+        const dayRealExp = dayExp;
 
         // Estimar Gastos
         if (dayExp === 0 && dayKms > 0) {
@@ -154,6 +157,8 @@ export const calculateTotals = (services: Service[], expenses: Expense[], mileag
         totalTaxiIncome += dayTaxi;
         totalSubscriberIncome += daySub;
         totalExpenses += dayExp;
+        totalRealExpenses += dayRealExp;
+        totalEstimatedExpenses += dayExp - dayRealExp;
         totalKms += dayKms;
         pendingSubscriberBalance += dayPendingSub;
     });
@@ -163,7 +168,10 @@ export const calculateTotals = (services: Service[], expenses: Expense[], mileag
         taxiIncome: totalTaxiIncome,
         subscriberIncome: totalSubscriberIncome,
         totalExpenses,
+        totalRealExpenses,
+        totalEstimatedExpenses,
         netIncome: totalGrossIncome - totalExpenses,
+        netIncomeReal: totalGrossIncome - totalRealExpenses,
         totalKms,
         pendingSubscriberBalance,
         servicesCount: totalServices,

@@ -78,10 +78,14 @@ const MobileShell: React.FC = () => {
             </main>
 
             {/* Bottom Navigation */}
-            <nav className="glass" style={{
+            <nav className="glass bottom-nav" style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
-                display: 'flex', justifyContent: 'space-around', alignItems: 'center',
-                padding: '0.6rem 0.4rem',
+                display: 'flex', justifyContent: 'flex-start', alignItems: 'center',
+                gap: '0.35rem',
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                WebkitOverflowScrolling: 'touch',
+                padding: '0.62rem 0.6rem',
                 borderTop: '1px solid var(--border-light)',
                 maxWidth: '480px', margin: '0 auto',
                 paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.6rem)',

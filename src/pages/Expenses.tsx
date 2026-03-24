@@ -66,6 +66,17 @@ const Expenses: React.FC = () => {
             ]
         }
     ];
+
+    const parseYearMonth = (value: string) => {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return null;
+        return { year: date.getFullYear(), month: date.getMonth() + 1 };
+    };
+
+    const getNextMonth = (year: number, month: number) => {
+        if (month === 12) return { year: year + 1, month: 1 };
+        return { year, month: month + 1 };
+    };
     
     const selectedCategory = useMemo(() => {
         for (const group of categories) {
@@ -212,13 +223,45 @@ const Expenses: React.FC = () => {
             const result = await parseFuelPDF(file);
 
             const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-            const monthLabel = monthNames[parseInt(result.month) - 1];
+            const parsedMonth = parseInt(result.month, 10);
+            const parsedYear = parseInt(result.year, 10);
+
+            if (!Number.isInteger(parsedMonth) || parsedMonth < 1 || parsedMonth > 12 || !Number.isInteger(parsedYear)) {
+                showToast('No se pudo identificar correctamente el mes del PDF', 'error');
+                return;
+            }
+
+            const monthLabel = monthNames[parsedMonth - 1];
+
+            const existingMonthlyFuel = expenses
+                .filter((expense) => expense.category === 'gasoil' && expense.is_monthly_summary)
+                .map((expense) => parseYearMonth(expense.timestamp))
+                .filter((value): value is { year: number; month: number } => value !== null)
+                .sort((a, b) => (a.year - b.year) || (a.month - b.month));
+
+            const duplicateMonth = existingMonthlyFuel.some((value) => value.year === parsedYear && value.month === parsedMonth);
+            if (duplicateMonth) {
+                showToast(`Ya existe el resumen de ${monthLabel} ${parsedYear}`, 'error');
+                return;
+            }
+
+            if (existingMonthlyFuel.length > 0) {
+                const latest = existingMonthlyFuel[existingMonthlyFuel.length - 1];
+                const expectedNext = getNextMonth(latest.year, latest.month);
+                if (expectedNext.year !== parsedYear || expectedNext.month !== parsedMonth) {
+                    const expectedLabel = `${monthNames[expectedNext.month - 1]} ${expectedNext.year}`;
+                    showToast(`Debes cargar primero ${expectedLabel} para mantener el orden mensual`, 'error');
+                    return;
+                }
+            }
+
+            const safeMonthTimestamp = new Date(parsedYear, parsedMonth, 0, 12, 0, 0).toISOString();
 
             const expenseData: Omit<Expense, 'id'> = {
                 category: 'gasoil',
-                description: `Combustible - ${monthLabel} ${result.year}`,
+                description: `Combustible - ${monthLabel} ${parsedYear}`,
                 amount: result.totalAmount,
-                timestamp: result.lastDayOfMonth,
+                timestamp: safeMonthTimestamp,
                 type: user?.role === 'asalariado' ? 'labor' : 'expense',
                 is_monthly_summary: true,
                 metadata: {
