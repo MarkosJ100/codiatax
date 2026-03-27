@@ -49,7 +49,7 @@ const PDFExportButton: React.FC = () => {
             doc.text("Resumen Financiero", 20, 50);
 
             doc.setFontSize(10);
-            doc.text(`RecaudaciÃ³n Bruta:`, 20, 58);
+            doc.text(`Recaudaci�n Bruta:`, 20, 58);
             doc.text(`${dailyIncome.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}`, 150, 58, { align: 'right' });
 
             doc.setTextColor(220, 38, 38);
@@ -58,15 +58,15 @@ const PDFExportButton: React.FC = () => {
 
             doc.setTextColor(0, 0, 0);
             doc.setFont("helvetica", "bold");
-            doc.text(`RecaudaciÃ³n Limpia:`, 20, 70);
+            doc.text(`Recaudaci�n Limpia:`, 20, 70);
             doc.text(`${netIncome.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}`, 150, 70, { align: 'right' });
             doc.setFont("helvetica", "normal");
 
             const tableData: string[][] = dailyServices.map(s => [
                 format(new Date(s.timestamp), 'HH:mm'),
-                s.type === 'company' ? (s.companyName || 'CompaÃ±Ã­a') : 'Normal',
+                s.type === 'company' ? (s.companyName || 'Compa��a') : 'Normal',
                 s.observation || '-',
-                s.amount.toFixed(2) + ' â‚¬'
+                s.amount.toFixed(2) + ' �'
             ]);
 
             autoTable(doc, {
@@ -87,7 +87,7 @@ const PDFExportButton: React.FC = () => {
 
         } catch (err) {
             console.error(err);
-            toast.error("OcurriÃ³ un error al generar el PDF");
+            toast.error("Ocurri� un error al generar el PDF");
         } finally {
             setIsGenerating(false);
         }

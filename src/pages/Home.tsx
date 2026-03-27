@@ -63,7 +63,7 @@ const Home: React.FC = () => {
         e.preventDefault();
         if (tempKm && !isNaN(parseInt(tempKm, 10))) {
             updateAnnualConfig({ yearEndKm: parseInt(tempKm, 10) });
-            showToast('KilÃ³metros de cierre de aÃ±o guardados.');
+            showToast('Kil�metros de cierre de a�o guardados.');
             setTempKm('');
         }
     };
@@ -224,7 +224,7 @@ const Home: React.FC = () => {
                             >
                                 <TrendingUp size={12} color="var(--success)" />
                                 <span style={{ fontSize: '0.65rem', fontWeight: '850', color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                    RecaudaciÃ³n Neta
+                                    Recaudaci�n Neta
                                 </span>
                             </div>
                             <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '700' }}>
@@ -244,7 +244,7 @@ const Home: React.FC = () => {
                                         borderRadius: '10px'
                                     }}
                                 >
-                                    {period === 'day' ? 'Hoy' : period === 'week' ? 'Sem' : period === 'month' ? 'Mes' : 'AÃ±o'}
+                                    {period === 'day' ? 'Hoy' : period === 'week' ? 'Sem' : period === 'month' ? 'Mes' : 'A�o'}
                                 </button>
                             ))}
                         </div>
@@ -261,7 +261,7 @@ const Home: React.FC = () => {
                             alignItems: 'baseline'
                         }}>
                             {netIncomeReal.toFixed(0)}
-                            <span style={{ fontSize: '1.5rem', marginLeft: '6px', fontWeight: '900', color: 'var(--text-tertiary)', letterSpacing: '0.05em' }}>â‚¬</span>
+                            <span style={{ fontSize: '1.5rem', marginLeft: '6px', fontWeight: '900', color: 'var(--text-tertiary)', letterSpacing: '0.05em' }}>�</span>
                         </div>
                     </div>
 
@@ -278,15 +278,15 @@ const Home: React.FC = () => {
                     >
                         <div style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '850', letterSpacing: '0.06em', marginBottom: '6px' }}>Bruto</div>
-                            <div style={{ fontWeight: '950', fontSize: '1.1rem', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{grossIncome.toFixed(0)}<small style={{ fontSize: '0.7em', fontWeight: '700', marginLeft: '1px', opacity: 0.5 }}>â‚¬</small></div>
+                            <div style={{ fontWeight: '950', fontSize: '1.1rem', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{grossIncome.toFixed(0)}<small style={{ fontSize: '0.7em', fontWeight: '700', marginLeft: '1px', opacity: 0.5 }}>�</small></div>
                         </div>
                         <div style={{ textAlign: 'center', borderLeft: '1px solid var(--border-light)' }}>
                             <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '850', letterSpacing: '0.06em', marginBottom: '6px' }}>Gastos</div>
-                            <div style={{ fontWeight: '950', fontSize: '1.1rem', color: 'var(--danger)', letterSpacing: '-0.02em' }}>{totalRealExpenses.toFixed(0)}<small style={{ fontSize: '0.7em', fontWeight: '700', marginLeft: '1px', opacity: 0.5 }}>â‚¬</small></div>
+                            <div style={{ fontWeight: '950', fontSize: '1.1rem', color: 'var(--danger)', letterSpacing: '-0.02em' }}>{totalRealExpenses.toFixed(0)}<small style={{ fontSize: '0.7em', fontWeight: '700', marginLeft: '1px', opacity: 0.5 }}>�</small></div>
                         </div>
                         <div style={{ textAlign: 'center', borderLeft: '1px solid var(--border-light)' }}>
                             <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '850', letterSpacing: '0.06em', marginBottom: '6px' }}>Neto</div>
-                            <div style={{ fontWeight: '950', fontSize: '1.1rem', color: 'var(--success)', letterSpacing: '-0.02em' }}>{netIncomeReal.toFixed(0)}<small style={{ fontSize: '0.7em', fontWeight: '700', marginLeft: '1px', opacity: 0.5 }}>â‚¬</small></div>
+                            <div style={{ fontWeight: '950', fontSize: '1.1rem', color: 'var(--success)', letterSpacing: '-0.02em' }}>{netIncomeReal.toFixed(0)}<small style={{ fontSize: '0.7em', fontWeight: '700', marginLeft: '1px', opacity: 0.5 }}>�</small></div>
                         </div>
                         <div style={{ textAlign: 'center', borderLeft: '1px solid var(--border-light)' }}>
                             <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '850', letterSpacing: '0.06em', marginBottom: '6px' }}>KMs</div>
@@ -315,7 +315,7 @@ const Home: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
                             <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '850', letterSpacing: '0.08em', marginBottom: '4px' }}>
-                                {isAirportToday ? 'Servicio Aeropuerto' : (isRestingToday ? 'DÃ­a Libre' : 'Estado del Turno')}
+                                {isAirportToday ? 'Servicio Aeropuerto' : (isRestingToday ? 'D�a Libre' : 'Estado del Turno')}
                             </div>
                             <div style={{ fontWeight: '850', fontSize: '1.05rem', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                                 {isRestingToday ? 'Fuera de Servicio' : (currentShift ? `${currentShift.weekLabel}` : 'Servicio Libre')}
@@ -414,8 +414,8 @@ const Home: React.FC = () => {
                         <Settings size={26} color="var(--text-muted)" />
                     </div>
                     <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '1.15rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '2px', letterSpacing: '-0.03em' }}>ConfiguraciÃ³n</div>
-                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '650' }}>Seguridad, datos y exportaciÃ³n avanzada</div>
+                        <div style={{ fontSize: '1.15rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '2px', letterSpacing: '-0.03em' }}>Configuraci�n</div>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '650' }}>Seguridad, datos y exportaci�n avanzada</div>
                     </div>
                     <motion.div animate={{ rotate: showSettings ? 180 : 0 }} transition={{ duration: 0.2 }}>
                         <ChevronDown size={20} color="var(--text-muted)" />
@@ -446,10 +446,10 @@ const Home: React.FC = () => {
                 <motion.div variants={itemVariants} className="card" style={{ marginBottom: '2rem', backgroundColor: 'rgba(var(--warning-rgb), 0.08)', border: '2px dashed var(--warning)', borderRadius: '24px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.75rem' }}>
                         <AlertTriangle size={22} color="var(--warning)" />
-                        <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: '900', letterSpacing: '-0.02em' }}>Cierre de aÃ±o ({today.getFullYear()})</h3>
+                        <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: '900', letterSpacing: '-0.02em' }}>Cierre de a�o ({today.getFullYear()})</h3>
                     </div>
                     <p style={{ fontSize: '0.88rem', marginBottom: '1.25rem', color: 'var(--text-secondary)', lineHeight: 1.5, fontWeight: '600' }}>
-                        Introduce los kilÃ³metros finales marcados en el odÃ³metro para completar el informe anual obligatorio.
+                        Introduce los kil�metros finales marcados en el od�metro para completar el informe anual obligatorio.
                     </p>
                     <form onSubmit={handleEndYearKm} style={{ display: 'flex', gap: '10px' }}>
                         <input
@@ -477,7 +477,7 @@ const Home: React.FC = () => {
                 <motion.div variants={itemVariants} style={{ marginBottom: '2.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem', padding: '0 0.25rem' }}>
                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--danger)' }}></div>
-                        <h2 style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Alertas de vehÃ­culo</h2>
+                        <h2 style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Alertas de veh�culo</h2>
                     </div>
                     <div style={{ display: 'grid', gap: '14px' }}>
                         {alerts.map((alert, idx) => (
@@ -536,7 +536,7 @@ const Home: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 0.25rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-primary)' }}></div>
-                            <h2 style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>AnÃ¡lisis GrÃ¡fico</h2>
+                            <h2 style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>An�lisis Gr�fico</h2>
                         </div>
                         <Link to="/history" style={{ fontSize: '0.82rem', color: 'var(--accent-strong)', textDecoration: 'none', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>
                             Historial completo <ArrowRight size={14} />

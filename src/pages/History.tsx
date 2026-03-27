@@ -143,7 +143,7 @@ const History: React.FC = () => {
 
     // Handle Delete
     const handleDelete = (id: number) => {
-        if (confirm('Â¿EstÃ¡s seguro de borrar este servicio?')) {
+        if (confirm('�Est�s seguro de borrar este servicio?')) {
             deleteService(id);
             showToast('Servicio eliminado');
         }
@@ -229,7 +229,7 @@ const History: React.FC = () => {
         };
 
         addService(newService);
-        showToast('Servicio aÃ±adido');
+        showToast('Servicio a�adido');
         setIsAddingService(false);
         handleCancelEdit();
     };
@@ -273,7 +273,7 @@ const History: React.FC = () => {
 
             doc.setFontSize(18);
             doc.setTextColor(40, 40, 40);
-            doc.text('CODIATAX - HistÃ³rico de Servicios', 14, 20);
+            doc.text('CODIATAX - Hist�rico de Servicios', 14, 20);
 
             doc.setFontSize(11);
             doc.setTextColor(100, 100, 100);
@@ -284,13 +284,13 @@ const History: React.FC = () => {
             doc.setFontSize(12);
             doc.setTextColor(0, 0, 0);
             doc.text(`Total Servicios: ${filteredServices.length}`, 20, 48);
-            doc.text(`Importe Total: ${totalAmount.toFixed(2)} â‚¬`, 150, 48, { align: 'right' });
+            doc.text(`Importe Total: ${totalAmount.toFixed(2)} �`, 150, 48, { align: 'right' });
 
             const tableData = filteredServices.map(s => [
                 format(new Date(s.timestamp), 'dd/MM/yy HH:mm'),
                 s.type === 'company' ? (s.companyName || '') : (s.type === 'facturado' ? 'Facturado' : 'Normal'),
                 s.observation || '-',
-                s.amount.toFixed(2) + ' â‚¬'
+                s.amount.toFixed(2) + ' �'
             ]);
 
             autoTable(doc, {
@@ -335,7 +335,7 @@ const History: React.FC = () => {
             {/* Header Section */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <div>
-                    <h2 style={{ fontSize: '1.75rem', fontWeight: '950', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>HistÃ³rico</h2>
+                    <h2 style={{ fontSize: '1.75rem', fontWeight: '950', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Hist�rico</h2>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>Toda tu actividad registrada</p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -380,7 +380,7 @@ const History: React.FC = () => {
                         }}>
                             <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--accent-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 {editingService ? <Edit2 size={18} /> : <Plus size={18} />}
-                                {editingService ? 'Editar Servicio' : 'Nuevo Registro HistÃ³rico'}
+                                {editingService ? 'Editar Servicio' : 'Nuevo Registro Hist�rico'}
                             </h3>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -398,7 +398,7 @@ const History: React.FC = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label style={labelStyle}>Importe (â‚¬)</label>
+                                        <label style={labelStyle}>Importe (�)</label>
                                         <input
                                             type="number"
                                             step="0.01"
@@ -517,13 +517,13 @@ const History: React.FC = () => {
                     >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
                             <Filter size={18} color="var(--accent-primary)" />
-                            <h3 style={{ fontSize: '1rem', fontWeight: '900', margin: 0 }}>Filtros de bÃºsqueda</h3>
+                            <h3 style={{ fontSize: '1rem', fontWeight: '900', margin: 0 }}>Filtros de b�squeda</h3>
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: '10px' }}>
                                 <select value={filterDay} onChange={e => setFilterDay(e.target.value)} style={inputStyle}>
-                                    <option value="">DÃ­a</option>
+                                    <option value="">D�a</option>
                                     {Array.from({ length: 31 }).map((_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}
                                 </select>
                                 <select value={filterMonth.toString()} onChange={e => setFilterMonth(parseInt(e.target.value))} style={inputStyle}>
@@ -643,9 +643,9 @@ const History: React.FC = () => {
                         </h3>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                        <span style={labelStyle}>RecaudaciÃ³n</span>
+                        <span style={labelStyle}>Recaudaci�n</span>
                         <div style={{ fontSize: '1.6rem', fontWeight: '950', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
-                            {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<span style={{ color: 'var(--accent-primary)', fontSize: '1.1rem', marginLeft: '2px' }}>â‚¬</span>
+                            {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<span style={{ color: 'var(--accent-primary)', fontSize: '1.1rem', marginLeft: '2px' }}>�</span>
                         </div>
                     </div>
                 </div>
@@ -686,7 +686,7 @@ const History: React.FC = () => {
                                         </span>
                                     </div>
                                     <span style={{ fontSize: '0.85rem', fontWeight: '950', color: 'var(--success)' }}>
-                                        {group.totalAmount.toFixed(2)} â‚¬
+                                        {group.totalAmount.toFixed(2)} �
                                     </span>
                                 </div>
 
@@ -753,7 +753,7 @@ const History: React.FC = () => {
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginLeft: '12px' }}>
                                                         <div style={{ textAlign: 'right' }}>
                                                             <div style={{ fontSize: '1.25rem', fontWeight: '950', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-                                                                {service.amount.toFixed(2)}<span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', marginLeft: '1px' }}>â‚¬</span>
+                                                                {service.amount.toFixed(2)}<span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', marginLeft: '1px' }}>�</span>
                                                             </div>
                                                         </div>
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', borderLeft: '1px solid var(--border-dim)', paddingLeft: '12px' }}>

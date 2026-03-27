@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { encryption } from '../../services/encryption';
 import { Preferences } from '../../utils/webPreferences';
 import { Lock, Check } from 'lucide-react';
@@ -39,7 +39,7 @@ const PinSetup: React.FC<PinSetupProps> = ({ onComplete }) => {
     const handleContinue = async () => {
         if (step === 'create') {
             if (pin.length < 4) {
-                setError('El PIN debe tener al menos 4 dÃ­gitos');
+                setError('El PIN debe tener al menos 4 d?gitos');
                 return;
             }
             setStep('confirm');
@@ -105,7 +105,7 @@ const PinSetup: React.FC<PinSetupProps> = ({ onComplete }) => {
                 </h2>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
                     {step === 'create'
-                        ? 'Introduce un PIN de 4-6 dÃ­gitos para proteger tus datos'
+                        ? 'Introduce un PIN de 4-6 d?gitos para proteger tus datos'
                         : 'Vuelve a introducir tu PIN para confirmar'
                     }
                 </p>
@@ -178,7 +178,7 @@ const PinSetup: React.FC<PinSetupProps> = ({ onComplete }) => {
                                 }
                             }}
                         >
-                            {num === 'del' ? 'âŒ«' : num}
+                            {num === 'del' ? '?' : num}
                         </button>
                     ))}
                 </div>
@@ -206,5 +206,6 @@ const PinSetup: React.FC<PinSetupProps> = ({ onComplete }) => {
 };
 
 export default PinSetup;
+
 
 

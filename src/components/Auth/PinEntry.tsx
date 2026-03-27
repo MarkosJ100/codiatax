@@ -57,7 +57,7 @@ const PinEntry: React.FC<PinEntryProps> = ({ onSuccess }) => {
             const { value: storedSalt } = await Preferences.get({ key: 'app_pin_salt' });
 
             if (!storedHash || !storedSalt) {
-                setError('Error de configuraciÃ³n de seguridad');
+                setError('Error de configuraci�n de seguridad');
                 setIsLoading(false);
                 return;
             }
@@ -121,7 +121,7 @@ const PinEntry: React.FC<PinEntryProps> = ({ onSuccess }) => {
                     Introduce tu PIN
                 </h2>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-                    AplicaciÃ³n bloqueada por seguridad
+                    Aplicaci�n bloqueada por seguridad
                 </p>
 
                 {/* PIN Dots */}

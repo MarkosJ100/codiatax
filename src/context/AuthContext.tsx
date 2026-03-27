@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             isShared: metadata.isShared || false,
             workMode: metadata.workMode || 'solo',
             shiftWeek: metadata.shiftWeek || 'Semana A',
-            shiftType: metadata.shiftType || 'maÃ±ana',
+            shiftType: metadata.shiftType || 'ma�ana',
             startTime: metadata.startTime || '06:00',
             endTime: metadata.endTime || '15:00',
             lastLogin: new Date().toISOString()

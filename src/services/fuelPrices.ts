@@ -47,8 +47,8 @@ export const fetchFuelPrices = async (): Promise<FuelPricesData | null> => {
 
         const stations: FuelStation[] = data.ListaEESSPrecio.map((station: Record<string, string>) => ({
             id: station['IDEESS'] || Math.random().toString(),
-            name: station['RÃ³tulo'] || 'Desconocida',
-            address: station['DirecciÃ³n'] || '',
+            name: station['R�tulo'] || 'Desconocida',
+            address: station['Direcci�n'] || '',
             schedule: station['Horario'] || '',
             dieselA: parsePrice(station['Precio Gasoleo A']),
             gasoline95: parsePrice(station['Precio Gasolina 95 E5']),

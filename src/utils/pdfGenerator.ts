@@ -1,4 +1,4 @@
-﻿import type { jsPDF } from 'jspdf';
+import type { jsPDF } from 'jspdf';
 import { Invoice, DriverProfile } from '../types';
 import QRCode from 'qrcode';
 
@@ -30,8 +30,8 @@ export const generateInvoicePDF = async (invoice: Invoice, profile: DriverProfil
     const mutedColor = [107, 114, 128];
 
     // --- QR CODE GENERATION ---
-    // Format: Factura: 2026/XXX\nEmisor: [NIF]\nTotal: XX.XX â‚¬\nFecha: DD/MM/AAAA
-    const invoiceSummary = `Factura: ${invoice.series || ''}${invoice.number}\nEmisor: ${profile.nif}\nTotal: ${invoice.totalAmount.toFixed(2)} â‚¬\nFecha: ${new Date(invoice.dateEmission).toLocaleDateString('es-ES')}`;
+    // Format: Factura: 2026/XXX\nEmisor: [NIF]\nTotal: XX.XX ?\nFecha: DD/MM/AAAA
+    const invoiceSummary = `Factura: ${invoice.series || ''}${invoice.number}\nEmisor: ${profile.nif}\nTotal: ${invoice.totalAmount.toFixed(2)} ?\nFecha: ${new Date(invoice.dateEmission).toLocaleDateString('es-ES')}`;
     const qrDataUrl = await generateQRCodeDataUrl(invoiceSummary);
 
     // Header
@@ -41,8 +41,8 @@ export const generateInvoicePDF = async (invoice: Invoice, profile: DriverProfil
 
     doc.setFontSize(10);
     doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-    doc.text(`NÃºmero: ${invoice.series || ''}${invoice.number}`, 105, 30, { align: 'center' });
-    doc.text(`Fecha de emisiÃ³n: ${new Date(invoice.dateEmission).toLocaleDateString('es-ES')}`, 105, 35, { align: 'center' });
+    doc.text(`N?mero: ${invoice.series || ''}${invoice.number}`, 105, 30, { align: 'center' });
+    doc.text(`Fecha de emisi?n: ${new Date(invoice.dateEmission).toLocaleDateString('es-ES')}`, 105, 35, { align: 'center' });
 
     // Emisor (Driver) - Left Column
     doc.setFontSize(11);
@@ -58,7 +58,7 @@ export const generateInvoicePDF = async (invoice: Invoice, profile: DriverProfil
     doc.text(addressLines, 20, 67);
 
     let yPos = 67 + (addressLines.length * 5);
-    doc.text(`Licencia Taxi nÂº ${profile.licenseNo} (${profile.municipality})`, 20, yPos);
+    doc.text(`Licencia Taxi n� ${profile.licenseNo} (${profile.municipality})`, 20, yPos);
     yPos += 5;
     doc.text(`Tlf: ${profile.phone || ''} | Email: ${profile.email || ''}`, 20, yPos);
     yPos += 5;
@@ -115,7 +115,7 @@ export const generateInvoicePDF = async (invoice: Invoice, profile: DriverProfil
     }
 
     // Amount for the service line (Aligned Right)
-    doc.text(`${invoice.baseAmount.toFixed(2)} â‚¬`, 190, 120, { align: 'right' });
+    doc.text(`${invoice.baseAmount.toFixed(2)} ?`, 190, 120, { align: 'right' });
 
 
     // Totals Box (Bottom Right)
@@ -129,11 +129,11 @@ export const generateInvoicePDF = async (invoice: Invoice, profile: DriverProfil
 
     // Base Header & Value
     doc.text('Base Imponible:', 125, startY + 8);
-    doc.text(`${invoice.baseAmount.toFixed(2)} â‚¬`, 185, startY + 8, { align: 'right' });
+    doc.text(`${invoice.baseAmount.toFixed(2)} ?`, 185, startY + 8, { align: 'right' });
 
     // IVA Header & Value
     doc.text(`IVA (${invoice.ivaRate}%):`, 125, startY + 16);
-    doc.text(`${invoice.ivaAmount.toFixed(2)} â‚¬`, 185, startY + 16, { align: 'right' });
+    doc.text(`${invoice.ivaAmount.toFixed(2)} ?`, 185, startY + 16, { align: 'right' });
 
     // Divider Line
     doc.setDrawColor(0, 0, 0);
@@ -144,7 +144,7 @@ export const generateInvoicePDF = async (invoice: Invoice, profile: DriverProfil
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.text('TOTAL:', 125, startY + 30);
-    doc.text(`${invoice.totalAmount.toFixed(2)} â‚¬`, 185, startY + 30, { align: 'right' });
+    doc.text(`${invoice.totalAmount.toFixed(2)} ?`, 185, startY + 30, { align: 'right' });
 
     // Payment Method (Bottom Left)
     doc.setFontSize(10);
@@ -168,7 +168,7 @@ export const downloadInvoicePDF = async (invoice: Invoice, profile: DriverProfil
         return true;
     } catch (error) {
         console.error('Error downloading PDF:', error);
-        alert('Error al descargar el PDF. Por favor, intÃ©ntalo de nuevo.');
+        alert('Error al descargar el PDF. Por favor, int?ntalo de nuevo.');
         return false;
     }
 };
@@ -197,4 +197,5 @@ export const sendInvoiceByEmail = async (invoice: Invoice, profile: DriverProfil
         return false;
     }
 };
+
 

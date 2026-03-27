@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { encryption } from '../../services/encryption';
 import { Preferences } from '../../utils/webPreferences';
 import { rateLimiter } from '../../utils/sanitize';
@@ -56,7 +56,7 @@ const PinLogin: React.FC<PinLoginProps> = ({ onSuccess }) => {
             return;
         }
 
-        // Rate limiting: mÃ¡ximo 5 intentos por minuto
+        // Rate limiting: m?ximo 5 intentos por minuto
         if (!rateLimiter.canProceed('pin_login', 5, 60000)) {
             setIsBlocked(true);
             const remaining = rateLimiter.getTimeUntilReset('pin_login', 60000);
@@ -71,7 +71,7 @@ const PinLogin: React.FC<PinLoginProps> = ({ onSuccess }) => {
             const { value: salt } = await Preferences.get({ key: 'app_pin_salt' });
 
             if (!storedHash || !salt) {
-                setError('Error de configuraciÃ³n');
+                setError('Error de configuraci?n');
                 return;
             }
 
@@ -131,7 +131,7 @@ const PinLogin: React.FC<PinLoginProps> = ({ onSuccess }) => {
                 <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
                     {isBlocked
                         ? `Espera ${blockTimeRemaining}s antes de intentar de nuevo`
-                        : 'Introduce tu PIN para acceder a la aplicaciÃ³n'
+                        : 'Introduce tu PIN para acceder a la aplicaci?n'
                     }
                 </p>
 
@@ -211,7 +211,7 @@ const PinLogin: React.FC<PinLoginProps> = ({ onSuccess }) => {
                                 }
                             }}
                         >
-                            {num === 'del' ? 'âŒ«' : num}
+                            {num === 'del' ? '?' : num}
                         </button>
                     ))}
                 </div>
@@ -230,7 +230,7 @@ const PinLogin: React.FC<PinLoginProps> = ({ onSuccess }) => {
                     textDecoration: 'underline'
                 }}
             >
-                Â¿Olvidaste tu PIN?
+                ?Olvidaste tu PIN?
             </button>
 
             {/* Recovery Modal */}
@@ -256,4 +256,5 @@ const PinLogin: React.FC<PinLoginProps> = ({ onSuccess }) => {
 };
 
 export default PinLogin;
+
 

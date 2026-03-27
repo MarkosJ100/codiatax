@@ -86,16 +86,16 @@ const ExportMenu: React.FC<ExportMenuProps> = ({ direction = 'down', onOpenChang
                 console.log('Intentando parsear con xlsx library...');
                 newServices = parseServicesExcel(buffer);
 
-                // Si xlsx no encontrÃ³ servicios y es un .csv, intentar parser de texto
+                // Si xlsx no encontr� servicios y es un .csv, intentar parser de texto
                 if (newServices.length === 0 && file.name.toLowerCase().endsWith('.csv')) {
-                    console.log('xlsx no encontrÃ³ servicios, intentando parser CSV de texto...');
+                    console.log('xlsx no encontr� servicios, intentando parser CSV de texto...');
                     const decoder = new TextDecoder('iso-8859-1');
                     const text = decoder.decode(buffer);
                     newServices = parseServicesCsv(text);
                 }
 
                 if (newServices.length === 0) {
-                    toast.warning('No se encontraron servicios vÃ¡lidos. AsegÃºrate de usar el formato de App Taxi.');
+                    toast.warning('No se encontraron servicios v�lidos. Aseg�rate de usar el formato de App Taxi.');
                     return;
                 }
 
@@ -104,10 +104,10 @@ const ExportMenu: React.FC<ExportMenuProps> = ({ direction = 'down', onOpenChang
                 let importCount = 0;
                 let skipCount = 0;
 
-                // AÃ±adir los servicios existentes al set de "ya procesados"
+                // A�adir los servicios existentes al set de "ya procesados"
                 services.forEach(s => {
                     const timeMs = new Date(s.timestamp).getTime();
-                    // Normalizar el importe y la observaciÃ³n para la clave
+                    // Normalizar el importe y la observaci�n para la clave
                     const normObs = String(s.observation || '').trim();
                     const key = `${timeMs}_${normObs}`;
                     processedKeys.add(key);
@@ -115,30 +115,30 @@ const ExportMenu: React.FC<ExportMenuProps> = ({ direction = 'down', onOpenChang
 
                 const servicesToImport = [...newServices];
 
-                // Verificar importes altos (>100â‚¬) y preguntar al usuario
+                // Verificar importes altos (>100�) y preguntar al usuario
                 const highAmounts = servicesToImport.filter(s => s.amount > 100);
                 if (highAmounts.length > 0) {
-                    const examples = highAmounts.slice(0, 3).map(s => `${s.amount}â‚¬`).join(', ');
-                    const msg = `Se han detectado ${highAmounts.length} servicios con importes superiores a 100â‚¬ (ej: ${examples}).\n\nÂ¿Son correctos estos importes?\n\nSi pulsas CANCELAR, se importarÃ¡n igualmente pero te recomendamos revisarlos en el historial.`;
+                    const examples = highAmounts.slice(0, 3).map(s => `${s.amount}�`).join(', ');
+                    const msg = `Se han detectado ${highAmounts.length} servicios con importes superiores a 100� (ej: ${examples}).\n\n�Son correctos estos importes?\n\nSi pulsas CANCELAR, se importar�n igualmente pero te recomendamos revisarlos en el historial.`;
                     
                     if (!window.confirm(msg)) {
-                        // El usuario cancelÃ³ la confirmaciÃ³n de importes altos.
-                        // SegÃºn la peticiÃ³n del usuario "me preguntas si el importe es correcto"
-                        // PodrÃ­amos incluso ofrecer dividirlos por 100 aquÃ­ si no lo hizo el parser automÃ¡tico.
+                        // El usuario cancel� la confirmaci�n de importes altos.
+                        // Seg�n la petici�n del usuario "me preguntas si el importe es correcto"
+                        // Podr�amos incluso ofrecer dividirlos por 100 aqu� si no lo hizo el parser autom�tico.
                     }
                 }
 
                 for (const service of servicesToImport) {
                     const timeMs = new Date(service.timestamp).getTime();
 
-                    // Usamos solo el tiempo y la observaciÃ³n como clave de deduplicaciÃ³n.
-                    // Esto evita que si un importe se parseÃ³ mal una vez (ej: 6.42 vs 642)
+                    // Usamos solo el tiempo y la observaci�n como clave de deduplicaci�n.
+                    // Esto evita que si un importe se parse� mal una vez (ej: 6.42 vs 642)
                     // se considere un servicio distinto.
                     const normObs = String(service.observation || '').trim();
                     const key = `${timeMs}_${normObs}`;
 
                     if (processedKeys.has(key)) {
-                        console.log(`[DeduplicaciÃ³n] Saltando duplicatado: ${key}`);
+                        console.log(`[Deduplicaci�n] Saltando duplicatado: ${key}`);
                         skipCount++;
                         continue;
                     }
@@ -152,7 +152,7 @@ const ExportMenu: React.FC<ExportMenuProps> = ({ direction = 'down', onOpenChang
                     if (importCount > 0) {
                         toast.success(`${importCount} importados, ${skipCount} duplicados ignorados`);
                     } else {
-                        toast.warning(`Todos los ${skipCount} servicios ya existÃ­an (ignorados)`);
+                        toast.warning(`Todos los ${skipCount} servicios ya exist�an (ignorados)`);
                     }
                 } else {
                     toast.success(`${importCount} servicios importados correctamente`);

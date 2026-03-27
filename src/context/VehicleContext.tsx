@@ -35,7 +35,7 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children })
             initialOdometer: 0,
             maintenance: {
                 oil: { name: 'Aceite', lastKm: 0, interval: 15000 },
-                tires: { name: 'NeumÃ¡ticos', lastKm: 0, interval: 40000 },
+                tires: { name: 'Neum�ticos', lastKm: 0, interval: 40000 },
                 brakes: { name: 'Frenos', lastKm: 0, interval: 30000 }
             }
         };
