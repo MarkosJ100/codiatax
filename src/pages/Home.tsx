@@ -1,4 +1,4 @@
-ï»¿import React, { Suspense, lazy, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -63,7 +63,7 @@ const Home: React.FC = () => {
         e.preventDefault();
         if (tempKm && !isNaN(parseInt(tempKm, 10))) {
             updateAnnualConfig({ yearEndKm: parseInt(tempKm, 10) });
-            showToast('Kilï¿½metros de cierre de aï¿½o guardados.');
+            showToast('Kilómetros de cierre de año guardados.');
             setTempKm('');
         }
     };
@@ -224,7 +224,7 @@ const Home: React.FC = () => {
                             >
                                 <TrendingUp size={12} color="var(--success)" />
                                 <span style={{ fontSize: '0.65rem', fontWeight: '850', color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                    Recaudaciï¿½n Neta
+                                    Recaudación Neta
                                 </span>
                             </div>
                             <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '700' }}>
@@ -244,7 +244,7 @@ const Home: React.FC = () => {
                                         borderRadius: '10px'
                                     }}
                                 >
-                                    {period === 'day' ? 'Hoy' : period === 'week' ? 'Sem' : period === 'month' ? 'Mes' : 'Aï¿½o'}
+                                    {period === 'day' ? 'Hoy' : period === 'week' ? 'Sem' : period === 'month' ? 'Mes' : 'Año'}
                                 </button>
                             ))}
                         </div>
@@ -261,7 +261,7 @@ const Home: React.FC = () => {
                             alignItems: 'baseline'
                         }}>
                             {netIncomeReal.toFixed(0)}
-                            <span style={{ fontSize: '1.5rem', marginLeft: '6px', fontWeight: '900', color: 'var(--text-tertiary)', letterSpacing: '0.05em' }}>ï¿½</span>
+                            <span style={{ fontSize: '1.5rem', marginLeft: '6px', fontWeight: '900', color: 'var(--text-tertiary)', letterSpacing: '0.05em' }}>€</span>
                         </div>
                     </div>
 
@@ -278,15 +278,15 @@ const Home: React.FC = () => {
                     >
                         <div style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '850', letterSpacing: '0.06em', marginBottom: '6px' }}>Bruto</div>
-                            <div style={{ fontWeight: '950', fontSize: '1.1rem', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{grossIncome.toFixed(0)}<small style={{ fontSize: '0.7em', fontWeight: '700', marginLeft: '1px', opacity: 0.5 }}>ï¿½</small></div>
+                            <div style={{ fontWeight: '950', fontSize: '1.1rem', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{grossIncome.toFixed(0)}<small style={{ fontSize: '0.7em', fontWeight: '700', marginLeft: '1px', opacity: 0.5 }}>€</small></div>
                         </div>
                         <div style={{ textAlign: 'center', borderLeft: '1px solid var(--border-light)' }}>
                             <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '850', letterSpacing: '0.06em', marginBottom: '6px' }}>Gastos</div>
-                            <div style={{ fontWeight: '950', fontSize: '1.1rem', color: 'var(--danger)', letterSpacing: '-0.02em' }}>{totalRealExpenses.toFixed(0)}<small style={{ fontSize: '0.7em', fontWeight: '700', marginLeft: '1px', opacity: 0.5 }}>ï¿½</small></div>
+                            <div style={{ fontWeight: '950', fontSize: '1.1rem', color: 'var(--danger)', letterSpacing: '-0.02em' }}>{totalRealExpenses.toFixed(0)}<small style={{ fontSize: '0.7em', fontWeight: '700', marginLeft: '1px', opacity: 0.5 }}>€</small></div>
                         </div>
                         <div style={{ textAlign: 'center', borderLeft: '1px solid var(--border-light)' }}>
                             <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '850', letterSpacing: '0.06em', marginBottom: '6px' }}>Neto</div>
-                            <div style={{ fontWeight: '950', fontSize: '1.1rem', color: 'var(--success)', letterSpacing: '-0.02em' }}>{netIncomeReal.toFixed(0)}<small style={{ fontSize: '0.7em', fontWeight: '700', marginLeft: '1px', opacity: 0.5 }}>ï¿½</small></div>
+                            <div style={{ fontWeight: '950', fontSize: '1.1rem', color: 'var(--success)', letterSpacing: '-0.02em' }}>{netIncomeReal.toFixed(0)}<small style={{ fontSize: '0.7em', fontWeight: '700', marginLeft: '1px', opacity: 0.5 }}>€</small></div>
                         </div>
                         <div style={{ textAlign: 'center', borderLeft: '1px solid var(--border-light)' }}>
                             <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '850', letterSpacing: '0.06em', marginBottom: '6px' }}>KMs</div>
@@ -315,7 +315,7 @@ const Home: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
                             <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '850', letterSpacing: '0.08em', marginBottom: '4px' }}>
-                                {isAirportToday ? 'Servicio Aeropuerto' : (isRestingToday ? 'Dï¿½a Libre' : 'Estado del Turno')}
+                                {isAirportToday ? 'Servicio Aeropuerto' : (isRestingToday ? 'Día Libre' : 'Estado del Turno')}
                             </div>
                             <div style={{ fontWeight: '850', fontSize: '1.05rem', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                                 {isRestingToday ? 'Fuera de Servicio' : (currentShift ? `${currentShift.weekLabel}` : 'Servicio Libre')}
@@ -414,8 +414,8 @@ const Home: React.FC = () => {
                         <Settings size={26} color="var(--text-muted)" />
                     </div>
                     <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '1.15rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '2px', letterSpacing: '-0.03em' }}>Configuraciï¿½n</div>
-                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '650' }}>Seguridad, datos y exportaciï¿½n avanzada</div>
+                        <div style={{ fontSize: '1.15rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '2px', letterSpacing: '-0.03em' }}>Configuración</div>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '650' }}>Seguridad, datos y exportación avanzada</div>
                     </div>
                     <motion.div animate={{ rotate: showSettings ? 180 : 0 }} transition={{ duration: 0.2 }}>
                         <ChevronDown size={20} color="var(--text-muted)" />
@@ -446,10 +446,10 @@ const Home: React.FC = () => {
                 <motion.div variants={itemVariants} className="card" style={{ marginBottom: '2rem', backgroundColor: 'rgba(var(--warning-rgb), 0.08)', border: '2px dashed var(--warning)', borderRadius: '24px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.75rem' }}>
                         <AlertTriangle size={22} color="var(--warning)" />
-                        <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: '900', letterSpacing: '-0.02em' }}>Cierre de aï¿½o ({today.getFullYear()})</h3>
+                        <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: '900', letterSpacing: '-0.02em' }}>Cierre de año ({today.getFullYear()})</h3>
                     </div>
                     <p style={{ fontSize: '0.88rem', marginBottom: '1.25rem', color: 'var(--text-secondary)', lineHeight: 1.5, fontWeight: '600' }}>
-                        Introduce los kilï¿½metros finales marcados en el odï¿½metro para completar el informe anual obligatorio.
+                        Introduce los kilómetros finales marcados en el odómetro para completar el informe anual obligatorio.
                     </p>
                     <form onSubmit={handleEndYearKm} style={{ display: 'flex', gap: '10px' }}>
                         <input
@@ -477,7 +477,7 @@ const Home: React.FC = () => {
                 <motion.div variants={itemVariants} style={{ marginBottom: '2.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem', padding: '0 0.25rem' }}>
                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--danger)' }}></div>
-                        <h2 style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Alertas de vehï¿½culo</h2>
+                        <h2 style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Alertas de vehículo</h2>
                     </div>
                     <div style={{ display: 'grid', gap: '14px' }}>
                         {alerts.map((alert, idx) => (
@@ -536,14 +536,14 @@ const Home: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 0.25rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-primary)' }}></div>
-                            <h2 style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Anï¿½lisis Grï¿½fico</h2>
+                            <h2 style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Análisis Gráfico</h2>
                         </div>
                         <Link to="/history" style={{ fontSize: '0.82rem', color: 'var(--accent-strong)', textDecoration: 'none', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>
                             Historial completo <ArrowRight size={14} />
                         </Link>
                     </div>
                     <div className="card" style={{ margin: 0, padding: '1.5rem', borderRadius: '28px', border: '1px solid var(--border-light)' }}>
-                        <Suspense fallback={<div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>Cargando grÃ¡fico...</div>}>
+                        <Suspense fallback={<div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>Cargando gráfico...</div>}>
                             <UnifiedChart />
                         </Suspense>
                     </div>
@@ -566,6 +566,7 @@ const Home: React.FC = () => {
 };
 
 export default Home;
+
 
 
 

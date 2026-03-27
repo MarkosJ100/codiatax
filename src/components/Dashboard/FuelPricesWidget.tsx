@@ -80,7 +80,7 @@ const FuelPricesWidget: React.FC = () => {
                         color: 'var(--text-primary)'
                     }}
                 >
-                    Reintentar conexiÃ³n
+                    Reintentar conexión
                 </button>
             </div>
         );
@@ -270,3 +270,4 @@ const FuelPricesWidget: React.FC = () => {
 };
 
 export default React.memo(FuelPricesWidget);
+
