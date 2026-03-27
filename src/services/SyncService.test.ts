@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+﻿import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { SyncService } from './SyncService';
 import { storage } from '../utils/storage';
 
@@ -37,7 +37,7 @@ describe('SyncService', () => {
         const mockItem = { entityType: 'SERVICE' as any, operation: 'CREATE' as any, entityId: 1, data: { amount: 10 }, userName: 'u1' };
         syncService.addToQueue(mockItem);
 
-        expect(storage.setItem).toHaveBeenCalledWith('codiatax_sync_queue', expect.any(Array));
+        expect(storage.setItem).toHaveBeenCalledWith('codiatx_sync_queue', expect.any(Array));
     });
 
     it('should process queue when online', async () => {
@@ -59,6 +59,7 @@ describe('SyncService', () => {
 
         await syncService.processQueue();
         // Should still have pending items in storage call
-        expect(storage.setItem).toHaveBeenCalledWith('codiatax_sync_queue', expect.arrayContaining([expect.objectContaining({ entityType: 'SERVICE' })]));
+        expect(storage.setItem).toHaveBeenCalledWith('codiatx_sync_queue', expect.arrayContaining([expect.objectContaining({ entityType: 'SERVICE' })]));
     });
 });
+

@@ -1,5 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Capacitor } from '@capacitor/core';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { FileDown, History as HistoryIcon, Info, MapPin, ReceiptText, ShieldAlert, Trash2, Wrench } from 'lucide-react';
 
 import { useVehicle } from '../context/VehicleContext';
@@ -9,7 +8,7 @@ import { MaintenanceRecord } from '../types';
 import DeleteConfirmModal from '../components/Common/DeleteConfirmModal';
 import { storage } from '../utils/storage';
 
-const MAINTENANCE_STORAGE_KEY = 'codiatax_maintenance';
+const MAINTENANCE_STORAGE_KEY = 'codiatx_maintenance';
 const ESTIMATED_DAILY_KM = 60;
 const DEFAULT_ESTIMATED_COST = 140;
 
@@ -85,7 +84,7 @@ const getStatusColor = (status: RevisionStatus): string => {
 const Maintenance: React.FC = () => {
     const { vehicle, currentOdometer } = useVehicle();
     const toast = useToast();
-    const isNativePlatform = Capacitor.isNativePlatform();
+    const isNativePlatform = false;
 
     const [records, setRecords] = useState<MaintenanceRecord[]>(loadMaintenanceRecords);
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: number | null; label: string }>({
@@ -127,7 +126,7 @@ const Maintenance: React.FC = () => {
         if (records.length === 0) return DEFAULT_ESTIMATED_COST;
         const withNumericCost = records
             .map((record) => {
-                const match = record.notes.match(/(?:^|\s)(\d+[\.,]?\d{0,2})\s*(?:EUR|euros?|�)/i);
+                const match = record.notes.match(/(?:^|\s)(\d+[.,]?\d{0,2})\s*(?:EUR|euros?|€)/i);
                 if (!match) return null;
                 return Number(match[1].replace(',', '.'));
             })
@@ -385,3 +384,6 @@ const Maintenance: React.FC = () => {
 };
 
 export default Maintenance;
+
+
+

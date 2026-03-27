@@ -1,8 +1,13 @@
-class LocalStorageManager {
+﻿class LocalStorageManager {
     private static instance: LocalStorageManager;
     private maxRetries = 3;
 
     private constructor() { }
+
+    private getLegacyKey(key: string): string | null {
+        if (!key.startsWith('codiatx_')) return null;
+        return key.replace(/^codiatx_/, 'codiatax_');
+    }
 
     static getInstance(): LocalStorageManager {
         if (!LocalStorageManager.instance) {
@@ -15,6 +20,12 @@ class LocalStorageManager {
         try {
             const serialized = JSON.stringify(value);
             localStorage.setItem(key, serialized);
+
+            const legacyKey = this.getLegacyKey(key);
+            if (legacyKey) {
+                localStorage.removeItem(legacyKey);
+            }
+
             return true;
         } catch (error: any) {
             if (error.name === 'QuotaExceededError') {
@@ -35,8 +46,20 @@ class LocalStorageManager {
     getItem<T>(key: string, defaultValue: T): T {
         try {
             const item = localStorage.getItem(key);
-            if (!item) return defaultValue;
-            return JSON.parse(item) as T;
+            if (item) return JSON.parse(item) as T;
+
+            const legacyKey = this.getLegacyKey(key);
+            if (legacyKey) {
+                const legacyItem = localStorage.getItem(legacyKey);
+                if (legacyItem) {
+                    const parsed = JSON.parse(legacyItem) as T;
+                    // Silent migration on first successful legacy read.
+                    this.setItem(key, parsed);
+                    return parsed;
+                }
+            }
+
+            return defaultValue;
         } catch (error) {
             console.error(`Error reading ${key} from localStorage:`, error);
             return defaultValue;
@@ -46,6 +69,10 @@ class LocalStorageManager {
     removeItem(key: string): void {
         try {
             localStorage.removeItem(key);
+            const legacyKey = this.getLegacyKey(key);
+            if (legacyKey) {
+                localStorage.removeItem(legacyKey);
+            }
         } catch (error) {
             console.error(`Error removing ${key}:`, error);
         }
@@ -54,8 +81,8 @@ class LocalStorageManager {
     private cleanupOldData(): void {
         try {
             // Remove old services and expenses (keep last 90 days)
-            const services = this.getItem<any[]>('codiatax_services', []);
-            const expenses = this.getItem<any[]>('codiatax_expenses', []);
+            const services = this.getItem<any[]>('codiatx_services', []);
+            const expenses = this.getItem<any[]>('codiatx_expenses', []);
 
             const ninetyDaysAgo = new Date();
             ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
@@ -67,8 +94,8 @@ class LocalStorageManager {
                 new Date(e.timestamp) > ninetyDaysAgo
             );
 
-            this.setItem('codiatax_services', recentServices);
-            this.setItem('codiatax_expenses', recentExpenses);
+            this.setItem('codiatx_services', recentServices);
+            this.setItem('codiatx_expenses', recentExpenses);
         } catch (error) {
             console.error('Cleanup failed:', error);
         }

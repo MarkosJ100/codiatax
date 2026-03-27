@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
 import { VehicleData, MaintenanceItem, MileageLog } from '../types';
 import { useAuth } from './AuthContext';
 import { VehicleRepository } from '../services/repositories/VehicleRepository';
@@ -35,17 +35,17 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children })
             initialOdometer: 0,
             maintenance: {
                 oil: { name: 'Aceite', lastKm: 0, interval: 15000 },
-                tires: { name: 'Neumáticos', lastKm: 0, interval: 40000 },
+                tires: { name: 'NeumÃ¡ticos', lastKm: 0, interval: 40000 },
                 brakes: { name: 'Frenos', lastKm: 0, interval: 30000 }
             }
         };
-        const saved = storage.getItem<VehicleData>('codiatax_vehicle', defaultVehicle);
+        const saved = storage.getItem<VehicleData>('codiatx_vehicle', defaultVehicle);
         if (saved && typeof saved === 'object' && saved.maintenance) return saved;
         return defaultVehicle;
     });
 
     const [mileageLogs, setMileageLogs] = useState<MileageLog[]>(() => {
-        return storage.getItem<MileageLog[]>('codiatax_mileage', []);
+        return storage.getItem<MileageLog[]>('codiatx_mileage', []);
     });
 
     // Derived state
@@ -58,7 +58,7 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Persistence & Sync
     useEffect(() => {
         const timeout = setTimeout(async () => {
-            storage.setItem('codiatax_vehicle', vehicle);
+            storage.setItem('codiatx_vehicle', vehicle);
 
             if (user) {
                 try {
@@ -83,7 +83,7 @@ export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, [vehicle, user]);
 
     useEffect(() => {
-        storage.setItem('codiatax_mileage', mileageLogs);
+        storage.setItem('codiatx_mileage', mileageLogs);
     }, [mileageLogs]);
 
     // Sync Fetch Logic
@@ -138,3 +138,4 @@ export const useVehicle = () => {
     if (!context) throw new Error('useVehicle must be used within VehicleProvider');
     return context;
 };
+

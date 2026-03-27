@@ -1,8 +1,8 @@
 # 🚖 CODIATAX - Documentación Completa del Proyecto
 
-**Versión:** 1.3.0 (Estable)  
+**Versión:** 1.4.0 (Estable)  
 **Fecha de Creación:** Diciembre 2024  
-**Última Actualización:** 12 Marzo 2026 (v1.3.0)  
+**Última Actualización:** 20 Marzo 2026 (v1.4.0)  
 **Tipo:** Aplicación Móvil Híbrida (Android/iOS/Web)  
 **Propósito:** Gestión Integral para Profesionales del Taxi con Sincronización Cloud
 
@@ -235,6 +235,14 @@ Registro: Se guarda como gasto mensual de 20€
 | Aceite Caja de Cambios | Cada 90,000 km |
 | Pastillas de Freno | Cada 40,000 km |
 | Neumáticos | Cada 50,000 km |
+
+**Novedad v1.4.0: Plantillas por Marca y Modelo**
+
+La aplicación ahora incluye planes de mantenimiento predefinidos para los modelos más comunes en el sector del taxi:
+- **Marcas soportadas:** Hyundai, Toyota, Kia, Skoda, Dacia, etc.
+- **Modelos específicos:** Ioniq Hybrid, Prius, Niro, Octavia, Jogger...
+- **Indicadores de Fiabilidad:** 🔏 Fuente Oficial, 📖 Manual Aportado, ⚠️ Base Orientativa.
+- **Automatización:** Al seleccionar un modelo, se configuran automáticamente los intervalos oficiales y se generan avisos inteligentes.
 
 **Flujo de Trabajo:**
 
@@ -619,6 +627,11 @@ MobileShell.tsx          - Estructura móvil principal
 1. **Validación de Entorno:** Sistema de protección que impide el inicio de la app si faltan variables críticas (Supabase URL/Key).
 2. **Políticas RLS:** Cada registro en la base de datos está vinculado al `auth.uid()` del usuario, impidiendo accesos cruzados.
 3. **Cifrado AES:** Datos sensibles locales protegidos con `crypto-js`.
+
+### ⚡ Interfaz Premium (v1.4.0)
+- **Selectores Dropdown:** Sustitución de rejillas por menús elegantes con efectos de cristal (blur) y elevación.
+- **Modales Propios:** Eliminación de diálogos nativos del sistema por componentes animados y consistentes.
+- **Navegación Purista:** Barra inferior simplificada sin líneas distractoras, centrada en el color y la forma.
 
 ---
 

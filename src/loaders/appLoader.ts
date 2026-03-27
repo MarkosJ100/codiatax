@@ -1,4 +1,4 @@
-import { Service, Expense, Vehicle, ShiftStorage, User } from '../types';
+﻿import { Service, Expense, Vehicle, ShiftStorage, User } from '../types';
 import { DataRepository } from '../services/repositories/DataRepository';
 import { supabase } from '../supabase';
 
@@ -37,7 +37,11 @@ export async function appDataLoader(userId: string | null): Promise<LoaderData> 
  */
 export function getUserFromStorage(): any | null {
     try {
-        const saved = localStorage.getItem('codiatax_user');
+        const saved = localStorage.getItem('codiatx_user') || localStorage.getItem('codiatax_user');
+        if (!localStorage.getItem('codiatx_user') && saved) {
+            localStorage.setItem('codiatx_user', saved);
+            localStorage.removeItem('codiatax_user');
+        }
         return saved && saved !== 'undefined' ? JSON.parse(saved) : null;
     } catch {
         return null;
@@ -61,13 +65,14 @@ export async function loadUserFromSupabaseSession(): Promise<User | null> {
                 isShared: metadata.isShared || false,
                 workMode: metadata.workMode || 'solo',
                 shiftWeek: metadata.shiftWeek || 'Semana A',
-                shiftType: metadata.shiftType || 'mañana',
+                shiftType: metadata.shiftType || 'maÃ±ana',
                 startTime: metadata.startTime || '06:00',
                 endTime: metadata.endTime || '15:00',
                 lastLogin: new Date().toISOString()
             };
             // Persist for next time
-            localStorage.setItem('codiatax_user', JSON.stringify(user));
+            localStorage.setItem('codiatx_user', JSON.stringify(user));
+            localStorage.removeItem('codiatax_user');
             return user;
         }
         return null;
@@ -75,3 +80,4 @@ export async function loadUserFromSupabaseSession(): Promise<User | null> {
         return null;
     }
 }
+

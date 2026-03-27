@@ -1,10 +1,6 @@
 import React from 'react';
 import { useUI } from '../../context/UIContext';
 
-interface ToastProps {
-    // Add props if needed, currently it might be internal or passed from context
-}
-
 const Toast: React.FC = () => {
     const { toast } = useUI();
 

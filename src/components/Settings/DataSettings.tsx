@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useServices } from '../../context/ServiceContext';
 import { useVehicle } from '../../context/VehicleContext';
@@ -34,7 +34,7 @@ const DataSettings: React.FC = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `codiatax_backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `codiatx_backup_${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -49,7 +49,7 @@ const DataSettings: React.FC = () => {
             return;
         }
 
-        const confirmed = window.confirm('¿ESTÁS TOTALMENTE SEGURO? Esta acción es irreversible y borrará todos tus servicios, gastos y configuraciones.');
+        const confirmed = window.confirm('Â¿ESTÃS TOTALMENTE SEGURO? Esta acciÃ³n es irreversible y borrarÃ¡ todos tus servicios, gastos y configuraciones.');
         if (!confirmed) {
             setIsConfirming(false);
             return;
@@ -92,7 +92,7 @@ const DataSettings: React.FC = () => {
                 }
             }
         } catch (error) {
-            showToast('Archivo de backup inválido', 'error');
+            showToast('Archivo de backup invÃ¡lido', 'error');
         }
 
         event.target.value = '';
@@ -102,7 +102,7 @@ const DataSettings: React.FC = () => {
         <div className="card" style={{ marginTop: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.5rem' }}>
                 <Database size={24} color="var(--accent-primary)" />
-                <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Gestión de Datos</h3>
+                <h3 style={{ fontSize: '1.2rem', margin: 0 }}>GestiÃ³n de Datos</h3>
             </div>
 
             {/* Backup Section */}
@@ -135,7 +135,7 @@ const DataSettings: React.FC = () => {
                     </button>
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-                    Exporta todos tus datos a un archivo para guardarlos fuera de la aplicación.
+                    Exporta todos tus datos a un archivo para guardarlos fuera de la aplicaciÃ³n.
                 </p>
             </div>
 
@@ -193,7 +193,7 @@ const DataSettings: React.FC = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Trash2 size={20} color={isConfirming ? 'var(--danger)' : 'var(--text-muted)'} />
                         <span style={{ fontWeight: 500, color: isConfirming ? 'var(--danger)' : 'var(--text-primary)' }}>
-                            Resetear Aplicación
+                            Resetear AplicaciÃ³n
                         </span>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
@@ -223,7 +223,7 @@ const DataSettings: React.FC = () => {
                                 fontWeight: 'bold'
                             }}
                         >
-                            {isConfirming ? '¡SÍ, BORRAR TODO!' : 'Borrar Datos'}
+                            {isConfirming ? 'Â¡SÃ, BORRAR TODO!' : 'Borrar Datos'}
                         </button>
                     </div>
                 </div>
@@ -232,7 +232,7 @@ const DataSettings: React.FC = () => {
                     <div style={{ display: 'flex', gap: '8px', marginTop: '8px', color: 'var(--danger)' }}>
                         <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
                         <p style={{ fontSize: '0.85rem', margin: 0, fontWeight: '500' }}>
-                            ¡CUIDADO! Se borrará todo. Te recomendamos hacer una
+                            Â¡CUIDADO! Se borrarÃ¡ todo. Te recomendamos hacer una
                             <span
                                 onClick={handleBackup}
                                 style={{ textDecoration: 'underline', cursor: 'pointer', marginLeft: '4px', fontWeight: 'bold' }}
@@ -254,7 +254,7 @@ const DataSettings: React.FC = () => {
 };
 
 const CloudDiagnosis = () => {
-    // Para diagnóstico usamos useApp que ya agrega el estado de todos los dominios
+    // Para diagnÃ³stico usamos useApp que ya agrega el estado de todos los dominios
     const { syncStatus, lastSyncError, forceManualSync, user } = useApp();
 
     const handleForceSync = () => {
@@ -272,8 +272,8 @@ const CloudDiagnosis = () => {
 
     const getStatusText = () => {
         if (syncStatus === 'syncing') return 'Sincronizando...';
-        if (syncStatus === 'error') return 'Error de Sincronización';
-        return 'Conectado / Al día';
+        if (syncStatus === 'error') return 'Error de SincronizaciÃ³n';
+        return 'Conectado / Al dÃ­a';
     };
 
     return (
@@ -286,7 +286,7 @@ const CloudDiagnosis = () => {
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
                 <ActivityIcon size={20} color="var(--accent-primary)" />
-                <h4 style={{ margin: 0, fontSize: '1rem' }}>Diagnóstico de Nube</h4>
+                <h4 style={{ margin: 0, fontSize: '1rem' }}>DiagnÃ³stico de Nube</h4>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '0.85rem', marginBottom: '1rem' }}>
@@ -298,7 +298,7 @@ const CloudDiagnosis = () => {
                     {user?.name ? `"${normalizeUsername(user.name)}"` : '-'}
                 </div>
 
-                <div style={{ color: 'var(--text-muted)' }}>Estado Conexión:</div>
+                <div style={{ color: 'var(--text-muted)' }}>Estado ConexiÃ³n:</div>
                 <div style={{
                     color: getStatusColor(),
                     fontWeight: 'bold',
@@ -317,7 +317,7 @@ const CloudDiagnosis = () => {
 
                 {lastSyncError && (
                     <>
-                        <div style={{ color: 'var(--danger)' }}>Último Error:</div>
+                        <div style={{ color: 'var(--danger)' }}>Ãšltimo Error:</div>
                         <div style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>{lastSyncError}</div>
                     </>
                 )}
@@ -340,7 +340,7 @@ const CloudDiagnosis = () => {
                 }}
             >
                 <RefreshIcon className={syncStatus === 'syncing' ? 'spin' : ''} size={18} />
-                {syncStatus === 'syncing' ? 'Sincronizando...' : 'Forzar Sincronización Ahora'}
+                {syncStatus === 'syncing' ? 'Sincronizando...' : 'Forzar SincronizaciÃ³n Ahora'}
             </button>
 
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.75rem', textAlign: 'center' }}>
@@ -381,3 +381,4 @@ const RefreshIcon = ({ size, className }: { size: number, className: string }) =
 );
 
 export default DataSettings;
+

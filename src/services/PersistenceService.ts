@@ -1,4 +1,4 @@
-import { storage } from '../utils/storage';
+﻿import { storage } from '../utils/storage';
 import { DataRepository } from './repositories/DataRepository';
 import { BackupData } from '../types';
 
@@ -10,9 +10,9 @@ export interface PersistenceResult {
 
 export class PersistenceService {
     /**
-     * Lógica de borrado completo de datos (local + nube).
-     * No muestra diálogos ni toasts ni recarga la UI.
-     * Devuelve un resultado para que la capa de presentación decida qué hacer.
+     * LÃ³gica de borrado completo de datos (local + nube).
+     * No muestra diÃ¡logos ni toasts ni recarga la UI.
+     * Devuelve un resultado para que la capa de presentaciÃ³n decida quÃ© hacer.
      */
     static async resetAppData(userName?: string): Promise<PersistenceResult> {
         try {
@@ -31,16 +31,16 @@ export class PersistenceService {
 
     /**
      * Restaura una copia de seguridad en almacenamiento local.
-     * No muestra diálogos ni recarga; solo devuelve el resultado.
+     * No muestra diÃ¡logos ni recarga; solo devuelve el resultado.
      */
     static async restoreAppData(backup: BackupData): Promise<PersistenceResult> {
         try {
-            if (backup.services) storage.setItem('codiatax_services', backup.services);
-            if (backup.expenses) storage.setItem('codiatax_expenses', backup.expenses);
-            if (backup.vehicle) storage.setItem('codiatax_vehicle', backup.vehicle);
-            if (backup.mileageLogs) storage.setItem('codiatax_mileage', backup.mileageLogs);
-            if (backup.shiftStorage) storage.setItem('codiatax_shifts', backup.shiftStorage);
-            if (backup.annualConfig) storage.setItem('codiatax_annual_config', backup.annualConfig);
+            if (backup.services) storage.setItem('codiatx_services', backup.services);
+            if (backup.expenses) storage.setItem('codiatx_expenses', backup.expenses);
+            if (backup.vehicle) storage.setItem('codiatx_vehicle', backup.vehicle);
+            if (backup.mileageLogs) storage.setItem('codiatx_mileage', backup.mileageLogs);
+            if (backup.shiftStorage) storage.setItem('codiatx_shifts', backup.shiftStorage);
+            if (backup.annualConfig) storage.setItem('codiatx_annual_config', backup.annualConfig);
 
             return { success: true, requiresReload: true };
         } catch (error) {
@@ -49,3 +49,4 @@ export class PersistenceService {
         }
     }
 }
+

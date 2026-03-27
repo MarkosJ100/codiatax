@@ -1,12 +1,9 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useServices } from '../context/ServiceContext';
 import { useUI } from '../context/UIContext';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isSameWeek, getMonth, getYear, getDate, es } from '../utils/dateHelpers';
 import { Search, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, TrendingUp, Filter, Calendar as CalendarIcon, DollarSign, Clock, FileDown, Trash2, Edit2, CheckCircle2, XCircle } from 'lucide-react';
-import { Filesystem, Directory } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share';
-import { Capacitor } from '@capacitor/core';
 import { useToast } from '../hooks/useToast';
 import ExportMenu from '../components/Common/ExportMenu';
 import { Service } from '../types';
@@ -146,7 +143,7 @@ const History: React.FC = () => {
 
     // Handle Delete
     const handleDelete = (id: number) => {
-        if (confirm('¿Estás seguro de borrar este servicio?')) {
+        if (confirm('Â¿EstÃ¡s seguro de borrar este servicio?')) {
             deleteService(id);
             showToast('Servicio eliminado');
         }
@@ -232,7 +229,7 @@ const History: React.FC = () => {
         };
 
         addService(newService);
-        showToast('Servicio añadido');
+        showToast('Servicio aÃ±adido');
         setIsAddingService(false);
         handleCancelEdit();
     };
@@ -249,11 +246,16 @@ const History: React.FC = () => {
 
     const togglePaid = (service: Service) => {
         const updatedService: Omit<Service, 'id'> = {
-            ...service,
+            amount: service.amount,
+            originalAmount: service.originalAmount,
+            companyName: service.companyName,
+            subscriberId: service.subscriberId,
+            observation: service.observation,
+            type: service.type,
+            timestamp: service.timestamp,
+            source: service.source,
             isPaid: !service.isPaid
         };
-        // @ts-ignore
-        delete updatedService.id;
         updateService(service.id, updatedService);
         showToast(updatedService.isPaid ? 'Marcado como cobrado' : 'Marcado como pendiente');
     };
@@ -267,11 +269,11 @@ const History: React.FC = () => {
             ]);
             const doc = new jsPDF() as any;
             const dateStr = showFilters ? `Filtrado Personalizado` : (selectedDate ? format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: es }) : format(viewDate, "MMMM 'de' yyyy", { locale: es }));
-            const fileName = `codiatax_historial_${new Date().getTime()}.pdf`;
+            const fileName = `codiatx_historial_${new Date().getTime()}.pdf`;
 
             doc.setFontSize(18);
             doc.setTextColor(40, 40, 40);
-            doc.text('CODIATAX - Histórico de Servicios', 14, 20);
+            doc.text('CODIATAX - HistÃ³rico de Servicios', 14, 20);
 
             doc.setFontSize(11);
             doc.setTextColor(100, 100, 100);
@@ -282,13 +284,13 @@ const History: React.FC = () => {
             doc.setFontSize(12);
             doc.setTextColor(0, 0, 0);
             doc.text(`Total Servicios: ${filteredServices.length}`, 20, 48);
-            doc.text(`Importe Total: ${totalAmount.toFixed(2)} €`, 150, 48, { align: 'right' });
+            doc.text(`Importe Total: ${totalAmount.toFixed(2)} â‚¬`, 150, 48, { align: 'right' });
 
             const tableData = filteredServices.map(s => [
                 format(new Date(s.timestamp), 'dd/MM/yy HH:mm'),
                 s.type === 'company' ? (s.companyName || '') : (s.type === 'facturado' ? 'Facturado' : 'Normal'),
                 s.observation || '-',
-                s.amount.toFixed(2) + ' €'
+                s.amount.toFixed(2) + ' â‚¬'
             ]);
 
             autoTable(doc, {
@@ -298,22 +300,7 @@ const History: React.FC = () => {
                 theme: 'grid',
                 headStyles: { fillColor: [59, 130, 246], textColor: 255 },
                 styles: { fontSize: 9 },
-            });
-
-            if (Capacitor.isNativePlatform()) {
-                const pdfBase64 = (doc as any).output('datauristring').split(',')[1];
-                const result = await Filesystem.writeFile({
-                    path: fileName,
-                    data: pdfBase64,
-                    directory: Directory.Cache
-                });
-                await Share.share({
-                    title: 'Histórico Codiatax',
-                    url: result.uri,
-                });
-            } else {
-                doc.save(fileName);
-            }
+            });            doc.save(fileName);
 
         } catch (error) {
             console.error("Export Error:", error);
@@ -348,7 +335,7 @@ const History: React.FC = () => {
             {/* Header Section */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <div>
-                    <h2 style={{ fontSize: '1.75rem', fontWeight: '950', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Histórico</h2>
+                    <h2 style={{ fontSize: '1.75rem', fontWeight: '950', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>HistÃ³rico</h2>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>Toda tu actividad registrada</p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -393,7 +380,7 @@ const History: React.FC = () => {
                         }}>
                             <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--accent-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 {editingService ? <Edit2 size={18} /> : <Plus size={18} />}
-                                {editingService ? 'Editar Servicio' : 'Nuevo Registro Histórico'}
+                                {editingService ? 'Editar Servicio' : 'Nuevo Registro HistÃ³rico'}
                             </h3>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -411,7 +398,7 @@ const History: React.FC = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label style={labelStyle}>Importe (€)</label>
+                                        <label style={labelStyle}>Importe (â‚¬)</label>
                                         <input
                                             type="number"
                                             step="0.01"
@@ -530,13 +517,13 @@ const History: React.FC = () => {
                     >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
                             <Filter size={18} color="var(--accent-primary)" />
-                            <h3 style={{ fontSize: '1rem', fontWeight: '900', margin: 0 }}>Filtros de búsqueda</h3>
+                            <h3 style={{ fontSize: '1rem', fontWeight: '900', margin: 0 }}>Filtros de bÃºsqueda</h3>
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: '10px' }}>
                                 <select value={filterDay} onChange={e => setFilterDay(e.target.value)} style={inputStyle}>
-                                    <option value="">Día</option>
+                                    <option value="">DÃ­a</option>
                                     {Array.from({ length: 31 }).map((_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}
                                 </select>
                                 <select value={filterMonth.toString()} onChange={e => setFilterMonth(parseInt(e.target.value))} style={inputStyle}>
@@ -656,9 +643,9 @@ const History: React.FC = () => {
                         </h3>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                        <span style={labelStyle}>Recaudación</span>
+                        <span style={labelStyle}>RecaudaciÃ³n</span>
                         <div style={{ fontSize: '1.6rem', fontWeight: '950', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
-                            {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<span style={{ color: 'var(--accent-primary)', fontSize: '1.1rem', marginLeft: '2px' }}>€</span>
+                            {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<span style={{ color: 'var(--accent-primary)', fontSize: '1.1rem', marginLeft: '2px' }}>â‚¬</span>
                         </div>
                     </div>
                 </div>
@@ -699,7 +686,7 @@ const History: React.FC = () => {
                                         </span>
                                     </div>
                                     <span style={{ fontSize: '0.85rem', fontWeight: '950', color: 'var(--success)' }}>
-                                        {group.totalAmount.toFixed(2)} €
+                                        {group.totalAmount.toFixed(2)} â‚¬
                                     </span>
                                 </div>
 
@@ -766,7 +753,7 @@ const History: React.FC = () => {
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginLeft: '12px' }}>
                                                         <div style={{ textAlign: 'right' }}>
                                                             <div style={{ fontSize: '1.25rem', fontWeight: '950', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-                                                                {service.amount.toFixed(2)}<span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', marginLeft: '1px' }}>€</span>
+                                                                {service.amount.toFixed(2)}<span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', marginLeft: '1px' }}>â‚¬</span>
                                                             </div>
                                                         </div>
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', borderLeft: '1px solid var(--border-dim)', paddingLeft: '12px' }}>
@@ -801,3 +788,5 @@ const History: React.FC = () => {
 };
 
 export default History;
+
+

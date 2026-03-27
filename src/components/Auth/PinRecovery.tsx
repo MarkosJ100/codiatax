@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Preferences } from '@capacitor/preferences';
+﻿import React, { useState } from 'react';
+import { Preferences } from '../../utils/webPreferences';
 import { useToast } from '../../hooks/useToast';
 import { AlertTriangle, RefreshCw, Trash2 } from 'lucide-react';
 
@@ -65,13 +65,13 @@ const PinRecovery: React.FC<PinRecoveryProps> = ({ onCancel, onSuccess }) => {
                         </div>
 
                         <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem', textAlign: 'center' }}>
-                            ¿Olvidaste tu PIN?
+                            Â¿Olvidaste tu PIN?
                         </h2>
 
                         <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', textAlign: 'center', fontSize: '0.9rem' }}>
                             Si has olvidado tu PIN, puedes eliminarlo y configurar uno nuevo.
                             <strong style={{ display: 'block', marginTop: '0.5rem', color: 'var(--text-primary)' }}>
-                                Tus datos NO se perderán.
+                                Tus datos NO se perderÃ¡n.
                             </strong>
                         </p>
 
@@ -83,7 +83,7 @@ const PinRecovery: React.FC<PinRecoveryProps> = ({ onCancel, onSuccess }) => {
                             marginBottom: '1.5rem'
                         }}>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', margin: 0 }}>
-                                💡 <strong>Nota:</strong> Solo se eliminará el PIN. Todos tus servicios, gastos y configuración se mantendrán intactos.
+                                ðŸ’¡ <strong>Nota:</strong> Solo se eliminarÃ¡ el PIN. Todos tus servicios, gastos y configuraciÃ³n se mantendrÃ¡n intactos.
                             </p>
                         </div>
 
@@ -133,11 +133,11 @@ const PinRecovery: React.FC<PinRecoveryProps> = ({ onCancel, onSuccess }) => {
                         </div>
 
                         <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem', textAlign: 'center' }}>
-                            Confirmar Eliminación
+                            Confirmar EliminaciÃ³n
                         </h2>
 
                         <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', textAlign: 'center', fontSize: '0.9rem' }}>
-                            ¿Estás seguro de que quieres eliminar tu PIN de seguridad?
+                            Â¿EstÃ¡s seguro de que quieres eliminar tu PIN de seguridad?
                         </p>
 
                         <div style={{
@@ -148,7 +148,7 @@ const PinRecovery: React.FC<PinRecoveryProps> = ({ onCancel, onSuccess }) => {
                             marginBottom: '1.5rem'
                         }}>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', margin: 0 }}>
-                                ⚠️ <strong>Advertencia:</strong> Después de eliminar el PIN, la aplicación quedará sin protección hasta que configures uno nuevo.
+                                âš ï¸ <strong>Advertencia:</strong> DespuÃ©s de eliminar el PIN, la aplicaciÃ³n quedarÃ¡ sin protecciÃ³n hasta que configures uno nuevo.
                             </p>
                         </div>
 
@@ -178,7 +178,7 @@ const PinRecovery: React.FC<PinRecoveryProps> = ({ onCancel, onSuccess }) => {
                                 }}
                             >
                                 <Trash2 size={18} />
-                                Sí, Eliminar
+                                SÃ­, Eliminar
                             </button>
                         </div>
                     </>
@@ -189,3 +189,5 @@ const PinRecovery: React.FC<PinRecoveryProps> = ({ onCancel, onSuccess }) => {
 };
 
 export default PinRecovery;
+
+

@@ -28,15 +28,6 @@ const ServiceForm: React.FC = () => {
     const [isSubCapped, setIsSubCapped] = useState(false);
     const [subCapAmount, setSubCapAmount] = useState('7');
 
-    useEffect(() => {
-        setAmount('');
-        setSelectedSubscriberId('');
-        setDestination('');
-        setObservation('');
-        setOfficeNumberSearchTerm('');
-        resetValidation();
-    }, [activeTab]);
-
     const [, addOptimisticService] = useOptimistic(
         services,
         (currentServices: Service[], newService: Omit<Service, 'id'>) => [
@@ -54,6 +45,20 @@ const ServiceForm: React.FC = () => {
             { validator: (v) => activeTab === 'subscriber' ? validators.isNotEmpty(v) : true, message: 'Debes seleccionar un abonado' }
         ]
     });
+    
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setAmount('');
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSelectedSubscriberId('');
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setDestination('');
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setObservation('');
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setOfficeNumberSearchTerm('');
+        resetValidation();
+    }, [activeTab, resetValidation]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();

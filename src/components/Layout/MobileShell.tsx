@@ -5,7 +5,6 @@ import { useAuth } from '../../context/AuthContext';
 import { format, es } from '../../utils/dateHelpers';
 import Toast from '../Common/Toast';
 
-// @ts-ignore
 import logo from '../../assets/logo.jpg';
 
 const MobileShell: React.FC = () => {

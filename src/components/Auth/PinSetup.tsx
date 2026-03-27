@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState } from 'react';
 import { encryption } from '../../services/encryption';
-import { Preferences } from '@capacitor/preferences';
+import { Preferences } from '../../utils/webPreferences';
 import { Lock, Check } from 'lucide-react';
 
 interface PinSetupProps {
@@ -12,12 +12,7 @@ const PinSetup: React.FC<PinSetupProps> = ({ onComplete }) => {
     const [confirmPin, setConfirmPin] = useState<string>('');
     const [step, setStep] = useState<'create' | 'confirm'>('create');
     const [error, setError] = useState<string>('');
-    const [salt, setSalt] = useState<string>('');
-
-    useEffect(() => {
-        // Generar salt al montar
-        setSalt(encryption.generateSalt());
-    }, []);
+    const [salt] = useState<string>(() => encryption.generateSalt());
 
     const handlePinInput = (digit: string) => {
         if (step === 'create') {
@@ -44,7 +39,7 @@ const PinSetup: React.FC<PinSetupProps> = ({ onComplete }) => {
     const handleContinue = async () => {
         if (step === 'create') {
             if (pin.length < 4) {
-                setError('El PIN debe tener al menos 4 dígitos');
+                setError('El PIN debe tener al menos 4 dÃ­gitos');
                 return;
             }
             setStep('confirm');
@@ -110,7 +105,7 @@ const PinSetup: React.FC<PinSetupProps> = ({ onComplete }) => {
                 </h2>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
                     {step === 'create'
-                        ? 'Introduce un PIN de 4-6 dígitos para proteger tus datos'
+                        ? 'Introduce un PIN de 4-6 dÃ­gitos para proteger tus datos'
                         : 'Vuelve a introducir tu PIN para confirmar'
                     }
                 </p>
@@ -183,7 +178,7 @@ const PinSetup: React.FC<PinSetupProps> = ({ onComplete }) => {
                                 }
                             }}
                         >
-                            {num === 'del' ? '⌫' : num}
+                            {num === 'del' ? 'âŒ«' : num}
                         </button>
                     ))}
                 </div>
@@ -211,3 +206,5 @@ const PinSetup: React.FC<PinSetupProps> = ({ onComplete }) => {
 };
 
 export default PinSetup;
+
+

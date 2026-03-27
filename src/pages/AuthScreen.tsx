@@ -295,7 +295,7 @@ const AuthScreen: React.FC = () => {
                 </div>
             </div>
 
-            <p style={{ textAlign: 'center', marginTop: '2rem', fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', opacity: 0.5 }}>CodiaTax Pro v1.3.0 • Premium Edition</p>
+            <p style={{ textAlign: 'center', marginTop: '2rem', fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', opacity: 0.5 }}>CodiaTax Pro v1.3.1 • Premium Edition</p>
         </div>
     );
 };

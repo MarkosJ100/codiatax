@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { encryption } from '../../services/encryption';
-import { Preferences } from '@capacitor/preferences';
+import { Preferences } from '../../utils/webPreferences';
 import { Lock, Delete, Fingerprint } from 'lucide-react';
 import { biometricService } from '../../services/biometric';
 
@@ -57,7 +57,7 @@ const PinEntry: React.FC<PinEntryProps> = ({ onSuccess }) => {
             const { value: storedSalt } = await Preferences.get({ key: 'app_pin_salt' });
 
             if (!storedHash || !storedSalt) {
-                setError('Error de configuración de seguridad');
+                setError('Error de configuraciÃ³n de seguridad');
                 setIsLoading(false);
                 return;
             }
@@ -121,7 +121,7 @@ const PinEntry: React.FC<PinEntryProps> = ({ onSuccess }) => {
                     Introduce tu PIN
                 </h2>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-                    Aplicación bloqueada por seguridad
+                    AplicaciÃ³n bloqueada por seguridad
                 </p>
 
                 {/* PIN Dots */}
@@ -239,3 +239,4 @@ const PinEntry: React.FC<PinEntryProps> = ({ onSuccess }) => {
 };
 
 export default PinEntry;
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useShifts } from '../context/ShiftContext';
 import { useUI } from '../context/UIContext';
@@ -7,9 +7,6 @@ import {
     addMonths, subMonths, addDays, subDays, parseISO, isValid
 } from '../utils/dateHelpers';
 import { Plane, RotateCcw, Download, Info } from 'lucide-react';
-import { Browser } from '@capacitor/browser';
-import { LocalNotifications } from '@capacitor/local-notifications';
-import { Capacitor } from '@capacitor/core';
 import CalendarGrid from '../components/Airport/CalendarGrid';
 import ShiftSummaryCard from '../components/Airport/ShiftSummaryCard';
 import QuickLinksCard from '../components/Airport/QuickLinksCard';
@@ -51,11 +48,7 @@ const AirportShifts: React.FC = () => {
         return shiftDaysSet.has(format(date, 'yyyy-MM-dd'));
     };
 
-    useEffect(() => {
-        if (Capacitor.isNativePlatform()) {
-            LocalNotifications.requestPermissions();
-        }
-    }, []);
+    useEffect(() => {}, []);
 
     const daysInMonth = useMemo(() => {
         if (!isValid(viewDate)) return [];
@@ -82,49 +75,12 @@ const AirportShifts: React.FC = () => {
         return predictions;
     }, [shiftDays]);
 
-    const scheduleShiftNotifications = async (dateStr: string) => {
-        if (!Capacitor.isNativePlatform()) return true;
-
-        const date = parseISO(dateStr);
-        const dateIdBase = parseInt(dateStr.replace(/-/g, '')) * 10;
-
-        const notificationDayBefore = subDays(date, 1);
-        notificationDayBefore.setHours(20, 0, 0, 0);
-
-        const notificationSameDay = new Date(date);
-        notificationSameDay.setHours(8, 0, 0, 0);
-
-        try {
-            await LocalNotifications.schedule({
-                notifications: [
-                    {
-                        title: "Turno Aeropuerto Mañana",
-                        body: `Recuerda: Mañana tienes turno en el aeropuerto.`,
-                        id: dateIdBase + 1,
-                        schedule: { at: notificationDayBefore },
-                    },
-                    {
-                        title: "Turno Aeropuerto Hoy",
-                        body: `Hoy tienes turno en el aeropuerto. ¡Buen servicio!`,
-                        id: dateIdBase + 2,
-                        schedule: { at: notificationSameDay },
-                    }
-                ]
-            });
-            return true;
-        } catch (e) {
-            console.error("Error scheduling notifications", e);
-            showToast("No se pudieron programar las alertas.", "error");
-            return false;
-        }
-    };
+    const scheduleShiftNotifications = async (_dateStr: string) => true;
 
     const prevMonth = () => setViewDate(subMonths(viewDate, 1));
     const nextMonth = () => setViewDate(addMonths(viewDate, 1));
 
-    const openFlightInfo = async (url: string) => {
-        await Browser.open({ url });
-    };
+    const openFlightInfo = async (url: string) => { window.open(url, '_blank', 'noopener,noreferrer'); };
 
     const links = [
         { name: 'Aena Infovuelos', url: 'https://www.aena.es/es/infovuelos.html', icon: Plane },
@@ -174,13 +130,13 @@ const AirportShifts: React.FC = () => {
             const airportShift = (shiftStorage.assignments || []).find(a => a.date === dateStr && a.userId === normalizeUsername(user.name));
 
             if (shift.type !== 'libre' && !isRest(dateStr)) {
-                const startTime = shift.type === 'mañana' ? '060000' : '150000';
-                const endTime = shift.type === 'mañana' ? '150000' : '235959';
+                const startTime = shift.type === 'maÃ±ana' ? '060000' : '150000';
+                const endTime = shift.type === 'maÃ±ana' ? '150000' : '235959';
                 const dayStr = format(day, 'yyyyMMdd');
                 icsContent += "BEGIN:VEVENT\n";
                 icsContent += `DTSTART:${dayStr}T${startTime}\n`;
                 icsContent += `DTEND:${dayStr}T${endTime}\n`;
-                icsContent += `SUMMARY:Taxi - Turno ${shift.type === 'mañana' ? 'Mañana' : 'Tarde'}\n`;
+                icsContent += `SUMMARY:Taxi - Turno ${shift.type === 'maÃ±ana' ? 'MaÃ±ana' : 'Tarde'}\n`;
                 icsContent += "END:VEVENT\n";
             }
             if (airportShift) {
@@ -188,7 +144,7 @@ const AirportShifts: React.FC = () => {
                 icsContent += "BEGIN:VEVENT\n";
                 icsContent += `DTSTART;VALUE=DATE:${dayStr}\n`;
                 icsContent += `DTEND;VALUE=DATE:${format(addDays(day, 1), 'yyyyMMdd')}\n`;
-                icsContent += `SUMMARY:✈️ Turno Aeropuerto (${airportShift.type === 'full' ? 'Día' : 'Normal'})\n`;
+                icsContent += `SUMMARY:âœˆï¸ Turno Aeropuerto (${airportShift.type === 'full' ? 'DÃ­a' : 'Normal'})\n`;
                 icsContent += "END:VEVENT\n";
             }
         });
@@ -223,7 +179,7 @@ const AirportShifts: React.FC = () => {
                 </div>
                 <div>
                     <h2 style={{ fontSize: '1.75rem', fontWeight: '950', letterSpacing: '-0.04em', margin: 0, color: 'var(--text-primary)' }}>Aeropuerto</h2>
-                    <p style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-muted)', margin: 0 }}>Gestión de turnos y vuelos</p>
+                    <p style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-muted)', margin: 0 }}>GestiÃ³n de turnos y vuelos</p>
                 </div>
             </motion.div>
 
@@ -276,7 +232,7 @@ const AirportShifts: React.FC = () => {
                             }}
                         >
                             <RotateCcw size={20} />
-                            Deshacer último cambio
+                            Deshacer Ãºltimo cambio
                         </button>
                     </motion.div>
                 )}
@@ -292,3 +248,4 @@ const AirportShiftsWithBoundary: React.FC = (props) => (
 );
 
 export default AirportShiftsWithBoundary;
+

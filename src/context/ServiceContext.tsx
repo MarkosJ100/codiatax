@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef, useMemo } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef, useMemo } from 'react';
 import { Service, Expense, Subscriber, AnnualConfig } from '../types';
 import { useAuth } from './AuthContext';
 import { ServiceRepository } from '../services/repositories/ServiceRepository';
@@ -40,26 +40,26 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
     const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error' | 'success'>('idle');
 
     const [services, setServices] = useState<Service[]>(() => {
-        return storage.getItem<Service[]>('codiatax_services', []);
+        return storage.getItem<Service[]>('codiatx_services', []);
     });
 
     const [expenses, setExpenses] = useState<Expense[]>(() => {
-        return storage.getItem<Expense[]>('codiatax_expenses', []);
+        return storage.getItem<Expense[]>('codiatx_expenses', []);
     });
 
     const [subscribers, setSubscribers] = useState<Subscriber[]>(() => {
-        return storage.getItem<Subscriber[]>('codiatax_subscribers', []);
+        return storage.getItem<Subscriber[]>('codiatx_subscribers', []);
     });
 
     const [annualConfig, setAnnualConfig] = useState<AnnualConfig>(() => {
-        return storage.getItem<AnnualConfig>('codiatax_annual_config', { yearStartKm: 0, yearEndKm: 0, manualGrossIncome: 0 });
+        return storage.getItem<AnnualConfig>('codiatx_annual_config', { yearStartKm: 0, yearEndKm: 0, manualGrossIncome: 0 });
     });
 
-    useEffect(() => { storage.setItem('codiatax_annual_config', annualConfig); }, [annualConfig]);
+    useEffect(() => { storage.setItem('codiatx_annual_config', annualConfig); }, [annualConfig]);
 
-    useEffect(() => { storage.setItem('codiatax_services', services); }, [services]);
-    useEffect(() => { storage.setItem('codiatax_expenses', expenses); }, [expenses]);
-    useEffect(() => { storage.setItem('codiatax_subscribers', subscribers); }, [subscribers]);
+    useEffect(() => { storage.setItem('codiatx_services', services); }, [services]);
+    useEffect(() => { storage.setItem('codiatx_expenses', expenses); }, [expenses]);
+    useEffect(() => { storage.setItem('codiatx_subscribers', subscribers); }, [subscribers]);
 
     // -- Cloud Sync Logic --
     const isSyncing = useRef(false);
@@ -272,3 +272,4 @@ export const useServices = () => {
     if (!context) throw new Error('useServices must be used within ServiceProvider');
     return context;
 };
+

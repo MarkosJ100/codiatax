@@ -1,4 +1,4 @@
-import { FuelTicket } from '../types';
+﻿import { FuelTicket } from '../types';
 import { endOfMonth, parse, isValid } from 'date-fns';
 import * as pdfjsLib from 'pdfjs-dist';
 
@@ -21,13 +21,13 @@ export const parseFuelPDF = async (file: File): Promise<{
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         let fullText = '';
 
-        // Extraer texto de todas las páginas
+        // Extraer texto de todas las pÃ¡ginas
         for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const textContent = await page.getTextContent();
 
             // Ordenar items por Y (arriba hacia abajo) y luego por X (izquierda a derecha)
-            // En PDF.js, Y típicamente crece hacia arriba, así que mayor Y = más arriba.
+            // En PDF.js, Y tÃ­picamente crece hacia arriba, asÃ­ que mayor Y = mÃ¡s arriba.
             const items = textContent.items as any[];
             items.sort((a, b) => {
                 const yA = a.transform[5];
@@ -54,11 +54,11 @@ export const parseFuelPDF = async (file: File): Promise<{
             fullText += textItems.join('') + '\n';
         }
 
-        console.log("=== TEXTO EXTRAÍDO DEL PDF ===");
+        console.log("=== TEXTO EXTRAÃDO DEL PDF ===");
         console.log(fullText);
         console.log("==============================");
 
-        let tickets: FuelTicket[] = [];
+        const tickets: FuelTicket[] = [];
         let totalAmount = 0;
         let foundMonth = '01';
         let foundYear = new Date().getFullYear().toString();
@@ -66,8 +66,8 @@ export const parseFuelPDF = async (file: File): Promise<{
         const lines = fullText.split('\n');
 
         for (const line of lines) {
-            // Buscar una fecha en la línea: YYYY-MM-DD o DD/MM/YYYY o DD-MM-YYYY
-            const dateMatch = line.match(/(\d{4})[\/\-](\d{2})[\/\-](\d{2})|(\d{2})[\/\-](\d{2})[\/\-](\d{2,4})/);
+            // Buscar una fecha en la lÃ­nea: YYYY-MM-DD o DD/MM/YYYY o DD-MM-YYYY
+            const dateMatch = line.match(/(\d{4})[/-](\d{2})[/-](\d{2})|(\d{2})[/-](\d{2})[/-](\d{2,4})/);
             if (dateMatch) {
                 let year, month, day;
                 if (dateMatch[1]) {
@@ -88,7 +88,7 @@ export const parseFuelPDF = async (file: File): Promise<{
                 foundMonth = month;
                 foundYear = year;
 
-                // Buscar números con decimales (litros y el importe)
+                // Buscar nÃºmeros con decimales (litros y el importe)
                 const numberMatches = line.match(/\d+[.,]\d+/g);
 
                 if (numberMatches && numberMatches.length >= 2) {
@@ -99,9 +99,9 @@ export const parseFuelPDF = async (file: File): Promise<{
                     let amount = 0;
 
                     if (nums.length >= 3) {
-                        // Si hay 3 o más números, normalmente son: [Litros, Precio Unitario, Importe Total]
+                        // Si hay 3 o mÃ¡s nÃºmeros, normalmente son: [Litros, Precio Unitario, Importe Total]
                         liters = nums[0];
-                        amount = nums[nums.length - 1]; // El último suele ser el importe total de la línea
+                        amount = nums[nums.length - 1]; // El Ãºltimo suele ser el importe total de la lÃ­nea
                     } else if (nums.length === 2) {
                         liters = nums[0];
                         amount = nums[1];
@@ -123,7 +123,7 @@ export const parseFuelPDF = async (file: File): Promise<{
         } else {
             // Ya no usamos fallback de prueba para evitar confusiones. 
             // Queremos que el usuario vea el error y nos pase el texto para ajustar el regex.
-            throw new Error("No se detectaron tickets válidos en este PDF. Revisa la consola para ver el texto extraído.");
+            throw new Error("No se detectaron tickets vÃ¡lidos en este PDF. Revisa la consola para ver el texto extraÃ­do.");
         }
 
         const baseDate = parse(`${foundYear}-${foundMonth}-01`, 'yyyy-MM-dd', new Date());
@@ -142,3 +142,4 @@ export const parseFuelPDF = async (file: File): Promise<{
         throw new Error("No se pudo analizar el PDF correctamente.");
     }
 };
+

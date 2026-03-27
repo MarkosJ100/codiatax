@@ -1,4 +1,4 @@
-// Routing Service using OSRM (Open Source Routing Machine)
+﻿// Routing Service using OSRM (Open Source Routing Machine)
 // Free API - no key required
 // https://router.project-osrm.org/
 
@@ -87,7 +87,7 @@ export const calculateRoute = async (
             distance: 0,
             duration: 0,
             success: false,
-            error: 'Error de conexión al servicio de rutas'
+            error: 'Error de conexiÃ³n al servicio de rutas'
         };
     }
 };
@@ -104,7 +104,7 @@ export interface GeocodingResult {
 export const geocodeAddress = async (address: string): Promise<GeocodingResult> => {
     try {
         // Add "Spain" to improve results for Spanish locations
-        const query = `${address}, Cádiz, Spain`;
+        const query = `${address}, CÃ¡diz, Spain`;
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
 
         const response = await fetch(url, {
@@ -125,7 +125,7 @@ export const geocodeAddress = async (address: string): Promise<GeocodingResult> 
                 lng: 0,
                 displayName: '',
                 success: false,
-                error: 'Dirección no encontrada'
+                error: 'DirecciÃ³n no encontrada'
             };
         }
 
@@ -144,7 +144,7 @@ export const geocodeAddress = async (address: string): Promise<GeocodingResult> 
             lng: 0,
             displayName: '',
             success: false,
-            error: 'Error de conexión al servicio de geocodificación'
+            error: 'Error de conexiÃ³n al servicio de geocodificaciÃ³n'
         };
     }
 };
@@ -180,7 +180,7 @@ export const reverseGeocode = async (coords: Coordinates): Promise<ReverseGeocod
                 street: '',
                 city: '',
                 success: false,
-                error: 'Dirección no encontrada'
+                error: 'DirecciÃ³n no encontrada'
             };
         }
 
@@ -206,7 +206,7 @@ export const reverseGeocode = async (coords: Coordinates): Promise<ReverseGeocod
             street: '',
             city: '',
             success: false,
-            error: 'Error de conexión'
+            error: 'Error de conexiÃ³n'
         };
     }
 };
@@ -221,14 +221,14 @@ export interface LocationSuggestion {
 // Helper function to shorten display names (remove postal codes and excessive details)
 const shortenDisplayName = (fullName: string): string => {
     // Remove postal codes (5 digits)
-    let shortened = fullName.replace(/,?\s*\d{5}\s*/g, '');
+    const shortened = fullName.replace(/,?\s*\d{5}\s*/g, '');
 
     // Split by comma and take only first 2-3 meaningful parts
     const parts = shortened.split(',').map(p => p.trim());
 
     // Filter out country names and keep only city/province
     const filtered = parts.filter(p =>
-        !p.toLowerCase().includes('españa') &&
+        !p.toLowerCase().includes('espaÃ±a') &&
         !p.toLowerCase().includes('spain') &&
         p.length > 0
     );
@@ -241,7 +241,7 @@ export const getLocationSuggestions = async (query: string): Promise<LocationSug
     if (!query || query.length < 3) return [];
 
     try {
-        // Search in Spain, prioritizing Cádiz area for local results
+        // Search in Spain, prioritizing CÃ¡diz area for local results
         // Use viewbox and bounded=0 to prioritize but not strictly limit results
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=es&viewbox=-6.4,36.9,-5.8,36.4&bounded=0`;
 
@@ -268,4 +268,5 @@ export const getLocationSuggestions = async (query: string): Promise<LocationSug
         return [];
     }
 };
+
 

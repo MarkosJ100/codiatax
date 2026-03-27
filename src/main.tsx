@@ -5,9 +5,12 @@ import App from './App'
 
 const rootElement = document.getElementById('root');
 if (rootElement) {
+  document.documentElement.setAttribute('data-platform', 'web');
   createRoot(rootElement).render(
     <StrictMode>
       <App />
     </StrictMode>,
   )
+  const bootMessage = document.getElementById('boot-msg');
+  if (bootMessage) bootMessage.style.display = 'none';
 }

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
 interface ToastMessage {
     message: string;
@@ -17,7 +17,11 @@ const UIContext = createContext<UIContextType | undefined>(undefined);
 export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // Theme State
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-        const saved = localStorage.getItem('codiatax_theme');
+        const saved = localStorage.getItem('codiatx_theme') || localStorage.getItem('codiatax_theme');
+        if (!localStorage.getItem('codiatx_theme') && (saved === 'light' || saved === 'dark')) {
+            localStorage.setItem('codiatx_theme', saved);
+            localStorage.removeItem('codiatax_theme');
+        }
         return (saved === 'light' || saved === 'dark') ? saved : 'light';
     });
 
@@ -26,7 +30,8 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
     // Persistence for Theme
     useEffect(() => {
-        localStorage.setItem('codiatax_theme', theme);
+        localStorage.setItem('codiatx_theme', theme);
+        localStorage.removeItem('codiatax_theme');
         document.documentElement.setAttribute('data-theme', theme);
     }, [theme]);
 
@@ -53,3 +58,4 @@ export const useUI = () => {
     }
     return context;
 };
+

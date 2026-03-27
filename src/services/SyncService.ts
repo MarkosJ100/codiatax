@@ -1,4 +1,4 @@
-import { storage } from '../utils/storage';
+﻿import { storage } from '../utils/storage';
 import { SyncItem, SyncStatus } from '../types/sync';
 
 export class SyncService {
@@ -16,7 +16,7 @@ export class SyncService {
     }
 
     private loadQueue() {
-        const savedQueue = storage.getItem<SyncItem[]>('codiatax_sync_queue', []);
+        const savedQueue = storage.getItem<SyncItem[]>('codiatx_sync_queue', []);
 
         // Recursive function to migrate data objects
         const migrateObject = (obj: any): any => {
@@ -56,7 +56,7 @@ export class SyncService {
     }
 
     private saveQueue() {
-        storage.setItem('codiatax_sync_queue', this.queue);
+        storage.setItem('codiatx_sync_queue', this.queue);
         this.notifyListeners();
     }
 
@@ -122,14 +122,14 @@ export class SyncService {
                     this.saveQueue();
                     console.log(`[SyncService] Sincronizado: ${item.entityType} ${item.operation}`);
                 } else {
-                    this.lastError = `Fallo en operación ${item.entityType}`;
+                    this.lastError = `Fallo en operaciÃ³n ${item.entityType}`;
                     this.lastErrorType = 'SERVER';
                     break;
                 }
             } catch (error: any) {
                 // Special handling for schema errors (PGRST204) - drop the item as it will always fail
                 if (error.code === 'PGRST204' || (error.message && error.message.includes('isMonthlySummary'))) {
-                    console.error(`[SyncService] Error de esquema crítico detectado en item ${item.id}. Eliminando de la cola.`, error);
+                    console.error(`[SyncService] Error de esquema crÃ­tico detectado en item ${item.id}. Eliminando de la cola.`, error);
                     this.queue.shift();
                     this.saveQueue();
                     continue; // Continue with next item
@@ -207,3 +207,4 @@ export class SyncService {
 }
 
 export const syncService = new SyncService();
+

@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+﻿import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { PersistenceService } from './PersistenceService';
 import { storage } from '../utils/storage';
 import { DataRepository } from './repositories/DataRepository';
@@ -52,16 +52,17 @@ describe('PersistenceService', () => {
             };
             const result = await PersistenceService.restoreAppData(mockBackup);
             expect(result.success).toBe(true);
-            expect(storage.setItem).toHaveBeenCalledWith('codiatax_services', mockBackup.services);
-            expect(storage.setItem).toHaveBeenCalledWith('codiatax_expenses', mockBackup.expenses);
+            expect(storage.setItem).toHaveBeenCalledWith('codiatx_services', mockBackup.services);
+            expect(storage.setItem).toHaveBeenCalledWith('codiatx_expenses', mockBackup.expenses);
         });
 
         it('should handle partial backups', async () => {
             const mockBackup = { vehicle: { model: 'Taxi' } as any };
             const result = await PersistenceService.restoreAppData(mockBackup);
             expect(result.success).toBe(true);
-            expect(storage.setItem).toHaveBeenCalledWith('codiatax_vehicle', mockBackup.vehicle);
-            expect(storage.setItem).not.toHaveBeenCalledWith('codiatax_services', expect.anything());
+            expect(storage.setItem).toHaveBeenCalledWith('codiatx_vehicle', mockBackup.vehicle);
+            expect(storage.setItem).not.toHaveBeenCalledWith('codiatx_services', expect.anything());
         });
     });
 });
+

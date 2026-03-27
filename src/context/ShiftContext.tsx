@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { ShiftStorage, AirportShift, ShiftType, UserShiftConfig } from '../types';
 import { calculateAirportCycle, filterFutureAssignments } from '../utils/airportLogic';
 import { useAuth } from './AuthContext';
@@ -33,14 +33,14 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const { user } = useAuth();
 
     const [shiftStorage, setShiftStorage] = useState<ShiftStorage>(() => {
-        return storage.getItem<ShiftStorage>('codiatax_shift_storage', { assignments: [], restDays: [], userConfigs: [] });
+        return storage.getItem<ShiftStorage>('codiatx_shift_storage', { assignments: [], restDays: [], userConfigs: [] });
     });
 
     const [undoBuffer, setUndoBuffer] = useState<AirportShift[] | null>(null);
 
     // Persistence & Sync
     useEffect(() => {
-        storage.setItem('codiatax_shift_storage', shiftStorage);
+        storage.setItem('codiatx_shift_storage', shiftStorage);
         if (user) {
             const sync = async () => {
                 try {
@@ -115,8 +115,8 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const getShiftForDate = useCallback((date: Date) => {
         if (!user) return { type: 'libre', label: 'Servicio Libre' };
-        if (user.workMode === 'solo') return { type: 'libre', label: 'Conductor Único', isSolo: true };
-        return { type: 'mañana', startTime: '06:00', endTime: '15:00' };
+        if (user.workMode === 'solo') return { type: 'libre', label: 'Conductor Ãšnico', isSolo: true };
+        return { type: 'maÃ±ana', startTime: '06:00', endTime: '15:00' };
     }, [user]);
 
     const generateAirportCycle = (startDateStr: string, type: string = 'standard') => {
@@ -166,3 +166,4 @@ export const useShifts = () => {
     if (!context) throw new Error('useShifts must be used within ShiftProvider');
     return context;
 };
+

@@ -1,4 +1,4 @@
-// Fuel Prices Service for Jerez de la Frontera
+﻿// Fuel Prices Service for Jerez de la Frontera
 // Data source: Ministerio de Industria y Turismo - https://datos.gob.es
 
 const JEREZ_MUNICIPALITY_ID = '1782';
@@ -47,8 +47,8 @@ export const fetchFuelPrices = async (): Promise<FuelPricesData | null> => {
 
         const stations: FuelStation[] = data.ListaEESSPrecio.map((station: Record<string, string>) => ({
             id: station['IDEESS'] || Math.random().toString(),
-            name: station['Rótulo'] || 'Desconocida',
-            address: station['Dirección'] || '',
+            name: station['RÃ³tulo'] || 'Desconocida',
+            address: station['DirecciÃ³n'] || '',
             schedule: station['Horario'] || '',
             dieselA: parsePrice(station['Precio Gasoleo A']),
             gasoline95: parsePrice(station['Precio Gasolina 95 E5']),
@@ -78,7 +78,7 @@ export const fetchFuelPrices = async (): Promise<FuelPricesData | null> => {
 };
 
 // Cache fuel prices in localStorage with 4-hour expiry
-const CACHE_KEY = 'codiatax_fuel_prices';
+const CACHE_KEY = 'codiatx_fuel_prices';
 const CACHE_DURATION = 4 * 60 * 60 * 1000; // 4 hours
 
 export const getCachedFuelPrices = async (): Promise<FuelPricesData | null> => {
@@ -105,3 +105,4 @@ export const getCachedFuelPrices = async (): Promise<FuelPricesData | null> => {
 
     return freshData;
 };
+

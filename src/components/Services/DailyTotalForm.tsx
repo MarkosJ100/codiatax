@@ -40,9 +40,13 @@ const DailyTotalForm: React.FC = () => {
 
     // Use useEffect to update local state when selected date or underlying data changes
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSmartAmount(todayServiceSmart ? todayServiceSmart.amount.toString() : '');
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCompanyAmount(todayServiceCompany ? todayServiceCompany.amount.toString() : '');
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setDailyKm(todayMileage ? todayMileage.amount.toString() : '');
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setDailyExpense(todayExpenses ? todayExpenses.amount.toString() : '');
     }, [serviceDate, todayServiceSmart, todayServiceCompany, todayMileage, todayExpenses]);
 

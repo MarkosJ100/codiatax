@@ -491,7 +491,9 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ initialData, onClos
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        profile && printInvoicePDF(inv, profile);
+                                                        if (profile) {
+                                                            printInvoicePDF(inv, profile);
+                                                        }
                                                     }}
                                                     style={{ padding: '8px', color: 'var(--text-secondary)', borderRadius: '8px', background: 'var(--bg-secondary)' }}
                                                     title="Imprimir"

@@ -371,7 +371,7 @@ const ProfileSetup: React.FC = () => {
             </AnimatePresence>
 
             <div style={{ marginTop: 'auto', paddingTop: '3rem', textAlign: 'center' }}>
-                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', opacity: 0.5 }}>CodiaTax Premium v1.3.0</p>
+                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', opacity: 0.5 }}>CodiaTax Premium v1.3.1</p>
             </div>
         </div>
     );
