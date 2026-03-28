@@ -163,15 +163,20 @@ export const calculateTotals = (services: Service[], expenses: Expense[], mileag
         pendingSubscriberBalance += dayPendingSub;
     });
 
+    const shouldApplyExpensesToBalance = period === 'month';
+    const visibleRealExpenses = shouldApplyExpensesToBalance ? totalRealExpenses : 0;
+    const visibleEstimatedExpenses = shouldApplyExpensesToBalance ? totalEstimatedExpenses : 0;
+    const visibleTotalExpenses = shouldApplyExpensesToBalance ? totalExpenses : 0;
+
     return {
         grossIncome: totalGrossIncome,
         taxiIncome: totalTaxiIncome,
         subscriberIncome: totalSubscriberIncome,
-        totalExpenses,
-        totalRealExpenses,
-        totalEstimatedExpenses,
-        netIncome: totalGrossIncome - totalExpenses,
-        netIncomeReal: totalGrossIncome - totalRealExpenses,
+        totalExpenses: visibleTotalExpenses,
+        totalRealExpenses: visibleRealExpenses,
+        totalEstimatedExpenses: visibleEstimatedExpenses,
+        netIncome: totalGrossIncome - visibleTotalExpenses,
+        netIncomeReal: totalGrossIncome - visibleRealExpenses,
         totalKms,
         pendingSubscriberBalance,
         servicesCount: totalServices,

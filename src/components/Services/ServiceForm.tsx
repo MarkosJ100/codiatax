@@ -165,10 +165,12 @@ const ServiceForm: React.FC = () => {
                     <CarTaxiFront size={20} color="var(--accent-strong)" />
                 </div>
                 <div>
-                    <div className="section-label" style={{ marginBottom: '0.2rem' }}>Nuevo registro</div>
                     <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '850', letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
-                        Alta diaria de servicio
+                        Registrar servicio manual
                     </h3>
+                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                        Añade una carrera suelta o un abonado que no haya entrado en la importación.
+                    </p>
                 </div>
             </div>
 

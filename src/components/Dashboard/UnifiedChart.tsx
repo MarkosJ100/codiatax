@@ -10,6 +10,25 @@ import { TrendingUp, Gauge, Calendar, Activity, BarChart3, Car, DollarSign } fro
 
 type ChartMetric = 'net' | 'income' | 'km' | 'finance';
 
+const getEstimatedKmByDay = (services: { timestamp: string; amount: number; source?: string }[]) => {
+    const totals = new Map<string, { totalSource: number; detailedSource: number }>();
+
+    services.forEach((service) => {
+        const dateKey = format(new Date(service.timestamp), 'yyyy-MM-dd');
+        const current = totals.get(dateKey) || { totalSource: 0, detailedSource: 0 };
+        if (service.source === 'total') current.totalSource += Number(service.amount) || 0;
+        else current.detailedSource += Number(service.amount) || 0;
+        totals.set(dateKey, current);
+    });
+
+    return new Map(
+        Array.from(totals.entries()).map(([dateKey, value]) => [
+            dateKey,
+            value.totalSource > 0 ? value.totalSource : value.detailedSource
+        ])
+    );
+};
+
 const UnifiedChart: React.FC = () => {
     const { services, expenses } = useServices();
     const { mileageLogs } = useVehicle();
@@ -25,6 +44,7 @@ const UnifiedChart: React.FC = () => {
         const servicesByDay = new Map<string, any[]>();
         const expensesByDay = new Map<string, any[]>();
         const mileageByDay = new Map<string, number>();
+        const estimatedKmByDay = getEstimatedKmByDay(services);
 
         services.forEach(s => {
             const dateKey = format(new Date(s.timestamp), 'yyyy-MM-dd');
@@ -51,7 +71,8 @@ const UnifiedChart: React.FC = () => {
 
             const dayServices = servicesByDay.get(dateKey) || [];
             const dayExpenses = expensesByDay.get(dateKey) || [];
-            const dayKm = mileageByDay.get(dateKey) || 0;
+            const realKm = mileageByDay.get(dateKey) || 0;
+            const dayKm = realKm > 0 ? realKm : (estimatedKmByDay.get(dateKey) || 0);
 
             const income = dayServices.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
             const allExpenses = dayExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
@@ -62,7 +83,8 @@ const UnifiedChart: React.FC = () => {
                 income,
                 expenses: allExpenses,
                 net: income - allExpenses,
-                km: dayKm
+                km: dayKm,
+                kmSource: realKm > 0 ? 'real' : (dayKm > 0 ? 'estimated' : 'none')
             });
         }
 
@@ -80,14 +102,39 @@ const UnifiedChart: React.FC = () => {
         const weekStart = startOfWeek(today, { weekStartsOn: 1 });
         const monthStart = startOfMonth(today);
         const yearStart = startOfYear(today);
+        const estimatedKmByDay = getEstimatedKmByDay(services);
+
+        const getKmForDate = (date: Date) => {
+            const dateKey = format(date, 'yyyy-MM-dd');
+            const realKm = mileageLogs
+                .filter(log => log.timestamp && isSameDay(new Date(log.timestamp), date))
+                .reduce((s, l) => s + (l.amount || 0), 0);
+            return realKm > 0 ? realKm : (estimatedKmByDay.get(dateKey) || 0);
+        };
+
+        const getRangeKm = (predicate: (date: Date) => boolean) => {
+            const keys = new Set([
+                ...Array.from(estimatedKmByDay.keys()),
+                ...mileageLogs.filter(log => log.timestamp).map(log => format(new Date(log.timestamp!), 'yyyy-MM-dd'))
+            ]);
+
+            let sum = 0;
+            keys.forEach((key) => {
+                const date = new Date(`${key}T12:00:00`);
+                if (predicate(date)) {
+                    sum += getKmForDate(date);
+                }
+            });
+            return sum;
+        };
 
         return {
-            daily: mileageLogs.filter(log => log.timestamp && isSameDay(new Date(log.timestamp), today)).reduce((s, l) => s + (l.amount || 0), 0),
-            weekly: mileageLogs.filter(log => log.timestamp && new Date(log.timestamp) >= weekStart).reduce((s, l) => s + (l.amount || 0), 0),
-            monthly: mileageLogs.filter(log => log.timestamp && new Date(log.timestamp) >= monthStart).reduce((s, l) => s + (l.amount || 0), 0),
-            annual: mileageLogs.filter(log => log.timestamp && new Date(log.timestamp) >= yearStart).reduce((s, l) => s + (l.amount || 0), 0),
+            daily: getKmForDate(today),
+            weekly: getRangeKm((date) => date >= weekStart),
+            monthly: getRangeKm((date) => date >= monthStart),
+            annual: getRangeKm((date) => date >= yearStart),
         };
-    }, [mileageLogs]);
+    }, [mileageLogs, services]);
 
     const getColor = (m: ChartMetric = metric) => {
         switch (m) {

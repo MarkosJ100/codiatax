@@ -116,7 +116,7 @@ const ExportMenu: React.FC<ExportMenuProps> = ({ direction = 'down', onOpenChang
                 const servicesToImport = [...newServices];
 
                 // Verificar importes altos (>100ï¿½) y preguntar al usuario
-                const highAmounts = servicesToImport.filter(s => s.amount > 100);
+                const highAmounts = servicesToImport.filter(s => s.amount >= 100);
                 if (highAmounts.length > 0) {
                     const examples = highAmounts.slice(0, 3).map(s => `${s.amount}ï¿½`).join(', ');
                     const msg = `Se han detectado ${highAmounts.length} servicios con importes superiores a 100ï¿½ (ej: ${examples}).\n\nï¿½Son correctos estos importes?\n\nSi pulsas CANCELAR, se importarï¿½n igualmente pero te recomendamos revisarlos en el historial.`;

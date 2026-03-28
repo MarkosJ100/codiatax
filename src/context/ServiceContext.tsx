@@ -150,6 +150,31 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, [services, user, updateService]);
 
+    // Data Migration: imported App Taxi tickets with missing decimal separator
+    useEffect(() => {
+        if (!user || services.length === 0) return;
+
+        const suspiciousAmounts = services.filter((service) => {
+            if (service.source === 'total') return false;
+            if (!service.observation?.includes('Ticket #')) return false;
+            if (!Number.isInteger(service.amount)) return false;
+            if (service.amount < 100 || service.amount > 9999) return false;
+            return true;
+        });
+
+        if (suspiciousAmounts.length > 0) {
+            suspiciousAmounts.forEach((service) => {
+                const correctedAmount = Number((service.amount / 100).toFixed(2));
+                updateService(service.id, {
+                    amount: correctedAmount,
+                    originalAmount: service.originalAmount && service.originalAmount > 100
+                        ? Number((service.originalAmount / 100).toFixed(2))
+                        : service.originalAmount
+                });
+            });
+        }
+    }, [services, user, updateService]);
+
     const addExpense = useCallback(async (expense: Omit<Expense, 'id'>) => {
         const localId = Date.now();
         setExpenses(prev => [{ ...expense, id: localId }, ...prev]);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { format, es } from '../../utils/dateHelpers';
-import { Edit2, Trash2, Clock3, TrendingUp } from 'lucide-react';
+import { Edit2, Trash2, TrendingUp } from 'lucide-react';
 import { Service } from '../../types';
 import { useServices } from '../../context/ServiceContext';
 
@@ -19,10 +19,42 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource, typeFilter = 'a
     const [editCompany, setEditCompany] = useState<string>('');
     const [editSubscriberId, setEditSubscriberId] = useState<string | undefined>(undefined);
 
+    const isImportedService = (service: Service) => {
+        const obs = service.observation || '';
+        return obs.includes('SmartTD') || obs.includes('Taxitronic');
+    };
+
+    const getSourceLabel = (service: Service) => {
+        if (service.source === 'total') return 'RESUMEN';
+        if (isImportedService(service)) return 'IMPORTADO';
+        return 'MANUAL';
+    };
+
+    const getSourceBadgeStyle = (service: Service) => {
+        if (service.source === 'total') {
+            return {
+                backgroundColor: 'rgba(var(--accent-primary-rgb), 0.1)',
+                color: 'var(--accent-primary)'
+            };
+        }
+        if (isImportedService(service)) {
+            return {
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                color: '#3b82f6'
+            };
+        }
+        return {
+            backgroundColor: 'rgba(245, 158, 11, 0.12)',
+            color: '#f59e0b'
+        };
+    };
+
     const filteredServices = services
         .filter((service) => {
             if (filterSource) {
-                const matchesSource = filterSource === 'manual' ? (service.source === 'manual' || !service.source) : service.source === filterSource;
+                const matchesSource = filterSource === 'manual'
+                    ? service.source !== 'total'
+                    : service.source === 'total';
                 if (!matchesSource) return false;
             }
 
@@ -60,8 +92,6 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource, typeFilter = 'a
     };
 
     const handleEditClick = (service: Service) => {
-        // Redirigir a History para editar o manejar aquí si es simple
-        // Por consistencia, mantendremos la edición aquí pero con estilo premium
         setEditingId(service.id);
         setEditAmount(service.amount);
         setEditType(service.type);
@@ -137,32 +167,32 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource, typeFilter = 'a
 
                                 if (isEditing) {
                                     return (
-                                        <div key={service.id} className="card" style={{ border: '2px solid var(--accent-primary)', background: 'rgba(var(--accent-primary-rgb), 0.03)', boxShadow: 'var(--shadow-premium)' }}>
+                                        <div key={service.id} className="card" style={{ border: '2px solid var(--accent-primary)', background: 'rgba(var(--accent-primary-rgb), 0.03)', boxShadow: 'var(--shadow-premium)', padding: '1rem', borderRadius: '22px' }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                                    <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)', lineHeight: 1.4 }}>
                                                         {format(new Date(service.timestamp), 'HH:mm')} · Editando registro
                                                     </span>
                                                 </div>
 
-                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                                <div style={{ display: 'grid', gap: '1rem' }}>
                                                     <div>
-                                                        <label style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Tipo</label>
-                                                        <select value={editType} onChange={(e) => setEditType(e.target.value as 'normal' | 'company' | 'facturado')} style={{ width: '100%', height: '42px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: 'var(--radius-sm)' }}>
+                                                        <label style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', lineHeight: 1.3 }}>Tipo</label>
+                                                        <select value={editType} onChange={(e) => setEditType(e.target.value as 'normal' | 'company' | 'facturado')} style={{ width: '100%', minHeight: '46px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '12px', padding: '0 0.75rem', lineHeight: 1.4 }}>
                                                             <option value="normal">Normal</option>
                                                             <option value="company">Compañía</option>
                                                             <option value="facturado">Facturado</option>
                                                         </select>
                                                     </div>
                                                     <div>
-                                                        <label style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Importe (€)</label>
-                                                        <input type="number" step="0.01" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} style={{ width: '100%', height: '42px', fontWeight: 'bold', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: 'var(--radius-sm)', padding: '0 0.5rem' }} />
+                                                        <label style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', lineHeight: 1.3 }}>Importe (€)</label>
+                                                        <input type="number" step="0.01" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} style={{ width: '100%', minHeight: '46px', fontWeight: '700', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '12px', padding: '0 0.75rem', lineHeight: 1.4 }} />
                                                     </div>
                                                 </div>
 
                                                 {editType === 'company' && (
                                                     <div>
-                                                        <label style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Abonado</label>
+                                                        <label style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', lineHeight: 1.3 }}>Abonado</label>
                                                         <select
                                                             value={editSubscriberId}
                                                             onChange={(e) => {
@@ -170,9 +200,9 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource, typeFilter = 'a
                                                                 setEditSubscriberId(e.target.value);
                                                                 if (sub) setEditCompany(sub.name);
                                                             }}
-                                                            style={{ width: '100%', height: '42px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: 'var(--radius-sm)' }}
+                                                            style={{ width: '100%', minHeight: '46px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '12px', padding: '0 0.75rem', lineHeight: 1.4 }}
                                                         >
-                                                            <option value="">-- Seleccionar --</option>
+                                                            <option value="">Seleccionar abonado</option>
                                                             {subscribers.map(sub => (
                                                                 <option key={sub.id} value={sub.id}>{sub.name}</option>
                                                             ))}
@@ -181,15 +211,15 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource, typeFilter = 'a
                                                 )}
 
                                                 <div>
-                                                    <label style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Observaciones</label>
-                                                    <input placeholder="Añadir nota..." value={editObs} onChange={(e) => setEditObs(e.target.value)} style={{ width: '100%', height: '42px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: 'var(--radius-sm)', padding: '0 0.5rem' }} />
+                                                    <label style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', lineHeight: 1.3 }}>Observaciones</label>
+                                                    <input placeholder="Añadir nota..." value={editObs} onChange={(e) => setEditObs(e.target.value)} style={{ width: '100%', minHeight: '46px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '12px', padding: '0 0.75rem', lineHeight: 1.4 }} />
                                                 </div>
 
-                                                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-                                                    <button onClick={() => setEditingId(null)} className="btn-ghost" style={{ flex: 1, height: '42px' }}>
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '0.25rem' }}>
+                                                    <button onClick={() => setEditingId(null)} className="btn-ghost" style={{ minHeight: '46px' }}>
                                                         Cancelar
                                                     </button>
-                                                    <button onClick={() => handleSave(service.id)} className="btn btn-primary" style={{ flex: 2, height: '42px' }}>
+                                                    <button onClick={() => handleSave(service.id)} className="btn btn-primary" style={{ minHeight: '46px' }}>
                                                         Guardar
                                                     </button>
                                                 </div>
@@ -206,17 +236,17 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource, typeFilter = 'a
                                             padding: '1rem',
                                             borderRadius: '20px',
                                             boxShadow: 'var(--shadow-premium)',
-                                            borderLeft: `4px solid ${service.type === 'company' ? '#8b5cf6' : 'var(--accent-primary)'}`,
+                                            borderLeft: `4px solid ${service.source === 'total' ? 'var(--accent-primary)' : service.type === 'company' ? '#8b5cf6' : 'var(--success)'}`,
                                             display: 'flex',
                                             justifyContent: 'space-between',
                                             alignItems: 'center'
                                         }}
                                     >
                                         <div style={{ flex: 1 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                                <span style={{ 
-                                                    fontSize: '0.7rem', 
-                                                    fontWeight: '800', 
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                                                <span style={{
+                                                    fontSize: '0.7rem',
+                                                    fontWeight: '800',
                                                     color: 'var(--text-muted)',
                                                     background: 'var(--bg-body)',
                                                     padding: '2px 6px',
@@ -224,18 +254,31 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource, typeFilter = 'a
                                                 }}>
                                                     {format(new Date(service.timestamp), 'HH:mm')}
                                                 </span>
-                                                <span style={{ 
-                                                    fontWeight: '750', 
+                                                <span style={{
+                                                    fontWeight: '750',
                                                     fontSize: '0.95rem',
                                                     color: 'var(--text-primary)'
                                                 }}>
-                                                    {service.companyName || (service.type === 'facturado' ? 'Facturado' : 'Carrera Normal')}
+                                                    {service.source === 'total'
+                                                        ? (service.observation || 'Resumen diario')
+                                                        : (service.companyName || (service.type === 'facturado' ? 'Facturado' : 'Carrera normal'))}
                                                 </span>
                                             </div>
-                                            
-                                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+
+                                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                                                 {renderTypeBadge(service)}
-                                                {service.observation && (
+                                                <span
+                                                    style={{
+                                                        fontSize: '0.65rem',
+                                                        fontWeight: '800',
+                                                        padding: '1px 6px',
+                                                        borderRadius: '4px',
+                                                        ...getSourceBadgeStyle(service)
+                                                    }}
+                                                >
+                                                    {getSourceLabel(service)}
+                                                </span>
+                                                {service.observation && service.source !== 'total' && (
                                                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
                                                         "{service.observation}"
                                                     </span>
@@ -252,18 +295,18 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource, typeFilter = 'a
 
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                             <div style={{ textAlign: 'right' }}>
-                                                <div style={{ 
-                                                    fontSize: '1.25rem', 
-                                                    fontWeight: '900', 
+                                                <div style={{
+                                                    fontSize: '1.25rem',
+                                                    fontWeight: '900',
                                                     color: 'var(--text-primary)',
                                                     letterSpacing: '-0.02em'
                                                 }}>
                                                     {service.amount.toFixed(2)}<span style={{ fontSize: '0.85rem', marginLeft: '1px', color: 'var(--accent-primary)' }}>€</span>
                                                 </div>
                                             </div>
-                                            
-                                            <div style={{ 
-                                                display: 'flex', 
+
+                                            <div style={{
+                                                display: 'flex',
                                                 flexDirection: 'column',
                                                 gap: '4px',
                                                 paddingLeft: '10px',
@@ -312,14 +355,16 @@ const ServiceList: React.FC<ServiceListProps> = ({ filterSource, typeFilter = 'a
             )}
 
             {filteredServices.length === 0 && (
-                <div style={{ 
-                    textAlign: 'center', 
-                    padding: '3rem 1rem', 
-                    backgroundColor: 'var(--bg-card)',
-                    borderRadius: '24px',
-                    border: '1px dashed var(--border-light)',
-                    color: 'var(--text-muted)' 
-                }}>
+                <div
+                    style={{
+                        textAlign: 'center',
+                        padding: '3rem 1rem',
+                        backgroundColor: 'var(--bg-card)',
+                        borderRadius: '24px',
+                        border: '1px dashed var(--border-light)',
+                        color: 'var(--text-muted)'
+                    }}
+                >
                     No hay servicios registrados en esta categoría.
                 </div>
             )}

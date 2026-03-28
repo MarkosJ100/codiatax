@@ -21,6 +21,10 @@ export interface MaintenanceItem {
     name: string;
     lastKm: Km;
     interval: Km;
+    lastDate?: string;
+    oilType?: string;
+    notes?: string;
+    checklist?: string[];
 }
 
 export interface Vehicle {
@@ -85,6 +89,13 @@ export interface MaintenanceRecord {
     nextKm: Km | string;
     date: string;
     notes: string;
+    invoiceAmount?: Money;
+    oilType?: string;
+    intervalKm?: Km;
+    checklist?: string[];
+    source?: 'manual' | 'ocr' | 'monthly_close';
+    monthKey?: string;
+    endKm?: Km;
 }
 
 export interface AirportShift {

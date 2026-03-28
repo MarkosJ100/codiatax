@@ -37,25 +37,25 @@ const Expenses: React.FC = () => {
 
     const categories = [
         {
-            group: 'Vehiculo (Taxi)',
+            group: 'Veh?culo (Taxi)',
             icon: Car,
             options: [
                 { value: 'gasoil', label: 'Gasoil / Gasolina', icon: '⛽' },
                 { value: 'vehicle_maintenance', label: 'Mantenimiento / Taller', icon: '🔧' },
                 { value: 'vehicle_insurance', label: 'Seguro del Coche', icon: '🛡️' },
                 { value: 'vehicle_cleaning', label: 'Lavado / Limpieza', icon: '✨' },
-                { value: 'vehicle_misc', label: 'Otros Gastos Vehiculo', icon: '🚗' }
+                { value: 'vehicle_misc', label: 'Otros gastos veh?culo', icon: '🚗' }
             ]
         },
         {
             group: 'Negocio',
             icon: Briefcase,
             options: [
-                { value: 'autonomous_quota', label: 'Cuota de Autonomo', icon: '👤' },
-                { value: 'agency_fees', label: 'Gestoria', icon: '🏢' },
+                { value: 'autonomous_quota', label: 'Cuota de aut?nomo', icon: '👤' },
+                { value: 'agency_fees', label: 'Gestor?a', icon: '🏢' },
                 { value: 'taxes', label: 'Impuestos / Tasas', icon: '⚖️' },
-                { value: 'association', label: 'Asociacion / Emisora', icon: '📻' },
-                { value: 'business_misc', label: 'Otros Gastos Negocio', icon: '💼' }
+                { value: 'association', label: 'Asociaci?n / Emisora', icon: '📻' },
+                { value: 'business_misc', label: 'Otros gastos negocio', icon: '💼' }
             ]
         },
         {
@@ -173,9 +173,9 @@ const Expenses: React.FC = () => {
         if (expenseType === 'agency_fees') {
             const multipliers: Record<string, number> = { 'Mensual': 1, 'Trimestral': 3, 'Semestral': 6, 'Anual': 12 };
             finalAmount = finalAmount * (multipliers[agencyFrequency] || 1);
-            finalDesc = `Gestoria (${agencyFrequency})`;
+            finalDesc = `Gestor?a (${agencyFrequency})`;
         } else if (expenseType === 'autonomous_quota') {
-            finalDesc = description || 'Cuota de Autonomo';
+            finalDesc = description || 'Cuota de aut?nomo';
         } else if (expenseType === 'manual') {
             finalCategory = 'custom';
             if (!finalDesc) finalDesc = 'Gasto Manual';
