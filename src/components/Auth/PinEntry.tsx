@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { encryption } from '../../services/encryption';
 import { Preferences } from '../../utils/webPreferences';
 import { Lock, Delete, Fingerprint } from 'lucide-react';
@@ -57,7 +57,7 @@ const PinEntry: React.FC<PinEntryProps> = ({ onSuccess }) => {
             const { value: storedSalt } = await Preferences.get({ key: 'app_pin_salt' });
 
             if (!storedHash || !storedSalt) {
-                setError('Error de configuraci�n de seguridad');
+                setError('Error de configuración de seguridad');
                 setIsLoading(false);
                 return;
             }
@@ -121,7 +121,7 @@ const PinEntry: React.FC<PinEntryProps> = ({ onSuccess }) => {
                     Introduce tu PIN
                 </h2>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-                    Aplicaci�n bloqueada por seguridad
+                    Aplicación bloqueada por seguridad
                 </p>
 
                 {/* PIN Dots */}

@@ -83,7 +83,7 @@ const PinRecovery: React.FC<PinRecoveryProps> = ({ onCancel, onSuccess }) => {
                             marginBottom: '1.5rem'
                         }}>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', margin: 0 }}>
-                                💡 <strong>Nota:</strong> Solo se eliminar? el PIN. Todos tus servicios, gastos y configuraci?n se mantendr?n intactos.
+                                ðŸ’¡ <strong>Nota:</strong> Solo se eliminar? el PIN. Todos tus servicios, gastos y configuraci?n se mantendr?n intactos.
                             </p>
                         </div>
 
@@ -148,7 +148,7 @@ const PinRecovery: React.FC<PinRecoveryProps> = ({ onCancel, onSuccess }) => {
                             marginBottom: '1.5rem'
                         }}>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', margin: 0 }}>
-                                ?? <strong>Advertencia:</strong> Despu�s de eliminar el PIN, la aplicaci�n quedar� sin protecci�n hasta que configures uno nuevo.
+                                ?? <strong>Advertencia:</strong> Después de eliminar el PIN, la aplicación quedará sin protección hasta que configures uno nuevo.
                             </p>
                         </div>
 

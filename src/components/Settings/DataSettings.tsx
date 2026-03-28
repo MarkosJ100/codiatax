@@ -49,7 +49,7 @@ const DataSettings: React.FC = () => {
             return;
         }
 
-        const confirmed = window.confirm('øEST¡S TOTALMENTE SEGURO? Esta acciÛn es irreversible y borrar· todos tus servicios, gastos y configuraciones.');
+        const confirmed = window.confirm('¬øEST√ÅS TOTALMENTE SEGURO? Esta acci√≥n es irreversible y borrar√° todos tus servicios, gastos y configuraciones.');
         if (!confirmed) {
             setIsConfirming(false);
             return;
@@ -92,7 +92,7 @@ const DataSettings: React.FC = () => {
                 }
             }
         } catch (error) {
-            showToast('Archivo de backup inv·lido', 'error');
+            showToast('Archivo de backup inv√°lido', 'error');
         }
 
         event.target.value = '';
@@ -102,7 +102,7 @@ const DataSettings: React.FC = () => {
         <div className="card" style={{ marginTop: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.5rem' }}>
                 <Database size={24} color="var(--accent-primary)" />
-                <h3 style={{ fontSize: '1.2rem', margin: 0 }}>GestiÛn de Datos</h3>
+                <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Gesti√≥n de Datos</h3>
             </div>
 
             {/* Backup Section */}
@@ -135,7 +135,7 @@ const DataSettings: React.FC = () => {
                     </button>
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-                    Exporta todos tus datos a un archivo para guardarlos fuera de la aplicaciÛn.
+                    Exporta todos tus datos a un archivo para guardarlos fuera de la aplicaci√≥n.
                 </p>
             </div>
 
@@ -193,7 +193,7 @@ const DataSettings: React.FC = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Trash2 size={20} color={isConfirming ? 'var(--danger)' : 'var(--text-muted)'} />
                         <span style={{ fontWeight: 500, color: isConfirming ? 'var(--danger)' : 'var(--text-primary)' }}>
-                            Resetear AplicaciÛn
+                            Resetear Aplicaci√≥n
                         </span>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
@@ -223,7 +223,7 @@ const DataSettings: React.FC = () => {
                                 fontWeight: 'bold'
                             }}
                         >
-                            {isConfirming ? '°SÕ, BORRAR TODO!' : 'Borrar Datos'}
+                            {isConfirming ? '¬°S√ç, BORRAR TODO!' : 'Borrar Datos'}
                         </button>
                     </div>
                 </div>
@@ -232,7 +232,7 @@ const DataSettings: React.FC = () => {
                     <div style={{ display: 'flex', gap: '8px', marginTop: '8px', color: 'var(--danger)' }}>
                         <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
                         <p style={{ fontSize: '0.85rem', margin: 0, fontWeight: '500' }}>
-                            °CUIDADO! Se borrar· todo. Te recomendamos hacer una
+                            ¬°CUIDADO! Se borrar√° todo. Te recomendamos hacer una
                             <span
                                 onClick={handleBackup}
                                 style={{ textDecoration: 'underline', cursor: 'pointer', marginLeft: '4px', fontWeight: 'bold' }}
@@ -254,7 +254,7 @@ const DataSettings: React.FC = () => {
 };
 
 const CloudDiagnosis = () => {
-    // Para diagnÛstico usamos useApp que ya agrega el estado de todos los dominios
+    // Para diagn√≥stico usamos useApp que ya agrega el estado de todos los dominios
     const { syncStatus, lastSyncError, forceManualSync, user } = useApp();
 
     const handleForceSync = () => {
@@ -272,8 +272,8 @@ const CloudDiagnosis = () => {
 
     const getStatusText = () => {
         if (syncStatus === 'syncing') return 'Sincronizando...';
-        if (syncStatus === 'error') return 'Error de SincronizaciÛn';
-        return 'Conectado / Al dÌa';
+        if (syncStatus === 'error') return 'Error de Sincronizaci√≥n';
+        return 'Conectado / Al d√≠a';
     };
 
     return (
@@ -286,7 +286,7 @@ const CloudDiagnosis = () => {
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
                 <ActivityIcon size={20} color="var(--accent-primary)" />
-                <h4 style={{ margin: 0, fontSize: '1rem' }}>DiagnÛstico de Nube</h4>
+                <h4 style={{ margin: 0, fontSize: '1rem' }}>Diagn√≥stico de Nube</h4>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '0.85rem', marginBottom: '1rem' }}>
@@ -298,7 +298,7 @@ const CloudDiagnosis = () => {
                     {user?.name ? `"${normalizeUsername(user.name)}"` : '-'}
                 </div>
 
-                <div style={{ color: 'var(--text-muted)' }}>Estado ConexiÛn:</div>
+                <div style={{ color: 'var(--text-muted)' }}>Estado Conexi√≥n:</div>
                 <div style={{
                     color: getStatusColor(),
                     fontWeight: 'bold',
@@ -317,7 +317,7 @@ const CloudDiagnosis = () => {
 
                 {lastSyncError && (
                     <>
-                        <div style={{ color: 'var(--danger)' }}>⁄ltimo Error:</div>
+                        <div style={{ color: 'var(--danger)' }}>√öltimo Error:</div>
                         <div style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>{lastSyncError}</div>
                     </>
                 )}
@@ -340,7 +340,7 @@ const CloudDiagnosis = () => {
                 }}
             >
                 <RefreshIcon className={syncStatus === 'syncing' ? 'spin' : ''} size={18} />
-                {syncStatus === 'syncing' ? 'Sincronizando...' : 'Forzar SincronizaciÛn Ahora'}
+                {syncStatus === 'syncing' ? 'Sincronizando...' : 'Forzar Sincronizaci√≥n Ahora'}
             </button>
 
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.75rem', textAlign: 'center' }}>

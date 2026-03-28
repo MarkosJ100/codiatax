@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole } from '../types';
 import { supabase } from '../supabase';
 import { User as SupabaseUser } from '@supabase/supabase-js';
@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             isShared: metadata.isShared || false,
             workMode: metadata.workMode || 'solo',
             shiftWeek: metadata.shiftWeek || 'Semana A',
-            shiftType: metadata.shiftType || 'ma�ana',
+            shiftType: metadata.shiftType || 'maï¿½ana',
             startTime: metadata.startTime || '06:00',
             endTime: metadata.endTime || '15:00',
             lastLogin: new Date().toISOString()

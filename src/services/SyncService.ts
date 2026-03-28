@@ -1,4 +1,4 @@
-﻿import { storage } from '../utils/storage';
+import { storage } from '../utils/storage';
 import { SyncItem, SyncStatus } from '../types/sync';
 
 export class SyncService {
@@ -122,14 +122,14 @@ export class SyncService {
                     this.saveQueue();
                     console.log(`[SyncService] Sincronizado: ${item.entityType} ${item.operation}`);
                 } else {
-                    this.lastError = `Fallo en operaci�n ${item.entityType}`;
+                    this.lastError = `Fallo en operaciï¿½n ${item.entityType}`;
                     this.lastErrorType = 'SERVER';
                     break;
                 }
             } catch (error: any) {
                 // Special handling for schema errors (PGRST204) - drop the item as it will always fail
                 if (error.code === 'PGRST204' || (error.message && error.message.includes('isMonthlySummary'))) {
-                    console.error(`[SyncService] Error de esquema cr�tico detectado en item ${item.id}. Eliminando de la cola.`, error);
+                    console.error(`[SyncService] Error de esquema crï¿½tico detectado en item ${item.id}. Eliminando de la cola.`, error);
                     this.queue.shift();
                     this.saveQueue();
                     continue; // Continue with next item

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useShifts } from '../context/ShiftContext';
 import { useUI } from '../context/UIContext';
@@ -130,13 +130,13 @@ const AirportShifts: React.FC = () => {
             const airportShift = (shiftStorage.assignments || []).find(a => a.date === dateStr && a.userId === normalizeUsername(user.name));
 
             if (shift.type !== 'libre' && !isRest(dateStr)) {
-                const startTime = shift.type === 'ma�ana' ? '060000' : '150000';
-                const endTime = shift.type === 'ma�ana' ? '150000' : '235959';
+                const startTime = shift.type === 'maï¿½ana' ? '060000' : '150000';
+                const endTime = shift.type === 'maï¿½ana' ? '150000' : '235959';
                 const dayStr = format(day, 'yyyyMMdd');
                 icsContent += "BEGIN:VEVENT\n";
                 icsContent += `DTSTART:${dayStr}T${startTime}\n`;
                 icsContent += `DTEND:${dayStr}T${endTime}\n`;
-                icsContent += `SUMMARY:Taxi - Turno ${shift.type === 'ma�ana' ? 'Ma�ana' : 'Tarde'}\n`;
+                icsContent += `SUMMARY:Taxi - Turno ${shift.type === 'maï¿½ana' ? 'Maï¿½ana' : 'Tarde'}\n`;
                 icsContent += "END:VEVENT\n";
             }
             if (airportShift) {
@@ -144,7 +144,7 @@ const AirportShifts: React.FC = () => {
                 icsContent += "BEGIN:VEVENT\n";
                 icsContent += `DTSTART;VALUE=DATE:${dayStr}\n`;
                 icsContent += `DTEND;VALUE=DATE:${format(addDays(day, 1), 'yyyyMMdd')}\n`;
-                icsContent += `SUMMARY:?? Turno Aeropuerto (${airportShift.type === 'full' ? 'D�a' : 'Normal'})\n`;
+                icsContent += `SUMMARY:?? Turno Aeropuerto (${airportShift.type === 'full' ? 'Dï¿½a' : 'Normal'})\n`;
                 icsContent += "END:VEVENT\n";
             }
         });
@@ -179,7 +179,7 @@ const AirportShifts: React.FC = () => {
                 </div>
                 <div>
                     <h2 style={{ fontSize: '1.75rem', fontWeight: '950', letterSpacing: '-0.04em', margin: 0, color: 'var(--text-primary)' }}>Aeropuerto</h2>
-                    <p style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-muted)', margin: 0 }}>Gesti�n de turnos y vuelos</p>
+                    <p style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-muted)', margin: 0 }}>Gestiï¿½n de turnos y vuelos</p>
                 </div>
             </motion.div>
 
@@ -232,7 +232,7 @@ const AirportShifts: React.FC = () => {
                             }}
                         >
                             <RotateCcw size={20} />
-                            Deshacer �ltimo cambio
+                            Deshacer ï¿½ltimo cambio
                         </button>
                     </motion.div>
                 )}

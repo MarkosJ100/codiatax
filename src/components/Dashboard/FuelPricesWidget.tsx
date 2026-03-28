@@ -80,7 +80,7 @@ const FuelPricesWidget: React.FC = () => {
                         color: 'var(--text-primary)'
                     }}
                 >
-                    Reintentar conexi�n
+                    Reintentar conexión
                 </button>
             </div>
         );
@@ -140,7 +140,7 @@ const FuelPricesWidget: React.FC = () => {
             </div>
             <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '0.95rem', fontWeight: '950', color: index < 1 ? 'var(--success)' : 'var(--text-primary)', letterSpacing: '-0.01em' }}>
-                    {station.dieselA?.toFixed(3)} €
+                    {station.dieselA?.toFixed(3)} â‚¬
                 </div>
                 <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '600' }}>
                     G95: {station.gasoline95?.toFixed(3) || '-'}

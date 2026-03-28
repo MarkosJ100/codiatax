@@ -115,7 +115,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const getShiftForDate = useCallback((date: Date) => {
         if (!user) return { type: 'libre', label: 'Servicio Libre' };
-        if (user.workMode === 'solo') return { type: 'libre', label: 'Conductor Único', isSolo: true };
+        if (user.workMode === 'solo') return { type: 'libre', label: 'Conductor Ãšnico', isSolo: true };
         return { type: 'ma?ana', startTime: '06:00', endTime: '15:00' };
     }, [user]);
 
