@@ -389,9 +389,44 @@ textarea:focus {
   flex-direction: row;
   justify-content: flex-start;
   width: 100%;
-  gap: 0.6rem;
-  font-size: 0.86rem;
-  padding: 0.72rem 0.8rem;
+  gap: 1rem;
+  font-size: 0.98rem;
+  font-weight: 800;
+  padding: 0.98rem 1rem;
+}
+
+.web-nav-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--accent-primary-rgb), 0.1);
+  border: 1px solid rgba(var(--accent-primary-rgb), 0.16);
+  flex-shrink: 0;
+  transition: var(--transition-smooth);
+}
+
+.web-nav .nav-item:hover .web-nav-icon {
+  transform: translateY(-1px) scale(1.02);
+  background: rgba(var(--accent-primary-rgb), 0.12);
+}
+
+.web-nav .nav-item.active .web-nav-icon {
+  background: rgba(var(--accent-primary-rgb), 0.2);
+  border-color: rgba(var(--accent-primary-rgb), 0.28);
+  box-shadow: 0 14px 28px -18px rgba(var(--accent-primary-rgb), 0.72);
+}
+
+.web-nav .nav-item .web-nav-icon svg {
+  color: var(--text-secondary);
+  transform: none;
+}
+
+.web-nav .nav-item.active .web-nav-icon svg {
+  color: var(--accent-strong);
+  transform: scale(1.08);
 }
 
 .web-nav .nav-item.active {

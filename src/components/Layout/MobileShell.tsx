@@ -36,7 +36,9 @@ const MobileShell: React.FC = () => {
         <nav className="web-nav">
           {navItems.map(({ to, icon: Icon, label, end }) => (
             <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
-              <Icon size={20} />
+              <span className="web-nav-icon">
+                <Icon size={32} strokeWidth={2.05} />
+              </span>
               <span>{label}</span>
             </NavLink>
           ))}
