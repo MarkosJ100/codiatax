@@ -35,6 +35,23 @@ interface ServiceContextType {
 
 const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
 
+const mergeById = <T extends { id: string | number }>(localItems: T[], cloudItems: T[]) => {
+    const merged = new Map<string | number, T>();
+
+    for (const item of localItems) {
+        merged.set(item.id, item);
+    }
+
+    for (const item of cloudItems) {
+        merged.set(item.id, item);
+    }
+
+    return Array.from(merged.values());
+};
+
+const sortByTimestampDesc = <T extends { timestamp: string }>(items: T[]) =>
+    [...items].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
 export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
     const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error' | 'success'>('idle');
@@ -74,9 +91,11 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
                 SubscriberRepository.getAll(user.name)
             ]);
 
-            setServices(cloudServices);
-            setExpenses(cloudExpenses);
-            setSubscribers(cloudSubscribers);
+            // Preserve recent local-only records (for example pending offline imports)
+            // instead of replacing the whole client state with the cloud snapshot.
+            setServices(prev => sortByTimestampDesc(mergeById(prev, cloudServices)));
+            setExpenses(prev => sortByTimestampDesc(mergeById(prev, cloudExpenses)));
+            setSubscribers(prev => mergeById(prev, cloudSubscribers));
 
             setSyncStatus('success');
         } catch (e) {
