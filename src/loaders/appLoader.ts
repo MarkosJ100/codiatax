@@ -65,7 +65,7 @@ export async function loadUserFromSupabaseSession(): Promise<User | null> {
                 isShared: metadata.isShared || false,
                 workMode: metadata.workMode || 'solo',
                 shiftWeek: metadata.shiftWeek || 'Semana A',
-                shiftType: metadata.shiftType || 'ma�ana',
+                shiftType: metadata.shiftType || 'mañana',
                 startTime: metadata.startTime || '06:00',
                 endTime: metadata.endTime || '15:00',
                 lastLogin: new Date().toISOString()

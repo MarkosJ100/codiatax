@@ -10,9 +10,9 @@ export interface PersistenceResult {
 
 export class PersistenceService {
     /**
-     * L�gica de borrado completo de datos (local + nube).
-     * No muestra di�logos ni toasts ni recarga la UI.
-     * Devuelve un resultado para que la capa de presentaci�n decida qu� hacer.
+     * L €gica de borrado completo de datos (local + nube).
+     * No muestra di €logos ni toasts ni recarga la UI.
+     * Devuelve un resultado para que la capa de presentaci €n decida qu € hacer.
      */
     static async resetAppData(userName?: string): Promise<PersistenceResult> {
         try {
@@ -31,7 +31,7 @@ export class PersistenceService {
 
     /**
      * Restaura una copia de seguridad en almacenamiento local.
-     * No muestra di�logos ni recarga; solo devuelve el resultado.
+     * No muestra di €logos ni recarga; solo devuelve el resultado.
      */
     static async restoreAppData(backup: BackupData): Promise<PersistenceResult> {
         try {

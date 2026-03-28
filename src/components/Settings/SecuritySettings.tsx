@@ -14,7 +14,7 @@ const SecuritySettings: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [biometricAvailable, setBiometricAvailable] = useState<boolean>(false);
     const [biometricEnabled, setBiometricEnabled] = useState<boolean>(false);
-    const [biometryName, setBiometryName] = useState<string>('Biometría');
+    const [biometryName, setBiometryName] = useState<string>('Biometr â‚¬a');
 
     async function checkPinStatus() {
         try {
@@ -31,7 +31,7 @@ const SecuritySettings: React.FC = () => {
             setBiometricAvailable(info.isAvailable);
             setBiometryName(info.biometryType === 'fingerprint' ? 'Huella Dactilar' :
                 info.biometryType === 'face' ? 'Face ID' :
-                    info.biometryType === 'iris' ? 'Iris' : 'Biometría');
+                    info.biometryType === 'iris' ? 'Iris' : 'Biometr â‚¬a');
 
             const { value } = await Preferences.get({ key: 'biometric_enabled' });
             setBiometricEnabled(value === 'true');
@@ -48,7 +48,7 @@ const SecuritySettings: React.FC = () => {
     const handleTogglePin = async () => {
         if (pinEnabled) {
             // Desactivar PIN
-            if (confirm('¿Estás seguro de que quieres desactivar el PIN? Tus datos estarán menos protegidos.')) {
+            if (confirm(' â‚¬EstÃ¡s seguro de que quieres desactivar el PIN? Tus datos estarÃ¡n menos protegidos.')) {
                 try {
                     await Preferences.remove({ key: 'pin_enabled' });
                     await Preferences.remove({ key: 'app_pin_hash' });
@@ -73,21 +73,21 @@ const SecuritySettings: React.FC = () => {
 
     const handleToggleBiometric = async () => {
         if (!biometricAvailable) {
-            toast.error(`${biometryName} no está disponible en este dispositivo`);
+            toast.error(`${biometryName} no estÃ¡ disponible en este dispositivo`);
             return;
         }
 
         if (biometricEnabled) {
-            // Desactivar biometría
+            // Desactivar biometr â‚¬a
             try {
                 await Preferences.remove({ key: 'biometric_enabled' });
                 setBiometricEnabled(false);
                 toast.success(`${biometryName} desactivada`);
             } catch (error) {
-                toast.error('Error al desactivar biometría');
+                toast.error('Error al desactivar biometr â‚¬a');
             }
         } else {
-            // Activar biometría - primero verificar que funciona
+            // Activar biometr â‚¬a - primero verificar que funciona
             const success = await biometricService.authenticate(
                 `Verifica tu ${biometryName.toLowerCase()} para activarla`
             );
@@ -98,10 +98,10 @@ const SecuritySettings: React.FC = () => {
                     setBiometricEnabled(true);
                     toast.success(`${biometryName} activada correctamente`);
                 } catch (error) {
-                    toast.error('Error al activar biometría');
+                    toast.error('Error al activar biometr â‚¬a');
                 }
             } else {
-                toast.error('Autenticación biométrica cancelada');
+                toast.error('AutenticaciÃ³n biom â‚¬trica cancelada');
             }
         }
     };
@@ -127,7 +127,7 @@ const SecuritySettings: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Lock size={20} color={pinEnabled ? 'var(--success)' : 'var(--text-muted)'} />
-                        <span style={{ fontWeight: 500 }}>Protección con PIN</span>
+                        <span style={{ fontWeight: 500 }}>ProtecciÃ³n con PIN</span>
                     </div>
                     <button
                         onClick={handleTogglePin}
@@ -144,8 +144,8 @@ const SecuritySettings: React.FC = () => {
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
                     {pinEnabled
-                        ? 'Tu aplicación está protegida con un PIN de seguridad'
-                        : 'Protege tu aplicación con un PIN de 4-6 dígitos'
+                        ? 'Tu aplicaciÃ³n estÃ¡ protegida con un PIN de seguridad'
+                        : 'Protege tu aplicaciÃ³n con un PIN de 4-6 d â‚¬gitos'
                     }
                 </p>
             </div>
@@ -178,8 +178,8 @@ const SecuritySettings: React.FC = () => {
                     </div>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
                         {biometricEnabled
-                            ? `Accede rápidamente con tu ${biometryName.toLowerCase()}`
-                            : `Usa tu ${biometryName.toLowerCase()} para acceder más rápido`
+                            ? `Accede r â‚¬pidamente con tu ${biometryName.toLowerCase()}`
+                            : `Usa tu ${biometryName.toLowerCase()} para acceder m â‚¬s rÃ¡pido`
                         }
                     </p>
                 </div>
@@ -194,7 +194,7 @@ const SecuritySettings: React.FC = () => {
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem' }}>
                     <Key size={20} color="var(--success)" />
-                    <span style={{ fontWeight: 500 }}>Encriptación de Datos</span>
+                    <span style={{ fontWeight: 500 }}>EncriptaciÃ³n de Datos</span>
                     <span style={{
                         fontSize: '0.7rem',
                         padding: '2px 8px',
@@ -207,7 +207,7 @@ const SecuritySettings: React.FC = () => {
                     </span>
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-                    Tus datos sensibles están encriptados con AES-256
+                    Tus datos sensibles estÃ¡n encriptados con AES-256
                 </p>
             </div>
 
@@ -227,7 +227,7 @@ const SecuritySettings: React.FC = () => {
                     </p>
                     <ul style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, paddingLeft: '1.2rem' }}>
                         <li>No compartas tu PIN con nadie</li>
-                        <li>Usa un PIN único que no uses en otros sitios</li>
+                        <li>Usa un PIN  â‚¬nico que no uses en otros sitios</li>
                         <li>Haz copias de seguridad regularmente</li>
                     </ul>
                 </div>

@@ -47,7 +47,7 @@ const BillingWidget: React.FC = () => {
                     <div style={{ padding: '6px', borderRadius: '8px', background: 'var(--accent-soft)', display: 'flex' }}>
                         <Wallet size={16} color="var(--accent-strong)" />
                     </div>
-                    Estado de facturación
+                    Estado de facturaciÃ³n
                 </h3>
                 <Link 
                     to="/billing" 

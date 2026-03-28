@@ -148,7 +148,7 @@ const PinRecovery: React.FC<PinRecoveryProps> = ({ onCancel, onSuccess }) => {
                             marginBottom: '1.5rem'
                         }}>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', margin: 0 }}>
-                                ?? <strong>Advertencia:</strong> DespuÈs de eliminar el PIN, la aplicaciÛn quedar· sin protecciÛn hasta que configures uno nuevo.
+                                ?? <strong>Advertencia:</strong> Despu√©s de eliminar el PIN, la aplicaci√≥n quedar√° sin protecci√≥n hasta que configures uno nuevo.
                             </p>
                         </div>
 

@@ -80,7 +80,7 @@ const FuelPricesWidget: React.FC = () => {
                         color: 'var(--text-primary)'
                     }}
                 >
-                    Reintentar conexión
+                    Reintentar conexiÃ³n
                 </button>
             </div>
         );

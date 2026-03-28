@@ -58,7 +58,7 @@ export const generateInvoicePDF = async (invoice: Invoice, profile: DriverProfil
     doc.text(addressLines, 20, 67);
 
     let yPos = 67 + (addressLines.length * 5);
-    doc.text(`Licencia Taxi nº ${profile.licenseNo} (${profile.municipality})`, 20, yPos);
+    doc.text(`Licencia Taxi nÂº ${profile.licenseNo} (${profile.municipality})`, 20, yPos);
     yPos += 5;
     doc.text(`Tlf: ${profile.phone || ''} | Email: ${profile.email || ''}`, 20, yPos);
     yPos += 5;
