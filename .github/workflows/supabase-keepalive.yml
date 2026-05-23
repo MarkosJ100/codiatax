@@ -1,0 +1,18 @@
+name: Keep Supabase Alive
+on:
+  schedule:
+    # Lunes, miércoles y viernes a las 09:00 UTC
+    - cron: "0 9 * * 1,3,5"
+  workflow_dispatch:
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase keepalive table
+        run: |
+          curl -sS -X PATCH "${{ secrets.SUPABASE_URL }}/rest/v1/keepalive?id=eq.1" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=minimal" \
+            -d "{\"touched_at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}"
