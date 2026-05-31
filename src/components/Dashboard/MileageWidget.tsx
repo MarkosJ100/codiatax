@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
+import { useVehicle } from '../../context/VehicleContext';
 import { Gauge, Plus } from 'lucide-react';
 
 const MileageWidget: React.FC = () => {
-    const { currentOdometer, addMileageLog } = useApp();
+    const { currentOdometer, addMileageLog } = useVehicle();
     const [inputKm, setInputKm] = useState<string>('');
     const [isEditing, setIsEditing] = useState<boolean>(false);
 
     const handleUpdate = () => {
         if (inputKm) {
-            addMileageLog(parseInt(inputKm));
+            addMileageLog({ amount: parseInt(inputKm), timestamp: new Date().toISOString() });
             setInputKm('');
             setIsEditing(false);
         }

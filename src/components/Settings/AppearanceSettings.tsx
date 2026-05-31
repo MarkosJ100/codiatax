@@ -1,10 +1,10 @@
 import React from 'react';
-import { useApp } from '../../context/AppContext';
+import { useUI } from '../../context/UIContext';
 import { Sun, Moon, Palette } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const AppearanceSettings: React.FC = () => {
-    const { theme, toggleTheme } = useApp();
+    const { theme, toggleTheme } = useUI();
 
     return (
         <div className="card" style={{ marginTop: '1rem' }}>

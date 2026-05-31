@@ -1,3 +1,5 @@
+import { User } from '../types';
+
 /**
  * User name normalization utilities
  * Ensures consistent user identification across the app and Supabase
@@ -50,4 +52,30 @@ export const displayUsername = (name: string): string => {
  */
 export const isSameUser = (name1: string, name2: string): boolean => {
     return normalizeUsername(name1) === normalizeUsername(name2);
+};
+
+/**
+ * Checks if the user has completed their profile setup.
+ */
+export const hasCompletedProfile = (user: User | null): boolean => {
+    return !!(user && user.name && user.licenseNumber);
+};
+
+/**
+ * Creates a default user configuration for new logins/setups.
+ * Currently used as a mock adapter but allows for future evolution.
+ */
+export const createDefaultUser = (name: string, licenseNumber: string): User => {
+    return {
+        name,
+        licenseNumber,
+        role: 'propietario',
+        isShared: false,
+        workMode: 'solo',
+        shiftWeek: 'Semana A',
+        shiftType: 'mañana',
+        startTime: '06:00',
+        endTime: '15:00',
+        lastLogin: new Date().toISOString()
+    };
 };

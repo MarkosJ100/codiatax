@@ -1,10 +1,12 @@
+﻿import { Service, Expense, Vehicle, ShiftStorage, User } from '../types';
+import { DataRepository } from '../services/repositories/DataRepository';
 import { supabase } from '../supabase';
 
 export interface LoaderData {
-    services: any[];
-    expenses: any[];
-    vehicle: any | null;
-    shiftStorage: any | null;
+    services: Service[];
+    expenses: Expense[];
+    vehicle: Vehicle | null;
+    shiftStorage: ShiftStorage | null;
 }
 
 /**
@@ -17,32 +19,12 @@ export async function appDataLoader(userId: string | null): Promise<LoaderData> 
     }
 
     try {
-        const [
-            { data: sData },
-            { data: eData },
-            { data: vData },
-            { data: tData }
-        ] = await Promise.all([
-            supabase.from('servicios').select('*').eq('user_id', userId),
-            supabase.from('gastos').select('*').eq('user_id', userId),
-            supabase.from('vehiculos').select('*').eq('user_id', userId).maybeSingle(),
-            supabase.from('turnos_storage').select('*').eq('user_id', userId).maybeSingle()
-        ]);
-
+        const data = await DataRepository.fetchInitialAppData(userId);
         return {
-            services: sData || [],
-            expenses: eData || [],
-            vehicle: vData ? {
-                licensePlate: vData.license_plate,
-                model: vData.model,
-                initialOdometer: vData.initial_odometer,
-                maintenance: vData.maintenance_data || {
-                    oil: { name: 'Aceite', lastKm: 0, interval: 15000 },
-                    tires: { name: 'Neumáticos', lastKm: 0, interval: 40000 },
-                    brakes: { name: 'Frenos', lastKm: 0, interval: 30000 }
-                }
-            } : null,
-            shiftStorage: tData?.data_json || null
+            services: data.services || [],
+            expenses: data.expenses || [],
+            vehicle: data.vehicle,
+            shiftStorage: data.shiftStorage
         };
     } catch (err) {
         console.warn('Loader failed (offline?):', err);
@@ -55,9 +37,47 @@ export async function appDataLoader(userId: string | null): Promise<LoaderData> 
  */
 export function getUserFromStorage(): any | null {
     try {
-        const saved = localStorage.getItem('codiatax_user');
+        const saved = localStorage.getItem('codiatx_user') || localStorage.getItem('codiatax_user');
+        if (!localStorage.getItem('codiatx_user') && saved) {
+            localStorage.setItem('codiatx_user', saved);
+            localStorage.removeItem('codiatax_user');
+        }
         return saved && saved !== 'undefined' ? JSON.parse(saved) : null;
     } catch {
         return null;
     }
 }
+
+/**
+ * Fallback: strictly check the live Supabase session and reconstruct a basic user object.
+ * This is used if the memory/localStorage user is missing (e.g. page refresh).
+ */
+export async function loadUserFromSupabaseSession(): Promise<User | null> {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+            const metadata = session.user.user_metadata;
+            const user: User = {
+                name: metadata.name || '',
+                role: metadata.role || 'propietario',
+                licenseNumber: metadata.licenseNumber || '',
+                // Add default properties if needed by the User type
+                isShared: metadata.isShared || false,
+                workMode: metadata.workMode || 'solo',
+                shiftWeek: metadata.shiftWeek || 'Semana A',
+                shiftType: metadata.shiftType || 'mañana',
+                startTime: metadata.startTime || '06:00',
+                endTime: metadata.endTime || '15:00',
+                lastLogin: new Date().toISOString()
+            };
+            // Persist for next time
+            localStorage.setItem('codiatx_user', JSON.stringify(user));
+            localStorage.removeItem('codiatax_user');
+            return user;
+        }
+        return null;
+    } catch {
+        return null;
+    }
+}
+

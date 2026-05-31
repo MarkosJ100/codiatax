@@ -1,16 +1,19 @@
-# React + Vite
+﻿# Codiatx Version Web 1.0
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicacion web para gestion operativa y financiera del taxi, construida con React + Vite + TypeScript.
 
-Currently, two official plugins are available:
+## Scripts
+- `npm run dev`: entorno local de desarrollo.
+- `npm run build`: compilacion de produccion.
+- `npm run preview`: vista local del build generado.
+- `npm run lint`: analisis estatico con ESLint.
+- `npm run test`: pruebas unitarias (Vitest).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Estado QA (Release Candidate 1.0)
+- Build: OK.
+- Lint: OK sin errores (warnings de deuda tecnica no bloqueantes).
+- Tests: actualmente bloqueados por entorno (`spawn EPERM` al cargar Vitest/esbuild).
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Documentación de Compilación
-- [Guía de Compilación para Android (APK)](GUIA_APK.md)
-- [Guía de Compilación para iOS (Apple)](GUIA_IOS.md)
+## Documentacion
+- Plan de ejecucion y revisiones: `CODIATX_WEB_1.0_PLAN.md`.
+- Changelog de versiones: `CHANGELOG.md`.

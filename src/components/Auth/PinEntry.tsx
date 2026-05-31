@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { encryption } from '../../services/encryption';
-import { Preferences } from '@capacitor/preferences';
+import { Preferences } from '../../utils/webPreferences';
 import { Lock, Delete, Fingerprint } from 'lucide-react';
 import { biometricService } from '../../services/biometric';
 
@@ -239,3 +239,4 @@ const PinEntry: React.FC<PinEntryProps> = ({ onSuccess }) => {
 };
 
 export default PinEntry;
+

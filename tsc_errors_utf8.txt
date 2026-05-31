@@ -1,0 +1,9 @@
+﻿src/context/AppContext.tsx(81,31): error TS2304: Cannot find name 'PersistenceResult'.
+src/context/AppContext.tsx(82,51): error TS2304: Cannot find name 'PersistenceResult'.
+src/services/routingService.test.ts(2,10): error TS2724: '"./routingService"' has no exported member named 'calculateFare'. Did you mean 'calculateRoute'?
+src/services/SyncService.test.ts(38,32): error TS2345: Argument of type '{ entityType: any; operation: any; data: { amount: number; }; userName: string; }' is not assignable to parameter of type 'Omit<SyncItem, "id" | "timestamp">'.
+  Property 'entityId' is missing in type '{ entityType: any; operation: any; data: { amount: number; }; userName: string; }' but required in type 'Omit<SyncItem, "id" | "timestamp">'.
+src/services/SyncService.test.ts(46,32): error TS2345: Argument of type '{ entityType: any; operation: any; data: { amount: number; }; userName: string; }' is not assignable to parameter of type 'Omit<SyncItem, "id" | "timestamp">'.
+  Property 'entityId' is missing in type '{ entityType: any; operation: any; data: { amount: number; }; userName: string; }' but required in type 'Omit<SyncItem, "id" | "timestamp">'.
+src/services/SyncService.test.ts(58,32): error TS2345: Argument of type '{ entityType: any; operation: any; data: { amount: number; }; userName: string; }' is not assignable to parameter of type 'Omit<SyncItem, "id" | "timestamp">'.
+  Property 'entityId' is missing in type '{ entityType: any; operation: any; data: { amount: number; }; userName: string; }' but required in type 'Omit<SyncItem, "id" | "timestamp">'.

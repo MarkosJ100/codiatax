@@ -1,16 +1,13 @@
-import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
-import { FileDown, Share2 } from 'lucide-react';
+﻿import React, { useState } from 'react';
+import { FileDown } from 'lucide-react';
 import { isSameDay, format, es } from '../../utils/dateHelpers';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { Filesystem, Directory } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share';
-import { Capacitor } from '@capacitor/core';
 import { useToast } from '../../hooks/useToast';
+import { useServices } from '../../context/ServiceContext';
+import { useAuth } from '../../context/AuthContext';
 
 const PDFExportButton: React.FC = () => {
-    const { services, expenses, user } = useApp();
+    const { services, expenses } = useServices();
+    const { user } = useAuth();
     const toast = useToast();
     const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
@@ -18,10 +15,14 @@ const PDFExportButton: React.FC = () => {
         if (!user) return;
         setIsGenerating(true);
         try {
+            const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+                import('jspdf'),
+                import('jspdf-autotable')
+            ]);
             const doc = new jsPDF();
             const today = new Date();
             const dateStr = format(today, "d 'de' MMMM 'de' yyyy", { locale: es });
-            const fileName = `codiatax_informe_${format(today, 'yyyy-MM-dd')}.pdf`;
+            const fileName = `codiatx_informe_${format(today, 'yyyy-MM-dd')}.pdf`;
 
             const dailyServices = services.filter(s => isSameDay(new Date(s.timestamp), today));
             const dailyIncome = dailyServices.reduce((acc, curr) => acc + curr.amount, 0);
@@ -65,7 +66,7 @@ const PDFExportButton: React.FC = () => {
                 format(new Date(s.timestamp), 'HH:mm'),
                 s.type === 'company' ? (s.companyName || 'Compañía') : 'Normal',
                 s.observation || '-',
-                s.amount.toFixed(2) + ' €'
+                s.amount.toFixed(2) + '  €'
             ]);
 
             autoTable(doc, {
@@ -82,36 +83,11 @@ const PDFExportButton: React.FC = () => {
                 doc.setPage(i);
                 doc.setFontSize(8);
                 doc.text('Generado por CODIATAX App', 14, (doc as any).internal.pageSize.height - 10);
-            }
-
-            if (Capacitor.isNativePlatform()) {
-                const pdfBase64 = doc.output('datauristring').split(',')[1];
-                try {
-                    const result = await Filesystem.writeFile({
-                        path: fileName,
-                        data: pdfBase64,
-                        directory: Directory.Cache,
-                    });
-
-                    await Share.share({
-                        title: 'Informe Diario Codiatax',
-                        text: `Adjunto informe del día ${dateStr}`,
-                        url: result.uri,
-                        dialogTitle: 'Compartir Informe PDF',
-                    });
-
-                } catch (e: any) {
-                    console.error("Error saving/sharing native PDF", e);
-                    toast.error("Error al exportar PDF: " + e.message);
-                }
-
-            } else {
-                doc.save(fileName);
-            }
+            }            doc.save(fileName);
 
         } catch (err) {
             console.error(err);
-            toast.error("Ocurrió un error al generar el PDF");
+            toast.error("Ocurri € un error al generar el PDF");
         } finally {
             setIsGenerating(false);
         }
@@ -138,11 +114,13 @@ const PDFExportButton: React.FC = () => {
         >
             {isGenerating ?
                 <div className="loading-spinner" style={{ width: 16, height: 16 }} /> :
-                (Capacitor.isNativePlatform() ? <Share2 size={18} /> : <FileDown size={18} />)
+                <FileDown size={18} />
             }
-            {Capacitor.isNativePlatform() ? 'Compartir Informe PDF' : 'Exportar Informe PDF'}
+            Exportar Informe PDF
         </button>
     );
 };
 
 export default PDFExportButton;
+
+

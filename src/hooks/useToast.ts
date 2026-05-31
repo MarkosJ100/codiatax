@@ -1,7 +1,7 @@
-import { useApp } from '../context/AppContext';
+import { useUI } from '../context/UIContext';
 
 export const useToast = () => {
-    const { showToast } = useApp();
+    const { showToast } = useUI();
 
     return {
         success: (message: string) => showToast(message, 'success'),

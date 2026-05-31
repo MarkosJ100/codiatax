@@ -1,4 +1,4 @@
-// Routing Service using OSRM (Open Source Routing Machine)
+﻿// Routing Service using OSRM (Open Source Routing Machine)
 // Free API - no key required
 // https://router.project-osrm.org/
 
@@ -13,6 +13,34 @@ export interface RouteResult {
 export interface Coordinates {
     lat: number;
     lng: number;
+}
+
+interface OSRMResponse {
+    code: string;
+    routes: {
+        distance: number;
+        duration: number;
+        geometry: {
+            coordinates: [number, number][];
+        };
+    }[];
+}
+
+interface NominatimResult {
+    lat: string;
+    lon: string;
+    display_name: string;
+    address?: {
+        road?: string;
+        pedestrian?: string;
+        footway?: string;
+        house_number?: string;
+        city?: string;
+        town?: string;
+        village?: string;
+        municipality?: string;
+    };
+    error?: string;
 }
 
 // Calculate route between two points using OSRM
@@ -31,7 +59,7 @@ export const calculateRoute = async (
             throw new Error(`HTTP error: ${response.status}`);
         }
 
-        const data = await response.json();
+        const data: OSRMResponse = await response.json();
 
         if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
             return {
@@ -45,7 +73,7 @@ export const calculateRoute = async (
         const route = data.routes[0];
 
         // Convert [lng, lat] from OSRM to [lat, lng] for Leaflet
-        const geometry = route.geometry?.coordinates?.map((coord: [number, number]) => [coord[1], coord[0]]) || [];
+        const geometry: [number, number][] = route.geometry?.coordinates?.map((coord: [number, number]): [number, number] => [coord[1], coord[0]]) || [];
 
         return {
             distance: route.distance / 1000, // Convert meters to km
@@ -89,7 +117,7 @@ export const geocodeAddress = async (address: string): Promise<GeocodingResult> 
             throw new Error(`HTTP error: ${response.status}`);
         }
 
-        const data = await response.json();
+        const data: NominatimResult[] = await response.json();
 
         if (!data || data.length === 0) {
             return {
@@ -144,7 +172,7 @@ export const reverseGeocode = async (coords: Coordinates): Promise<ReverseGeocod
             throw new Error(`HTTP error: ${response.status}`);
         }
 
-        const data = await response.json();
+        const data: NominatimResult = await response.json();
 
         if (!data || data.error) {
             return {
@@ -193,14 +221,14 @@ export interface LocationSuggestion {
 // Helper function to shorten display names (remove postal codes and excessive details)
 const shortenDisplayName = (fullName: string): string => {
     // Remove postal codes (5 digits)
-    let shortened = fullName.replace(/,?\s*\d{5}\s*/g, '');
+    const shortened = fullName.replace(/,?\s*\d{5}\s*/g, '');
 
     // Split by comma and take only first 2-3 meaningful parts
     const parts = shortened.split(',').map(p => p.trim());
 
     // Filter out country names and keep only city/province
     const filtered = parts.filter(p =>
-        !p.toLowerCase().includes('españa') &&
+        !p.toLowerCase().includes('espa €a') &&
         !p.toLowerCase().includes('spain') &&
         p.length > 0
     );
@@ -227,10 +255,10 @@ export const getLocationSuggestions = async (query: string): Promise<LocationSug
             throw new Error(`HTTP error: ${response.status}`);
         }
 
-        const data = await response.json();
+        const data: NominatimResult[] = await response.json();
 
         // Return suggestions with shortened names for better UI display
-        return data.map((item: any) => ({
+        return data.map((item) => ({
             displayName: shortenDisplayName(item.display_name),
             lat: parseFloat(item.lat),
             lng: parseFloat(item.lon)
@@ -241,44 +269,4 @@ export const getLocationSuggestions = async (query: string): Promise<LocationSug
     }
 };
 
-// Calculate taxi fare based on distance and tariff
-export interface FareCalculation {
-    distance: number;
-    duration: number;
-    bajadaBandera: number;
-    distanceCost: number;
-    totalFare: number;
-    tariffType: 'tarifa7' | 'tarifa8';
-    tariffLabel: string;
-}
 
-export const calculateFare = (
-    distanceKm: number,
-    tariffType: 'tarifa7' | 'tarifa8'
-): FareCalculation => {
-    // Tariff rates from BOJA 2025 (Interurban rules)
-    // Rate is doubled to cover the return trip
-    const tariffs = {
-        tarifa7: {
-            pricePerKm: 0.71 * 2, // 1.42 €/km
-            label: 'Tarifa 7 - Interurbana'
-        },
-        tarifa8: {
-            pricePerKm: 0.82 * 2, // 1.64 €/km
-            label: 'Tarifa 8 - Interurbana'
-        }
-    };
-
-    const tariff = tariffs[tariffType];
-    const totalFare = distanceKm * tariff.pricePerKm;
-
-    return {
-        distance: distanceKm,
-        duration: 0,
-        bajadaBandera: 0, // Interurban calculated as km x price (includes return)
-        distanceCost: totalFare,
-        totalFare: totalFare,
-        tariffType: tariffType,
-        tariffLabel: tariff.label
-    };
-};

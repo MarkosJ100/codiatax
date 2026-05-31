@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { useServices } from '../../context/ServiceContext';
+import { useVehicle } from '../../context/VehicleContext';
+import { useShifts } from '../../context/ShiftContext';
+import { useUI } from '../../context/UIContext';
 import { useApp } from '../../context/AppContext';
 import { Database, Download, Trash2, AlertCircle, FileJson, Upload } from 'lucide-react';
+import { normalizeUsername } from '../../utils/userHelpers';
 
 const DataSettings: React.FC = () => {
-    const {
-        services, expenses, vehicle, mileageLogs,
-        annualConfig, shiftStorage, resetAppData, restoreAppData, showToast
-    } = useApp();
+    const { user } = useAuth();
+    const { services, expenses, annualConfig } = useServices();
+    const { vehicle, mileageLogs } = useVehicle();
+    const { shiftStorage } = useShifts();
+    const { showToast } = useUI();
+    const { resetAppData, restoreAppData } = useApp();
+
     const [isConfirming, setIsConfirming] = useState(false);
 
     const handleBackup = () => {
@@ -25,7 +34,7 @@ const DataSettings: React.FC = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `codiatax_backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `codiatx_backup_${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -34,15 +43,33 @@ const DataSettings: React.FC = () => {
         showToast('Copia de seguridad descargada', 'success');
     };
 
-    const handleReset = () => {
+    const handleReset = async () => {
         if (!isConfirming) {
             setIsConfirming(true);
             return;
         }
 
-        // Final confirm
-        if (window.confirm('¿ESTÁS TOTALMENTE SEGURO? Esta acción es irreversible y borrará todos tus servicios, gastos y configuraciones.')) {
-            resetAppData();
+        const confirmed = window.confirm(' €EST¿S TOTALMENTE SEGURO? Esta acción es irreversible y borrar € todos tus servicios, gastos y configuraciones.');
+        if (!confirmed) {
+            setIsConfirming(false);
+            return;
+        }
+
+        try {
+            const result = await resetAppData();
+            if (!result.success) {
+                showToast(result.error || 'Error al borrar los datos', 'error');
+                setIsConfirming(false);
+                return;
+            }
+            showToast('Datos borrados, reiniciando...', 'success');
+            if (result.requiresReload) {
+                window.location.reload();
+            } else {
+                setIsConfirming(false);
+            }
+        } catch (error) {
+            showToast('Error inesperado al borrar los datos', 'error');
             setIsConfirming(false);
         }
     };
@@ -58,12 +85,16 @@ const DataSettings: React.FC = () => {
 
             if (!result.success) {
                 showToast(result.error || 'Error al restaurar', 'error');
+            } else {
+                showToast('Copia restaurada, recargando...', 'success');
+                if (result.requiresReload) {
+                    window.location.reload();
+                }
             }
         } catch (error) {
             showToast('Archivo de backup inválido', 'error');
         }
 
-        // Reset file input
         event.target.value = '';
     };
 
@@ -201,7 +232,7 @@ const DataSettings: React.FC = () => {
                     <div style={{ display: 'flex', gap: '8px', marginTop: '8px', color: 'var(--danger)' }}>
                         <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
                         <p style={{ fontSize: '0.85rem', margin: 0, fontWeight: '500' }}>
-                            ¡CUIDADO! Se borrará todo. Te recomendamos hacer una
+                            ¡CUIDADO! Se borrar € todo. Te recomendamos hacer una
                             <span
                                 onClick={handleBackup}
                                 style={{ textDecoration: 'underline', cursor: 'pointer', marginLeft: '4px', fontWeight: 'bold' }}
@@ -222,17 +253,9 @@ const DataSettings: React.FC = () => {
     );
 };
 
-// Componente interno para diagnóstico
 const CloudDiagnosis = () => {
+    // Para diagnóstico usamos useApp que ya agrega el estado de todos los dominios
     const { syncStatus, lastSyncError, forceManualSync, user } = useApp();
-    // Importación segura de la utilidad
-    let normalizeUsername = (name: string) => name.toLowerCase().trim();
-    try {
-        // Intentar usar la función real si está disponible en el scope, si no usar fallback
-        // En este caso, como estamos dentro del mismo proyecto, debería estar disponible si se importa arriba
-        // Pero como no puedo editar los imports fácilmente sin romper cosas, usaré una versión inline segura
-        // que coincida con la lógica de userHelpers.ts
-    } catch (e) { }
 
     const handleForceSync = () => {
         forceManualSync();
@@ -248,12 +271,9 @@ const CloudDiagnosis = () => {
     };
 
     const getStatusText = () => {
-        switch (syncStatus) {
-            case 'success': return 'Sincronizado';
-            case 'error': return 'Error';
-            case 'syncing': return 'Sincronizando...';
-            default: return 'Inactivo';
-        }
+        if (syncStatus === 'syncing') return 'Sincronizando...';
+        if (syncStatus === 'error') return 'Error de Sincronización';
+        return 'Conectado / Al d €a';
     };
 
     return (
@@ -297,7 +317,7 @@ const CloudDiagnosis = () => {
 
                 {lastSyncError && (
                     <>
-                        <div style={{ color: 'var(--danger)' }}>Último Error:</div>
+                        <div style={{ color: 'var(--danger)' }}>último Error:</div>
                         <div style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>{lastSyncError}</div>
                     </>
                 )}
@@ -330,14 +350,14 @@ const CloudDiagnosis = () => {
     );
 };
 
-// Iconos simples
-const ActivityIcon = ({ size, color }: any) => (
+// Iconos
+const ActivityIcon = ({ size, color }: { size: number, color: string }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
     </svg>
 );
 
-const RefreshIcon = ({ size, className }: any) => (
+const RefreshIcon = ({ size, className }: { size: number, className: string }) => (
     <svg
         width={size}
         height={size}
@@ -361,3 +381,6 @@ const RefreshIcon = ({ size, className }: any) => (
 );
 
 export default DataSettings;
+
+
+

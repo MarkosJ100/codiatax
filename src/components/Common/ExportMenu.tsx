@@ -1,17 +1,23 @@
-import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
+﻿import React, { useRef, useState } from 'react';
+import { useServices } from '../../context/ServiceContext';
 import { useToast } from '../../hooks/useToast';
-import { FileDown, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react';
-import { exportToExcel, exportServicesToCSV, exportExpensesToCSV } from '../../utils/exportData';
+import { FileDown, FileUp, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react';
 
-const ExportMenu: React.FC = () => {
-    const { services, expenses } = useApp();
+interface ExportMenuProps {
+    direction?: 'up' | 'down';
+    onOpenChange?: (isOpen: boolean) => void;
+}
+
+const ExportMenu: React.FC<ExportMenuProps> = ({ direction = 'down', onOpenChange }) => {
+    const { services, expenses, addService } = useServices();
     const toast = useToast();
     const [isOpen, setIsOpen] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleExportExcel = () => {
+    const handleExportExcel = async () => {
         try {
-            exportToExcel(services, expenses, `codiatax_completo_${new Date().toISOString().split('T')[0]}.xlsx`);
+            const { exportToExcel } = await import('../../utils/exportData');
+            exportToExcel(services, expenses, `codiatx_completo_${new Date().toISOString().split('T')[0]}.xlsx`);
             toast.success('Exportado a Excel correctamente');
             setIsOpen(false);
         } catch (error) {
@@ -20,8 +26,9 @@ const ExportMenu: React.FC = () => {
         }
     };
 
-    const handleExportServicesCSV = () => {
+    const handleExportServicesCSV = async () => {
         try {
+            const { exportServicesToCSV } = await import('../../utils/exportData');
             exportServicesToCSV(services);
             toast.success('Servicios exportados a CSV');
             setIsOpen(false);
@@ -31,8 +38,9 @@ const ExportMenu: React.FC = () => {
         }
     };
 
-    const handleExportExpensesCSV = () => {
+    const handleExportExpensesCSV = async () => {
         try {
+            const { exportExpensesToCSV } = await import('../../utils/exportData');
             exportExpensesToCSV(expenses);
             toast.success('Gastos exportados a CSV');
             setIsOpen(false);
@@ -42,10 +50,139 @@ const ExportMenu: React.FC = () => {
         }
     };
 
+    const handleImportCSVClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const toggleMenu = () => {
+        setIsOpen((prev) => {
+            const next = !prev;
+            onOpenChange?.(next);
+            return next;
+        });
+    };
+
+    const closeMenu = () => {
+        setIsOpen(false);
+        onOpenChange?.(false);
+    };
+
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        console.log(`--- IMPORTANDO ARCHIVO: "${file.name}" (${file.size} bytes, tipo: ${file.type}) ---`);
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const [{ parseServicesCsv, parseServicesExcel }] = await Promise.all([
+                    import('../../utils/importData')
+                ]);
+                const buffer = e.target?.result as ArrayBuffer;
+                let newServices: any[] = [];
+
+                // Intentar SIEMPRE con xlsx primero (soporta CSV, XLS, XLSX)
+                console.log('Intentando parsear con xlsx library...');
+                newServices = parseServicesExcel(buffer);
+
+                // Si xlsx no encontr € servicios y es un .csv, intentar parser de texto
+                if (newServices.length === 0 && file.name.toLowerCase().endsWith('.csv')) {
+                    console.log('xlsx no encontr € servicios, intentando parser CSV de texto...');
+                    const decoder = new TextDecoder('iso-8859-1');
+                    const text = decoder.decode(buffer);
+                    newServices = parseServicesCsv(text);
+                }
+
+                if (newServices.length === 0) {
+                    toast.warning('No se encontraron servicios válidos. Asegúrate de usar el formato de App Taxi.');
+                    return;
+                }
+
+                // Filtrar duplicados contra los servicios existentes y contra los propios del archivo
+                const processedKeys = new Set<string>();
+                let importCount = 0;
+                let skipCount = 0;
+
+                // A €adir los servicios existentes al set de "ya procesados"
+                services.forEach(s => {
+                    const timeMs = new Date(s.timestamp).getTime();
+                    // Normalizar el importe y la observación para la clave
+                    const normObs = String(s.observation || '').trim();
+                    const key = `${timeMs}_${normObs}`;
+                    processedKeys.add(key);
+                });
+
+                const servicesToImport = [...newServices];
+
+                // Verificar importes altos (>100 €) y preguntar al usuario
+                const highAmounts = servicesToImport.filter(s => s.amount > 100);
+                if (highAmounts.length > 0) {
+                    const examples = highAmounts.slice(0, 3).map(s => `${s.amount} €`).join(', ');
+                    const msg = `Se han detectado ${highAmounts.length} servicios con importes superiores a 100 € (ej: ${examples}).\n\n¿Son correctos estos importes?\n\nSi pulsas CANCELAR, se importar €n igualmente pero te recomendamos revisarlos en el historial.`;
+                    
+                    if (!window.confirm(msg)) {
+                        // El usuario cancel € la confirmación de importes altos.
+                        // Según la petici €n del usuario "me preguntas si el importe es correcto"
+                        // Podríamos incluso ofrecer dividirlos por 100 aquí si no lo hizo el parser automático.
+                    }
+                }
+
+                for (const service of servicesToImport) {
+                    const timeMs = new Date(service.timestamp).getTime();
+
+                    // Usamos solo el tiempo y la observación como clave de deduplicaci €n.
+                    // Esto evita que si un importe se parse € mal una vez (ej: 6.42 vs 642)
+                    // se considere un servicio distinto.
+                    const normObs = String(service.observation || '').trim();
+                    const key = `${timeMs}_${normObs}`;
+
+                    if (processedKeys.has(key)) {
+                        console.log(`[Deduplicaci €n] Saltando duplicatado: ${key}`);
+                        skipCount++;
+                        continue;
+                    }
+
+                    processedKeys.add(key);
+                    await addService(service);
+                    importCount++;
+                }
+
+                if (skipCount > 0) {
+                    if (importCount > 0) {
+                        toast.success(`${importCount} importados, ${skipCount} duplicados ignorados`);
+                    } else {
+                        toast.warning(`Todos los ${skipCount} servicios ya exist €an (ignorados)`);
+                    }
+                } else {
+                    toast.success(`${importCount} servicios importados correctamente`);
+                }
+
+                setIsOpen(false);
+            } catch (error) {
+                console.error('Error importing file:', error);
+                toast.error('Error al procesar el archivo');
+            } finally {
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            }
+        };
+
+        reader.readAsArrayBuffer(file);
+    };
+
     return (
         <div style={{ position: 'relative', display: 'inline-block' }}>
+            <input
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+            />
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={toggleMenu}
                 className="btn"
                 style={{
                     backgroundColor: 'var(--bg-card)',
@@ -58,16 +195,18 @@ const ExportMenu: React.FC = () => {
                 }}
             >
                 <FileDown size={18} />
-                Exportar Datos
+                Gestionar Datos
                 <ChevronDown size={16} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
             </button>
 
             {isOpen && (
                 <div style={{
                     position: 'absolute',
-                    top: '100%',
+                    top: direction === 'down' ? '100%' : undefined,
+                    bottom: direction === 'up' ? '100%' : undefined,
                     right: 0,
-                    marginTop: '8px',
+                    marginTop: direction === 'down' ? '8px' : undefined,
+                    marginBottom: direction === 'up' ? '8px' : undefined,
                     backgroundColor: 'var(--bg-card)',
                     border: '1px solid var(--border-color)',
                     borderRadius: 'var(--radius-md)',
@@ -76,6 +215,9 @@ const ExportMenu: React.FC = () => {
                     minWidth: '220px',
                     overflow: 'hidden'
                 }}>
+                    <div style={{ padding: '8px 16px', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Exportar
+                    </div>
                     <button
                         onClick={handleExportExcel}
                         style={{
@@ -150,12 +292,43 @@ const ExportMenu: React.FC = () => {
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Solo gastos</div>
                         </div>
                     </button>
+
+                    <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '4px 0' }} />
+                    <div style={{ padding: '8px 16px', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Importar
+                    </div>
+
+                    <button
+                        onClick={handleImportCSVClick}
+                        style={{
+                            width: '100%',
+                            padding: '12px 16px',
+                            textAlign: 'left',
+                            border: 'none',
+                            background: 'none',
+                            color: 'var(--text-primary)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                        <FileUp size={18} color="var(--warning)" />
+                        <div>
+                            <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>Reporte App Taxi</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Soportado .csv y .xlsx</div>
+                        </div>
+                    </button>
+
                 </div>
             )}
 
             {isOpen && (
                 <div
-                    onClick={() => setIsOpen(false)}
+                    onClick={closeMenu}
                     style={{
                         position: 'fixed',
                         top: 0,
@@ -171,3 +344,4 @@ const ExportMenu: React.FC = () => {
 };
 
 export default ExportMenu;
+

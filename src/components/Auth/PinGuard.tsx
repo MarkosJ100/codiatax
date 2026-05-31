@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Preferences } from '@capacitor/preferences';
+﻿import React, { useState, useEffect } from 'react';
+import { Preferences } from '../../utils/webPreferences';
 import PinEntry from './PinEntry';
 
 interface PinGuardProps {
@@ -75,3 +75,4 @@ const PinGuard: React.FC<PinGuardProps> = ({ children }) => {
 };
 
 export default PinGuard;
+

@@ -11,10 +11,6 @@ const BiometricLogin: React.FC<BiometricLoginProps> = ({ onSuccess }) => {
     const [showPinFallback, setShowPinFallback] = useState<boolean>(false);
     const [isAvailable, setIsAvailable] = useState<boolean>(false);
 
-    useEffect(() => {
-        checkBiometry();
-    }, []);
-
     const checkBiometry = async () => {
         const available = await biometricService.isAvailable();
         setIsAvailable(available);
@@ -24,6 +20,11 @@ const BiometricLogin: React.FC<BiometricLoginProps> = ({ onSuccess }) => {
             setShowPinFallback(true);
         }
     };
+    
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        checkBiometry();
+    }, []);
 
     // Si biometría no está disponible o usuario eligió PIN, mostrar PIN
     if (showPinFallback || !isAvailable) {

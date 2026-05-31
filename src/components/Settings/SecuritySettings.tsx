@@ -1,27 +1,22 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
-import { Preferences } from '@capacitor/preferences';
+import { Preferences } from '../../utils/webPreferences';
 import { Shield, Lock, Key, AlertTriangle, Fingerprint } from 'lucide-react';
 import PinSetup from '../Auth/PinSetup';
 import { biometricService } from '../../services/biometric';
 
 const SecuritySettings: React.FC = () => {
-    const { user } = useApp();
+    const { user } = useAuth();
     const toast = useToast();
     const [pinEnabled, setPinEnabled] = useState<boolean>(false);
     const [showPinSetup, setShowPinSetup] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [biometricAvailable, setBiometricAvailable] = useState<boolean>(false);
     const [biometricEnabled, setBiometricEnabled] = useState<boolean>(false);
-    const [biometryName, setBiometryName] = useState<string>('Biometría');
+    const [biometryName, setBiometryName] = useState<string>('Biometr €a');
 
-    React.useEffect(() => {
-        checkPinStatus();
-        checkBiometricAvailability();
-    }, []);
-
-    const checkPinStatus = async () => {
+    async function checkPinStatus() {
         try {
             const { value } = await Preferences.get({ key: 'pin_enabled' });
             setPinEnabled(value === 'true');
@@ -30,25 +25,30 @@ const SecuritySettings: React.FC = () => {
         }
     };
 
-    const checkBiometricAvailability = async () => {
+    async function checkBiometricAvailability() {
         try {
             const info = await biometricService.getBiometricInfo();
             setBiometricAvailable(info.isAvailable);
             setBiometryName(info.biometryType === 'fingerprint' ? 'Huella Dactilar' :
                 info.biometryType === 'face' ? 'Face ID' :
-                    info.biometryType === 'iris' ? 'Iris' : 'Biometría');
+                    info.biometryType === 'iris' ? 'Iris' : 'Biometr €a');
 
             const { value } = await Preferences.get({ key: 'biometric_enabled' });
             setBiometricEnabled(value === 'true');
         } catch (error) {
             console.error('Error checking biometric availability:', error);
         }
-    };
+    }
+
+    React.useEffect(() => {
+        checkPinStatus();
+        checkBiometricAvailability();
+    }, []);
 
     const handleTogglePin = async () => {
         if (pinEnabled) {
             // Desactivar PIN
-            if (confirm('¿Estás seguro de que quieres desactivar el PIN? Tus datos estarán menos protegidos.')) {
+            if (confirm(' €Estás seguro de que quieres desactivar el PIN? Tus datos estarán menos protegidos.')) {
                 try {
                     await Preferences.remove({ key: 'pin_enabled' });
                     await Preferences.remove({ key: 'app_pin_hash' });
@@ -78,16 +78,16 @@ const SecuritySettings: React.FC = () => {
         }
 
         if (biometricEnabled) {
-            // Desactivar biometría
+            // Desactivar biometr €a
             try {
                 await Preferences.remove({ key: 'biometric_enabled' });
                 setBiometricEnabled(false);
                 toast.success(`${biometryName} desactivada`);
             } catch (error) {
-                toast.error('Error al desactivar biometría');
+                toast.error('Error al desactivar biometr €a');
             }
         } else {
-            // Activar biometría - primero verificar que funciona
+            // Activar biometr €a - primero verificar que funciona
             const success = await biometricService.authenticate(
                 `Verifica tu ${biometryName.toLowerCase()} para activarla`
             );
@@ -98,10 +98,10 @@ const SecuritySettings: React.FC = () => {
                     setBiometricEnabled(true);
                     toast.success(`${biometryName} activada correctamente`);
                 } catch (error) {
-                    toast.error('Error al activar biometría');
+                    toast.error('Error al activar biometr €a');
                 }
             } else {
-                toast.error('Autenticación biométrica cancelada');
+                toast.error('Autenticación biom €trica cancelada');
             }
         }
     };
@@ -145,7 +145,7 @@ const SecuritySettings: React.FC = () => {
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
                     {pinEnabled
                         ? 'Tu aplicación está protegida con un PIN de seguridad'
-                        : 'Protege tu aplicación con un PIN de 4-6 dígitos'
+                        : 'Protege tu aplicación con un PIN de 4-6 d €gitos'
                     }
                 </p>
             </div>
@@ -178,8 +178,8 @@ const SecuritySettings: React.FC = () => {
                     </div>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
                         {biometricEnabled
-                            ? `Accede rápidamente con tu ${biometryName.toLowerCase()}`
-                            : `Usa tu ${biometryName.toLowerCase()} para acceder más rápido`
+                            ? `Accede r €pidamente con tu ${biometryName.toLowerCase()}`
+                            : `Usa tu ${biometryName.toLowerCase()} para acceder m €s rápido`
                         }
                     </p>
                 </div>
@@ -227,7 +227,7 @@ const SecuritySettings: React.FC = () => {
                     </p>
                     <ul style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, paddingLeft: '1.2rem' }}>
                         <li>No compartas tu PIN con nadie</li>
-                        <li>Usa un PIN único que no uses en otros sitios</li>
+                        <li>Usa un PIN  €nico que no uses en otros sitios</li>
                         <li>Haz copias de seguridad regularmente</li>
                     </ul>
                 </div>
@@ -237,3 +237,6 @@ const SecuritySettings: React.FC = () => {
 };
 
 export default SecuritySettings;
+
+
+

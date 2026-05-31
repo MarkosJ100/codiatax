@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { useApp } from '../../context/AppContext';
+import { useVehicle } from '../../context/VehicleContext';
 import { format, subDays, startOfWeek, startOfMonth, startOfYear, isSameDay } from '../../utils/dateHelpers';
 import { Gauge } from 'lucide-react';
 
 const MileageChart: React.FC = () => {
-    const { mileageLogs } = useApp();
+    const { mileageLogs } = useVehicle();
 
     const stats = useMemo(() => {
         const today = new Date();

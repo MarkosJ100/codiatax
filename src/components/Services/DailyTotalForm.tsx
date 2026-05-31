@@ -1,16 +1,19 @@
 import React, { useState, useTransition, useEffect, useMemo } from 'react';
-import { useApp } from '../../context/AppContext';
 import { isSameDay } from '../../utils/dateHelpers';
 import { useToast } from '../../hooks/useToast';
-import { Calculator, Save, Gauge, Loader2, Calendar } from 'lucide-react';
+import { Calculator, Save, Gauge, Loader2, Calendar, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import { useServices } from '../../context/ServiceContext';
+import { useVehicle } from '../../context/VehicleContext';
 
 const DailyTotalForm: React.FC = () => {
     const {
         addService, updateService,
-        addMileageLog, mileageLogs,
         services, expenses,
         addExpense, updateExpense
-    } = useApp();
+    } = useServices();
+    const {
+        addMileageLog, mileageLogs
+    } = useVehicle();
     const toast = useToast();
     const [isPending, startTransition] = useTransition();
     const [serviceDate, setServiceDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -37,13 +40,19 @@ const DailyTotalForm: React.FC = () => {
 
     // Use useEffect to update local state when selected date or underlying data changes
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSmartAmount(todayServiceSmart ? todayServiceSmart.amount.toString() : '');
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCompanyAmount(todayServiceCompany ? todayServiceCompany.amount.toString() : '');
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setDailyKm(todayMileage ? todayMileage.amount.toString() : '');
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setDailyExpense(todayExpenses ? todayExpenses.amount.toString() : '');
     }, [serviceDate, todayServiceSmart, todayServiceCompany, todayMileage, todayExpenses]);
 
-    const total = (parseFloat(smartAmount) || 0) + (parseFloat(companyAmount) || 0);
+    const totalIncome = (parseFloat(smartAmount) || 0) + (parseFloat(companyAmount) || 0);
+    const totalExpense = parseFloat(dailyExpense) || 0;
+    const netProfit = totalIncome - totalExpense;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -58,10 +67,10 @@ const DailyTotalForm: React.FC = () => {
         startTransition(() => {
             // KM registration
             if (dailyKm) {
-                addMileageLog(parseInt(dailyKm));
+                addMileageLog({ amount: parseInt(dailyKm), timestamp });
             }
 
-            // SmartTD Update/Add
+            // Taxímetro Update/Add
             if (parseFloat(smartAmount) > 0) {
                 if (todayServiceSmart) {
                     updateService(todayServiceSmart.id, { amount: parseFloat(smartAmount) });
@@ -112,101 +121,207 @@ const DailyTotalForm: React.FC = () => {
     };
 
     return (
-        <div className="card" style={{ border: '1px solid var(--accent-primary)' }}>
-            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center' }}>
-                <Calculator size={20} style={{ marginRight: '8px', color: 'var(--accent-primary)' }} />
-                Resumen Diario Integral
-            </h3>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Fecha del Resumen</label>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <Calendar size={18} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)' }} />
-                    <input
-                        type="date"
-                        value={serviceDate}
-                        onChange={(e) => setServiceDate(e.target.value)}
-                        style={{
-                            paddingLeft: '40px',
-                            width: '100%',
-                            border: '1px solid var(--accent-primary)',
-                            backgroundColor: 'rgba(59, 130, 246, 0.05)'
-                        }}
-                    />
+        <div className="card" style={{ padding: 0, boxShadow: 'var(--shadow-premium)', overflow: 'hidden' }}>
+            <div 
+                style={{ 
+                    padding: '1.25rem 1.5rem', 
+                    background: 'var(--bg-body)', 
+                    borderBottom: '1px solid var(--border-light)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px'
+                }}
+            >
+                <div style={{ padding: '8px', background: 'rgba(var(--accent-primary-rgb), 0.1)', borderRadius: '12px' }}>
+                    <Calculator size={20} color="var(--accent-primary)" />
                 </div>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '850', letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
+                    Resumen Diario Integral
+                </h3>
             </div>
 
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', fontStyle: 'italic' }}>
-                Importe, Kilómetros y Gastos relacionados para el día seleccionado.
-            </p>
+            <div style={{ padding: '1.5rem' }}>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    
+                    {/* Fecha */}
+                    <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: '750', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>Fecha del Resumen</label>
+                        <div className="input-with-icon" style={{ background: 'var(--bg-body)', borderRadius: '14px', border: '1px solid var(--border-light)' }}>
+                            <Calendar size={18} color="var(--accent-primary)" />
+                            <input
+                                type="date"
+                                value={serviceDate}
+                                onChange={(e) => setServiceDate(e.target.value)}
+                                style={{ background: 'transparent', border: 'none', fontWeight: '600', color: 'var(--text-primary)' }}
+                            />
+                        </div>
+                    </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div>
-                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem', color: 'var(--accent-primary)', fontWeight: 'bold' }}>🚖 Importe Taxímetro / Efectivo (€)</label>
-                    <input
-                        type="number" step="0.01"
-                        value={smartAmount} onChange={e => setSmartAmount(e.target.value)}
-                        placeholder="0.00"
-                        style={{ fontSize: '1.1rem', borderColor: 'var(--accent-primary)', backgroundColor: 'rgba(59, 130, 246, 0.05)' }}
-                    />
-                </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                            <label className="form-label" style={{ fontWeight: '750', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>🚖 Taxímetro (€)</label>
+                            <input
+                                type="number" step="0.01"
+                                value={smartAmount} onChange={e => setSmartAmount(e.target.value)}
+                                placeholder="0.00"
+                                style={{ 
+                                    fontSize: '1.1rem', 
+                                    fontWeight: '800',
+                                    borderRadius: '12px',
+                                    padding: '12px',
+                                    backgroundColor: 'var(--bg-body)',
+                                    border: '1px solid var(--border-light)',
+                                    color: 'var(--text-primary)',
+                                    width: '100%'
+                                }}
+                            />
+                        </div>
+                        <div>
+                            <label className="form-label" style={{ fontWeight: '750', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>🏢 Compañía (€)</label>
+                            <input
+                                type="number" step="0.01"
+                                value={companyAmount} onChange={e => setCompanyAmount(e.target.value)}
+                                placeholder="0.00"
+                                style={{ 
+                                    fontSize: '1.1rem', 
+                                    fontWeight: '800',
+                                    borderRadius: '12px',
+                                    padding: '12px',
+                                    backgroundColor: 'var(--bg-body)',
+                                    border: '1px solid var(--border-light)',
+                                    color: 'var(--text-primary)',
+                                    width: '100%'
+                                }}
+                            />
+                        </div>
+                    </div>
 
-                <div>
-                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem', color: '#8b5cf6', fontWeight: 'bold' }}>🏢 Importe Compañía / Vales (€)</label>
-                    <input
-                        type="number" step="0.01"
-                        value={companyAmount} onChange={e => setCompanyAmount(e.target.value)}
-                        placeholder="0.00"
-                        style={{ fontSize: '1.1rem', borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.05)' }}
-                    />
                     {individualCompanyTotal > 0 && (
-                        <p style={{ fontSize: '0.75rem', marginTop: '4px', color: '#8b5cf6', fontWeight: 'bold' }}>
-                            💡 Ya has registrado {individualCompanyTotal.toFixed(2)}€ individualmente hoy.
+                        <div style={{ 
+                            padding: '10px 14px', 
+                            background: 'rgba(139, 92, 246, 0.05)', 
+                            borderRadius: '12px', 
+                            border: '1px dashed #8b5cf6',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                        }}>
+                            <span style={{ fontSize: '0.75rem', color: '#8b5cf6', fontWeight: '700' }}>
+                                Individual hoy: {individualCompanyTotal.toFixed(2)}€
+                            </span>
                             <button
                                 type="button"
                                 onClick={() => setCompanyAmount(individualCompanyTotal.toString())}
-                                style={{ background: 'none', border: 'none', color: '#8b5cf6', textDecoration: 'underline', marginLeft: '8px', cursor: 'pointer', fontSize: '0.7rem' }}
+                                style={{ background: '#8b5cf6', border: 'none', color: 'white', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '0.65rem', fontWeight: '800' }}
                             >
-                                Usar esta cifra
+                                Usar cifra
                             </button>
-                        </p>
+                        </div>
                     )}
-                </div>
 
-                <div>
-                    <label style={{ marginBottom: '4px', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
-                        <Gauge size={16} style={{ marginRight: '6px' }} /> Kms Recorridos Hoy
-                    </label>
-                    <input
-                        type="number"
-                        value={dailyKm} onChange={e => setDailyKm(e.target.value)}
-                        placeholder="Ej: 300"
-                        style={{ borderLeft: '4px solid var(--accent-primary)' }}
-                    />
-                </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                            <label className="form-label" style={{ fontWeight: '750', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                                <Gauge size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> Km Hoy
+                            </label>
+                            <input
+                                type="number"
+                                value={dailyKm} onChange={e => setDailyKm(e.target.value)}
+                                placeholder="Ej: 300"
+                                style={{ 
+                                    fontSize: '1.1rem', 
+                                    fontWeight: '800',
+                                    borderRadius: '12px',
+                                    padding: '12px',
+                                    backgroundColor: 'var(--bg-body)',
+                                    border: '1px solid var(--border-light)',
+                                    color: 'var(--text-primary)',
+                                    width: '100%'
+                                }}
+                            />
+                        </div>
+                        <div>
+                            <label className="form-label" style={{ fontWeight: '750', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                                <TrendingDown size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> Gastos (€)
+                            </label>
+                            <input
+                                type="number" step="0.01"
+                                value={dailyExpense} onChange={e => setDailyExpense(e.target.value)}
+                                placeholder="0.00"
+                                style={{ 
+                                    fontSize: '1.1rem', 
+                                    fontWeight: '800',
+                                    borderRadius: '12px',
+                                    padding: '12px',
+                                    backgroundColor: 'var(--bg-body)',
+                                    border: '1px solid var(--border-light)',
+                                    color: 'var(--danger)',
+                                    width: '100%'
+                                }}
+                            />
+                        </div>
+                    </div>
 
-                <div>
-                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Gastos Diarios (€)</label>
-                    <input
-                        type="number" step="0.01"
-                        value={dailyExpense} onChange={e => setDailyExpense(e.target.value)}
-                        placeholder="0.00"
-                        style={{ borderLeft: '4px solid var(--danger)' }}
-                    />
-                </div>
+                    {/* Resumen Final Card */}
+                    <div style={{ 
+                        background: 'linear-gradient(135deg, var(--bg-body) 0%, var(--bg-card) 100%)', 
+                        borderRadius: '20px', 
+                        padding: '1.25rem',
+                        border: '1px solid var(--border-light)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '12px',
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ padding: '6px', background: 'rgba(var(--success-rgb), 0.1)', borderRadius: '8px' }}>
+                                    <TrendingUp size={16} color="var(--success)" />
+                                </div>
+                                <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>Ingreso Total</span>
+                            </div>
+                            <span style={{ fontWeight: '850', fontSize: '1rem' }}>{totalIncome.toFixed(2)} €</span>
+                        </div>
 
-                <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-sm)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 'bold' }}>BENEFICIO NETO</span>
-                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: (total - (parseFloat(dailyExpense) || 0)) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                        {(total - (parseFloat(dailyExpense) || 0)).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-                    </span>
-                </div>
+                        <div style={{ height: '1px', background: 'var(--border-light)', margin: '4px 0' }}></div>
 
-                <button type="submit" className="btn btn-primary" disabled={isPending}>
-                    {isPending ? <Loader2 size={20} className="animate-spin" style={{ marginRight: '8px' }} /> : <Save size={20} style={{ marginRight: '8px' }} />}
-                    {isPending ? 'Guardando...' : (todayMileage || todayServiceSmart ? 'Actualizar Resumen' : 'Guardar Resumen')}
-                </button>
-            </form>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ padding: '6px', background: 'rgba(var(--accent-primary-rgb), 0.1)', borderRadius: '8px' }}>
+                                    <Wallet size={16} color="var(--accent-primary)" />
+                                </div>
+                                <span style={{ fontSize: '0.9rem', fontWeight: '850', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>BENEFICIO NETO</span>
+                            </div>
+                            <span style={{ 
+                                fontWeight: '900', 
+                                fontSize: '1.5rem', 
+                                color: netProfit >= 0 ? 'var(--success)' : 'var(--danger)',
+                                letterSpacing: '-0.02em'
+                            }}>
+                                {netProfit.toFixed(2)}<span style={{ fontSize: '1rem', marginLeft: '2px' }}>€</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        className="btn btn-primary" 
+                        disabled={isPending}
+                        style={{ 
+                            height: '56px',
+                            borderRadius: '16px',
+                            fontWeight: '850',
+                            fontSize: '1rem',
+                            boxShadow: '0 8px 24px rgba(var(--accent-primary-rgb), 0.20)'
+                        }}
+                    >
+                        {isPending ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
+                        <span style={{ marginLeft: '12px' }}>
+                            {isPending ? 'Guardando...' : (todayMileage || todayServiceSmart ? 'Actualizar Resumen' : 'Guardar Resumen')}
+                        </span>
+                    </button>
+                </form>
+            </div>
         </div>
     );
 };

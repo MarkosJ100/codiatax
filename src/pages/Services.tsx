@@ -3,69 +3,185 @@ import ServiceForm from '../components/Services/ServiceForm';
 import ServiceList from '../components/Services/ServiceList';
 import DailyMileageInput from '../components/Services/DailyMileageInput';
 import DailyTotalForm from '../components/Services/DailyTotalForm';
-import { PenTool, Calculator } from 'lucide-react';
+import ExportMenu from '../components/Common/ExportMenu';
+import { PenTool, Calculator, ChevronRight } from 'lucide-react';
 
 export const Services: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'manual' | 'total'>('total');
     const [historyTypeFilter, setHistoryTypeFilter] = useState<'all' | 'taxi' | 'company'>('all');
+    const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
 
     return (
-        <div>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--accent-primary)' }}>Registro de Servicios</h2>
-
-            {/* Tabs */}
-            <div style={{ display: 'flex', marginBottom: '1rem', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '4px' }}>
-                <button
-                    onClick={() => setActiveTab('total')}
-                    style={{ flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', backgroundColor: activeTab === 'total' ? 'var(--bg-card)' : 'transparent', color: activeTab === 'total' ? 'var(--text-primary)' : 'var(--text-secondary)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '0.9rem', border: 'none', cursor: 'pointer' }}
+        <div style={{ paddingBottom: '4rem' }}>
+            {/* Header Section */}
+            <div style={{ marginBottom: '2rem', padding: '0 0.25rem' }}>
+                <div 
+                    style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '6px', 
+                        background: 'var(--accent-soft)', 
+                        padding: '4px 12px', 
+                        borderRadius: '20px',
+                        marginBottom: '0.75rem',
+                        border: '1px solid rgba(var(--accent-primary-rgb), 0.1)'
+                    }}
                 >
-                    <Calculator size={16} style={{ marginRight: '8px' }} /> Resumen Diario
-                </button>
-                <button
-                    onClick={() => setActiveTab('manual')}
-                    style={{ flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', backgroundColor: activeTab === 'manual' ? 'var(--bg-card)' : 'transparent', color: activeTab === 'manual' ? 'var(--text-primary)' : 'var(--text-secondary)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '0.9rem', border: 'none', cursor: 'pointer' }}
-                >
-                    <PenTool size={16} style={{ marginRight: '8px' }} /> Entrada Manual
-                </button>
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-primary)' }}></div>
+                    <span style={{ fontSize: '0.7rem', fontWeight: '850', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Operación Diaria
+                    </span>
+                </div>
+                <h2 style={{ fontSize: '2.25rem', fontWeight: '900', marginBottom: '0.5rem', color: 'var(--text-primary)', letterSpacing: '-0.04em', lineHeight: 1.1 }}>
+                    Registro de <span style={{ color: 'var(--accent-primary)' }}>servicios</span>
+                </h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: '600', maxWidth: '90%' }}>
+                    Controla tu jornada con precisión: registros manuales o resúmenes rápidos.
+                </p>
             </div>
 
-            {activeTab === 'manual' ? (
-                <>
-                    <DailyMileageInput />
-                    <ServiceForm />
-                </>
-            ) : (
-                <DailyTotalForm />
-            )}
+            {/* Main Navigation Tabs */}
+            <div style={{ position: 'sticky', top: '0', zIndex: 10, background: 'rgba(var(--bg-primary-rgb), 0.8)', backdropFilter: 'blur(10px)', padding: '0.5rem 0', marginBottom: '1.5rem' }}>
+                <div className="segmented-control" style={{ padding: '6px', borderRadius: '18px', background: 'var(--bg-body)', boxShadow: 'var(--shadow-premium)', border: '1px solid var(--border-light)' }}>
+                    <button
+                        onClick={() => {
+                            setIsImportMenuOpen(false);
+                            setActiveTab('total');
+                        }}
+                        className={activeTab === 'total' ? 'active' : ''}
+                        style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            gap: '10px',
+                            height: '44px',
+                            fontSize: '0.9rem'
+                        }}
+                    >
+                        <Calculator size={18} /> 
+                        <span>Resumen diario</span>
+                    </button>
+                    <button
+                        onClick={() => {
+                            setIsImportMenuOpen(false);
+                            setActiveTab('manual');
+                        }}
+                        className={activeTab === 'manual' ? 'active' : ''}
+                        style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            gap: '10px',
+                            height: '44px',
+                            fontSize: '0.9rem'
+                        }}
+                    >
+                        <PenTool size={18} /> 
+                        <span>Entrada manual</span>
+                    </button>
+                </div>
+            </div>
 
-            <div style={{ marginTop: '2.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
-                <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-secondary)' }}>
-                    Historial ({activeTab === 'manual' ? 'Manual' : 'Totales'})
-                </h3>
+            {/* Active Content Area */}
+            <div className="animate-fade-in" key={activeTab}>
+                {activeTab === 'manual' ? (
+                    <div style={{ display: 'grid', gap: '1.5rem' }}>
+                        <div
+                            className="card"
+                            style={{
+                                margin: 0,
+                                border: '1px solid var(--border-light)',
+                                background: 'var(--bg-card)',
+                                marginBottom: isImportMenuOpen ? '24rem' : 0,
+                                transition: 'margin-bottom 0.2s ease'
+                            }}
+                        >
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                <div style={{ fontSize: '0.78rem', fontWeight: '850', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                                    Importación directa
+                                </div>
+                                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '850', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+                                    Reporte App Taxi (SmartD / Taxitronic)
+                                </h3>
+                                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                                    En esta pestaña puedes importar directamente los servicios diarios exportados desde la app SmartD de Taxitronic (CSV o Excel).
+                                </p>
+                                <div style={{ alignSelf: 'flex-start' }}>
+                                    <ExportMenu direction="down" onOpenChange={setIsImportMenuOpen} />
+                                </div>
+                            </div>
+                        </div>
+                        <DailyMileageInput />
+                        <ServiceForm />
+                    </div>
+                ) : (
+                    <DailyTotalForm />
+                )}
+            </div>
 
-                <div style={{ display: 'flex', gap: '4px', backgroundColor: 'var(--bg-secondary)', padding: '2px', borderRadius: '8px' }}>
+            {/* History Header Section */}
+            <div
+                style={{
+                    marginTop: '4rem',
+                    marginBottom: '1.5rem',
+                    padding: '0 0.25rem'
+                }}
+            >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.25rem' }}>
+                    <div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>
+                            FLUJO RECIENTE
+                        </div>
+                        <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '850', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+                            Últimos registros
+                        </h3>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: '700' }}>
+                        Ver histórico <ChevronRight size={16} />
+                    </div>
+                </div>
+
+                {/* Filter Control */}
+                <div 
+                    className="segmented-control" 
+                    style={{ 
+                        width: '100%', 
+                        padding: '4px', 
+                        background: 'var(--bg-card)', 
+                        borderRadius: '14px',
+                        border: '1px solid var(--border-light)'
+                    }}
+                >
                     <button
                         onClick={() => setHistoryTypeFilter('all')}
-                        style={{ padding: '4px 12px', fontSize: '0.75rem', borderRadius: '6px', border: 'none', cursor: 'pointer', background: historyTypeFilter === 'all' ? 'var(--bg-card)' : 'transparent', color: 'var(--text-primary)', fontWeight: 'bold' }}
+                        className={historyTypeFilter === 'all' ? 'active' : ''}
+                        style={{ fontSize: '0.8rem', fontWeight: '750', padding: '8px 4px' }}
                     >
                         Todo
                     </button>
                     <button
                         onClick={() => setHistoryTypeFilter('taxi')}
-                        style={{ padding: '4px 12px', fontSize: '0.75rem', borderRadius: '6px', border: 'none', cursor: 'pointer', background: historyTypeFilter === 'taxi' ? 'var(--bg-card)' : 'transparent', color: 'var(--accent-primary)', fontWeight: 'bold' }}
+                        className={historyTypeFilter === 'taxi' ? 'active' : ''}
+                        style={{ fontSize: '0.8rem', fontWeight: '750', padding: '8px 4px' }}
                     >
-                        🚖 Taxi
+                        Carreras
                     </button>
                     <button
                         onClick={() => setHistoryTypeFilter('company')}
-                        style={{ padding: '4px 12px', fontSize: '0.75rem', borderRadius: '6px', border: 'none', cursor: 'pointer', background: historyTypeFilter === 'company' ? 'var(--bg-card)' : 'transparent', color: '#8b5cf6', fontWeight: 'bold' }}
+                        className={historyTypeFilter === 'company' ? 'active' : ''}
+                        style={{ fontSize: '0.8rem', fontWeight: '750', padding: '8px 4px' }}
                     >
-                        🏢 Abonados
+                        Abonados
                     </button>
                 </div>
             </div>
 
-            <ServiceList filterSource={activeTab} typeFilter={historyTypeFilter} />
+            {/* Service List with Filters applied */}
+            <div style={{ marginTop: '1rem' }}>
+                <ServiceList filterSource={activeTab} typeFilter={historyTypeFilter} />
+            </div>
         </div>
     );
 };
+
+export default Services;

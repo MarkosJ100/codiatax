@@ -1,10 +1,10 @@
 # 🚖 CODIATAX - Documentación Completa del Proyecto
 
-**Versión:** 1.1.0  
+**Versión:** 1.4.0 (Estable)  
 **Fecha de Creación:** Diciembre 2024  
-**Última Actualización:** Febrero 2026  
+**Última Actualización:** 20 Marzo 2026 (v1.4.0)  
 **Tipo:** Aplicación Móvil Híbrida (Android/iOS/Web)  
-**Propósito:** Gestión Integral para Profesionales del Taxi
+**Propósito:** Gestión Integral para Profesionales del Taxi con Sincronización Cloud
 
 ---
 
@@ -59,6 +59,7 @@ La aplicación distingue claramente entre dos tipos de usuarios:
 | 🤷 Olvidar gastos | 🔔 Recordatorios y avisos |
 | ⏰ Tiempo buscando datos | 🔍 Búsqueda instantánea |
 | 📊 Sin estadísticas | 📈 Gráficas y análisis automático |
+| 🚖 Tarifas desactualizadas | 📅 **Precios Oficiales 2026** (BOJA 17/02/2026) |
 
 ---
 
@@ -91,40 +92,45 @@ Encryption: crypto-js 4.2.0
 @capacitor/share: ^8.0.0            // Compartir archivos
 ```
 
-### Arquitectura de Componentes
+### Arquitectura de Componentes y Estado
+
+La aplicación utiliza un sistema de **Estado Global Dividido** para maximizar el rendimiento, evitando re-renders innecesarios.
 
 ```
 src/
+├── context/              # Gestión de Estado Especializada
+│   ├── AuthContext.tsx    # Autenticación Supabase
+│   ├── ServiceContext.tsx # Servicios y Facturación
+│   ├── ShiftContext.tsx   # Turnos de Aeropuerto
+│   ├── VehicleContext.tsx # Mantenimiento y Kilometraje
+│   ├── UIContext.tsx      # Temas y Notificaciones
+│   └── AppContext.tsx     # Puente de compatibilidad (Legacy)
 ├── components/          # Componentes reutilizables
 │   ├── Airport/        # Sistema de turnos aeropuerto
 │   ├── Auth/           # Autenticación y seguridad
-│   ├── Common/         # Componentes compartidos
+│   ├── Common/         # Componentes compartidos (UI Base)
 │   ├── Dashboard/      # Widgets del panel principal
-│   ├── Layout/         # Estructura de la app
+│   ├── Layout/         # Estructura de la app (MobileShell)
 │   ├── Maintenance/    # Gestión de taller
 │   ├── Services/       # Registro de servicios
 │   └── Settings/       # Configuración
-├── context/            # Estado global (AppContext)
-├── hooks/              # Custom hooks
-├── pages/              # Páginas principales
-├── services/           # Lógica de negocio
-├── types/              # Definiciones TypeScript
-└── utils/              # Utilidades y helpers
+├── pages/              # Vistas principales (React Router v7)
+└── ...
 ```
 
-### Almacenamiento de Datos
+### Modelo de Datos Híbrido
 
-**Estrategia:** 100% Local (No requiere servidor)
+**Estrategia:** Offline-First con Sincronización Cloud (Supabase)
 
-- **LocalStorage:** Datos de usuario, servicios, gastos
-- **Capacitor Preferences:** Configuración persistente
-- **Filesystem:** Exportación de PDFs y reportes
+- **Local:** LocalStorage + Capacitor Preferences (Acceso instantáneo sin red).
+- **Cloud:** Supabase (PostgreSQL) para copias de seguridad automáticas y multi-dispositivo.
+- **Seguridad Cloud:** Implementación de **Row Level Security (RLS)** asegurando que cada taxista solo acceda a sus propios datos.
 
 **Ventajas:**
-- ✅ Funciona sin conexión a internet
-- ✅ Privacidad total (datos no salen del dispositivo)
-- ✅ Sin costos de servidor
-- ✅ Velocidad de acceso instantánea
+- ✅ Funciona 100% sin internet (modo local).
+- ✅ Sincronización automática al detectar conexión.
+- ✅ Privacidad total mediante autenticación JWT y políticas de base de datos.
+- ✅ Resiliencia ante pérdida de dispositivo.
 
 ---
 
@@ -229,6 +235,14 @@ Registro: Se guarda como gasto mensual de 20€
 | Aceite Caja de Cambios | Cada 90,000 km |
 | Pastillas de Freno | Cada 40,000 km |
 | Neumáticos | Cada 50,000 km |
+
+**Novedad v1.4.0: Plantillas por Marca y Modelo**
+
+La aplicación ahora incluye planes de mantenimiento predefinidos para los modelos más comunes en el sector del taxi:
+- **Marcas soportadas:** Hyundai, Toyota, Kia, Skoda, Dacia, etc.
+- **Modelos específicos:** Ioniq Hybrid, Prius, Niro, Octavia, Jogger...
+- **Indicadores de Fiabilidad:** 🔏 Fuente Oficial, 📖 Manual Aportado, ⚠️ Base Orientativa.
+- **Automatización:** Al seleccionar un modelo, se configuran automáticamente los intervalos oficiales y se generan avisos inteligentes.
 
 **Flujo de Trabajo:**
 
@@ -602,13 +616,40 @@ MobileShell.tsx          - Estructura móvil principal
 - ✅ SIN publicidad
 - ✅ SIN tracking de usuarios
 
-### Control Total
+### Control Total y Seguridad Avanzada
 
 **Autonomía del Usuario:**
-- Exportar datos cuando quieras
-- Borrar todo con un click
-- No dependes de internet para funcionalidad básica
-- Tus datos nunca salen del dispositivo
+- Exportar datos cuando quieras.
+- Borrar todo con un click.
+- No dependes de internet para funcionalidad básica.
+
+**Capas de Seguridad v1.2.3:**
+1. **Validación de Entorno:** Sistema de protección que impide el inicio de la app si faltan variables críticas (Supabase URL/Key).
+2. **Políticas RLS:** Cada registro en la base de datos está vinculado al `auth.uid()` del usuario, impidiendo accesos cruzados.
+3. **Cifrado AES:** Datos sensibles locales protegidos con `crypto-js`.
+
+### ⚡ Interfaz Premium (v1.4.0)
+- **Selectores Dropdown:** Sustitución de rejillas por menús elegantes con efectos de cristal (blur) y elevación.
+- **Modales Propios:** Eliminación de diálogos nativos del sistema por componentes animados y consistentes.
+- **Navegación Purista:** Barra inferior simplificada sin líneas distractoras, centrada en el color y la forma.
+
+---
+
+## 🎨 PERSONALIZACIÓN Y ASSETS
+
+### Icono de la Aplicación
+
+Para personalizar el icono de CodiaTax:
+
+1. **Logo Principal:** Ubicado en `src/assets/logo.jpg`. Este se usa en la pantalla de login y componentes internos.
+2. **Iconos Android:**
+   - La fuente original y variaciones están en `android/app/src/main/res/` (carpetas `mipmap-*`).
+   - El archivo principal para reemplazar es `ic_launcher.png`.
+   - Se recomienda usar herramientas como *Android Asset Studio* para generar todas las densidades necesarias.
+
+### Personalización de Estilos
+- **Colores:** Modificar variables en `src/index.css` (ej. `--accent-primary`).
+- **Logo Login:** Reemplazar `src/assets/logo.jpg` respetando las dimensiones originales.
 
 ### Cifrado
 
@@ -684,10 +725,14 @@ npx cap open android
    - En Android Studio: Build → Build Bundle(s) / APK(s) → Build APK(s)
    - APK generado en: `android/app/build/outputs/apk/`
 
-**Script Automatizado:**
 ```bash
+# Script simplificado (Windows)
 npm run build:android
 ```
+
+> [!TIP]
+> **Ubicación del APK:** `android/app/build/outputs/apk/debug/app-debug.apk`
+> Si el comando falla, asegúrate de tener configurado el archivo `.env` con las credenciales de Supabase.
 
 ### Compilación iOS (IPA)
 

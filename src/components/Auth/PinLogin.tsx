@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { encryption } from '../../services/encryption';
-import { Preferences } from '@capacitor/preferences';
+import { Preferences } from '../../utils/webPreferences';
 import { rateLimiter } from '../../utils/sanitize';
 import { Lock, AlertCircle } from 'lucide-react';
 import PinRecovery from './PinRecovery';
@@ -36,8 +36,12 @@ const PinLogin: React.FC<PinLoginProps> = ({ onSuccess }) => {
 
     const handlePinInput = (digit: string) => {
         if (pin.length < 6 && !isBlocked) {
-            setPin(pin + digit);
+            const newPin = pin + digit;
+            setPin(newPin);
             setError('');
+            if (newPin.length === 6) {
+                void verifyPin(newPin);
+            }
         }
     };
 
@@ -46,13 +50,13 @@ const PinLogin: React.FC<PinLoginProps> = ({ onSuccess }) => {
         setError('');
     };
 
-    const verifyPin = async () => {
-        if (pin.length < 4) {
+    const verifyPin = async (inputPin: string) => {
+        if (inputPin.length < 4) {
             setError('PIN demasiado corto');
             return;
         }
 
-        // Rate limiting: máximo 5 intentos por minuto
+        // Rate limiting: m?ximo 5 intentos por minuto
         if (!rateLimiter.canProceed('pin_login', 5, 60000)) {
             setIsBlocked(true);
             const remaining = rateLimiter.getTimeUntilReset('pin_login', 60000);
@@ -67,11 +71,11 @@ const PinLogin: React.FC<PinLoginProps> = ({ onSuccess }) => {
             const { value: salt } = await Preferences.get({ key: 'app_pin_salt' });
 
             if (!storedHash || !salt) {
-                setError('Error de configuración');
+                setError('Error de configuraci?n');
                 return;
             }
 
-            const inputHash = encryption.hashWithSalt(pin, salt);
+            const inputHash = encryption.hashWithSalt(inputPin, salt);
 
             if (inputHash === storedHash) {
                 rateLimiter.reset('pin_login');
@@ -86,12 +90,6 @@ const PinLogin: React.FC<PinLoginProps> = ({ onSuccess }) => {
             setPin('');
         }
     };
-
-    useEffect(() => {
-        if (pin.length === 6) {
-            verifyPin();
-        }
-    }, [pin]);
 
     return (
         <div style={{
@@ -133,7 +131,7 @@ const PinLogin: React.FC<PinLoginProps> = ({ onSuccess }) => {
                 <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
                     {isBlocked
                         ? `Espera ${blockTimeRemaining}s antes de intentar de nuevo`
-                        : 'Introduce tu PIN para acceder a la aplicación'
+                        : 'Introduce tu PIN para acceder a la aplicaci?n'
                     }
                 </p>
 
@@ -213,7 +211,7 @@ const PinLogin: React.FC<PinLoginProps> = ({ onSuccess }) => {
                                 }
                             }}
                         >
-                            {num === 'del' ? '⌫' : num}
+                            {num === 'del' ? '?' : num}
                         </button>
                     ))}
                 </div>
@@ -232,7 +230,7 @@ const PinLogin: React.FC<PinLoginProps> = ({ onSuccess }) => {
                     textDecoration: 'underline'
                 }}
             >
-                ¿Olvidaste tu PIN?
+                ?Olvidaste tu PIN?
             </button>
 
             {/* Recovery Modal */}
@@ -258,3 +256,5 @@ const PinLogin: React.FC<PinLoginProps> = ({ onSuccess }) => {
 };
 
 export default PinLogin;
+
+

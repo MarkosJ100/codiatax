@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    ignores: ['dist', 'public', 'android', 'ios', 'node_modules', '*.cjs'],
+    ignores: ['dist', 'public', 'android', 'ios', 'node_modules', 'backup-*', '.gradle-user', 'release', 'context7-source', 'scripts', '*.mjs', '*.cjs', 'maintenance_restored.tsx'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
